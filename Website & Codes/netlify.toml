@@ -1,3 +1,9 @@
+[build]
+  # change this to the folder that contains homepage1.html (e.g., "build" or "public" or "." if it's repo root)
+  publish = "build"
+  # optional: build command if you need one
+  command = "npm run build"
+
 [[redirects]]
   from = "/*"
   to = "/homepage1.html"
