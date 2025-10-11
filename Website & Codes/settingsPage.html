@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Settings</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- Dashboard styles --- */
+        /* -- Formats the body -- */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+            height: calc(var(--vh, 1vh) * 100); 
+            background-color: #09ffce;
+        }
+
+        /* -- Sets a box dividing into two sections -- */
+        .container-wrap {
+          display: flex;
+          flex-direction: column-reverse;
+          background-color: var(--color-primary-p-50);
+          width: 100%;
+          height: 100%;
+        }
+
+        /* -- Structure of the Main Content -- */
+        .-main {
+            align-items: flex-start;
+            flex-grow: 1;
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            justify-content: center;
+            background-color: #8A1532;
+        }
+        
+        /* -- Structure of the Side login -- */
+        .-side {
+            justify-content: left;
+            height: 90px;
+            background-color: #F4F4F4;
+        }
+
+        /* -- Adjusts the two section based on screen -- */
+        @media screen {
+          .container-wrap {
+            display: grid;
+            grid-template-columns: .5fr 2fr;
+            background-color: #fefefe;
+          }
+
+          .-main {
+            padding-top: 25%;
+          }
+
+          .-side {
+            height: auto;
+            position: relative;
+          }
+        }
+
+        /* -- Styles -- */
+        .main-menu {
+            color: #F0FFDD;
+            text-align: center;
+            overflow: hidden;
+        }
+        .main-menu h2 {
+            font-size: large;
+        }
+        
+        /* -- main section -- */
+        .main-section {
+            display: grid;
+            line-height: 2;
+            text-align: left;
+            margin-top: 20%;
+            padding-left: 15%;
+        }
+        .main-section a {
+            text-decoration: none;
+            color: #F0FFDD;
+            font-weight: 300;
+        }
+        .main-section p {
+            filter: opacity(50%);
+        }
+        
+        /* -- settings section -- */
+        .settings-section {
+            display: grid;
+            line-height: 2;
+            text-align: left;
+            margin-top: 20%;
+            padding-left: 15%;
+        }
+        .settings-section p {
+            filter: opacity(50%);
+        }
+        .settings-section a {
+            text-decoration: none;
+            color: #F0FFDD;
+            font-weight: 300;
+        }
+        
+        /* -- Top bar -- */
+        .top-bar {
+            background-color: #FFFFFF;
+            top: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            height: 80px;
+            box-shadow: 0 15px 100px rgba(0,0,0,0.1);
+        }
+        .top-bar a {
+            text-decoration: none;
+            color: rgb(31, 31, 31);
+            font-weight: 700;
+            padding-right: 10%;
+        }
+        .top-bar i {
+            font-size: large;
+        }
+        
+        /* -- Logout area -- */
+        .logout {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            padding-right: 20px;
+            gap: 10px;
+        }
+        
+        /* -- info section | anything you want here -- */
+        .info {
+            margin:auto;
+            margin-left: 20px;
+            font-size: 39px;
+            font-weight: 200;
+            margin-bottom: 10px;
+        }
+        
+        /* -- Main Dashboard window -- */
+        .dash-window {
+            padding-top: 3%;
+            padding-left: 5%;
+            color: #501121;
+            width: auto;
+        }
+        .header-title h1 {
+            background-image: linear-gradient(#c6284f, #541122);
+            color: transparent;
+            background-clip: text;
+            font-size: 50px;
+            margin-bottom: 1%;
+        }
+        
+        /* -- Account Creation Form Styles -- */
+        .account-creation-form {
+            margin-top: 30px;
+            background-color: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-width: 800px;
+        }
+        
+        .account-creation-form h3 {
+            color: #501121;
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+        
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .input-group {
+            flex: 1;
+            min-width: 250px;
+            position: relative;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .input-group input, 
+        .input-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+        
+        .input-group input:focus, 
+        .input-group select:focus {
+            outline: none;
+            border-color: #8A1532;
+        }
+        
+        .form-actions {
+            margin-top: 30px;
+        }
+        
+        button[type="submit"] {
+            background-color: #8A1532;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: background-color 0.3s ease;
+            width: 100%;
+        }
+        
+        button[type="submit"]:hover {
+            background-color: #501121;
+        }
+        
+        /* -- Responsive adjustments -- */
+        @media (max-width: 768px) {
+            .container-wrap {
+                grid-template-columns: 1fr;
+            }
+            
+            .-main {
+                padding-top: 15%;
+            }
+            
+            .account-creation-form {
+                margin: 20px;
+                padding: 15px;
+            }
+            
+            .form-row {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container-wrap">
+        <!-- Sidebar -->
+        <div class="-main">
+            <div class="main-menu">
+                <img src="images/profile logo.PNG" alt="logo" width="60" height="60" title="St. Michael Academy">
+                <h2 id="displayName">Loading...</h2>
+                <p id="userRole">Loading...</p>
+                
+                <div class="main-section">
+                    <p>Main</p>
+                    <a href="studentList.html" id="studentListLink">Student List</a>
+                    <a href="studentProgress.html" id="studentProgressLink">Student Progress</a>
+                    <a href="evalControl.html" id="evalControlLink">Evaluation & Control</a>
+                    <a href="accSecSetup.html" id="accSecSetupLink" class="active">Account & Section Setup</a>
+                </div>
+                
+                <div class="settings-section">
+                    <p>Settings</p>
+                    <a href="settingsPage.html" id="settingsLink">Account Settings</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="-side">
+            <div class="top-bar">
+                <div></div> <!-- Empty div to balance the space-between alignment -->
+                <div class="logout" id="logoutBtn">
+                    <span>Logout</span>
+                    <i class="fas fa-sign-out"></i>
+                </div>
+            </div>
+            
+            <div class="dash-window">
+                
+                
+                <!-- Account Creation Section -->
+                <div class="account-creation-form" id="accountCreationSection">
+                    <h3>Create New Account</h3>
+                    
+                    <form id="createUserForm">
+                        <div class="form-row">
+                            <div class="input-group">
+                                <label for="newUserName">Full Name</label>
+                                <input type="text" id="newUserName" placeholder="Teacher's full name" required>
+                            </div>
+                            
+                            <div class="input-group">
+                                <label for="newUserEmail">Email</label>
+                                <input type="email" id="newUserEmail" placeholder="Teacher's email" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="input-group">
+                                <label for="newUserPassword">Password</label>
+                                <input type="password" id="newUserPassword" placeholder="Set password (min 6 characters)" required minlength="6">
+                            </div>
+                            
+                            <div class="input-group">
+                                <label for="newUserRole">Role</label>
+                                <select id="newUserRole" required>
+                                    <option value="teacher">Teacher</option>
+                                    <option value="admin">Admin</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="submit">Create Account</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
+    <script>
+        // Firebase initialization
+        const firebaseConfig = {
+            apiKey: "AIzaSyBkmM4hueT7PlnvV8FeRdp8g4rk0qQQrn4",
+            authDomain: "midnightmathscape.firebaseapp.com",
+            databaseURL: "https://midnightmathscape-default-rtdb.firebaseio.com",
+            projectId: "midnightmathscape",
+            storageBucket: "midnightmathscape.firebasestorage.app",
+            messagingSenderId: "1038485290511",
+            appId: "1:1038485290511:web:c8aa78fbcd5266b706ed7a",
+            measurementId: "G-WXGW44QMRD"
+        };
+
+        const app = firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check auth state
+            auth.onAuthStateChanged(async (user) => {
+                if (!user) {
+                    window.location.href = 'mainWeb.html';
+                    return;
+                }
+
+                // Set user info
+                document.getElementById('displayName').textContent = user.displayName || user.email;
+                
+                // Check if admin
+                const isAdmin = user.email === 'admin@stmichael.edu.ph' || 
+                              (await db.collection('users').doc(user.uid).get()).data()?.role === 'admin';
+                
+                if (isAdmin) {
+                    document.getElementById('userRole').textContent = 'Administrator';
+                    document.getElementById('accountCreationSection').style.display = 'block';
+                } else {
+                    document.getElementById('userRole').textContent = 'Teacher';
+                    document.getElementById('accountCreationSection').style.display = 'none';
+                   
+                }
+
+                // User creation form
+                document.getElementById('createUserForm').addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    
+                    const email = document.getElementById('newUserEmail').value;
+                    const password = document.getElementById('newUserPassword').value;
+                    const name = document.getElementById('newUserName').value;
+                    const role = document.getElementById('newUserRole').value;
+                    
+                    try {
+                        // Create user in Authentication
+                        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                        
+                        // Set display name
+                        await userCredential.user.updateProfile({ displayName: name });
+                        
+                        // Create user in Firestore
+                        await db.collection('users').doc(userCredential.user.uid).set({
+                            email: email,
+                            name: name,
+                            role: role,
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                        
+                        alert('Account created successfully!');
+                        this.reset();
+                    } catch (error) {
+                        alert('Error creating account: ' + error.message);
+                        console.error(error);
+                    }
+                });
+
+                // Logout button
+                document.getElementById('logoutBtn').addEventListener('click', function(e) {
+                    e.preventDefault();
+                    auth.signOut().then(() => {
+                        window.location.href = 'login.html';
+                    });
+                });
+            });
+        });
+    </script>
+</body>
+</html>

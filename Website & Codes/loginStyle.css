@@ -1,0 +1,90 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body, html {
+    height: 100%;
+    font-family: Arial, sans-serif;
+}
+
+.container {
+    display: flex;
+    height: 100%;
+    background: url('Website & Codes/images/background_st michael building.png') no-repeat center center fixed; /* Replace with your background */
+    background-size: cover;
+}
+
+.left {
+    flex: 1;
+    background: rgba(54, 54, 54, 0.2); /* Optional: Adjust opacity */
+    padding: 50px;
+}
+
+.logo {
+    font-size: 80px;
+    font-weight: bold;
+    text-align: left;
+    border: solid 2px #000;
+    width: 100px;
+}
+
+.left h1 {
+    color: white;
+    font-size: 32px;
+    margin-top: 500px;
+}
+
+.left p {
+    color: white;
+    margin-top: 10px;
+}
+
+.right {
+    flex: 1;
+    background-color: #1f1f1f; /* Dark Background */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 50px;
+}
+
+.right h2 {
+    color: rgb(255, 255, 255);
+    margin-bottom: 30px;
+}
+
+input[type="email"],
+input[type="password"] {
+    
+    padding: 10px;
+    width: 100%;
+    max-width: 1000px;
+    border: 1px solid #525252;
+    border-radius: 10px;
+    outline: rgb(102, 3, 3) 1px solid;
+}
+
+
+/* Welcome Title Style */
+.welcome-title {
+    font-size: 2.5rem;              /* Increase font size */
+    font-family: 'Comic Sans MS', cursive, sans-serif; /* Fun font style */
+    color: #ffcc00;                 /* Bright yellow color */
+    text-align: left;             /* Center the title */
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5); /* Add shadow for depth */
+    margin-bottom: 20px;            /* Space below title */
+}
+
+/* Welcome Message Style */
+.welcome-message {
+    font-size: 1.25rem;             /* Standard font size */
+    font-family: Arial, sans-serif; /* Clean, sans-serif font */
+    color: #ffffff;                 /* White color for text */
+    text-align: left;             /* Center the message */
+    max-width: 600px;               /* Limit the max width */
+  
+    line-height: 1.5;               /* Increase line height for readability */
+}

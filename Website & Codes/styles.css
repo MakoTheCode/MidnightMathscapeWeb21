@@ -1,0 +1,217 @@
+/* General Styles */
+body {
+    background-color: #000; /* Set background color */
+    color: white; /* Set text color to white */
+}
+
+html, body {
+    height: 100%; /* Ensure the html and body take up the full height */
+    margin: 0; /* Remove default margin */
+    scroll-behavior: smooth;
+}
+
+.background-container {
+    position: fixed; /* Change to fixed positioning */
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: url('images/background_st michael building.png'); /* Set your background image */
+    background-size: cover; /* Cover the entire area */
+    background-position: center; /* Center the background image */
+    z-index: -1; /* Ensure it stays behind other content */
+}
+
+.transparent-header {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    padding: 10px 20px;
+    z-index: 1000;
+}
+
+.title-image {
+    max-width: 50%; /* Make the image responsive */
+    height: auto; /* Maintain aspect ratio */
+    margin-bottom: 20px; /* Space below the title image */
+}
+
+.navbar {
+    display: flex;
+    justify-content: space-between; /* Space between items */
+    align-items: center; /* Center items vertically */
+    padding: 10px 20px; /* Add padding */
+}
+
+.nav-link {
+    color: white; /* Set link color to white */
+    text-decoration: none; /* Remove underline */
+    margin: 0 15px; /* Add margin between links */
+}
+
+.nav-link:hover {
+    text-decoration: underline; /* Underline on hover */
+}
+
+.nav-center {
+    display: flex;
+    justify-content: center; /* Center the links */
+    flex-grow: 1; /* Allow this section to grow */
+}
+
+.login-link {
+    margin-left: auto; /* Push login link to the right */
+}
+
+.main-content {
+    margin-top: 80px;
+}
+
+.hero-section {
+    text-align: center;
+    padding: 20px;
+}
+
+.hero-section h1 {
+    font-size: 3em;
+    font-family: 'Creepster', cursive;
+}
+
+.qr-code-container {
+    display: flex; /* Use flexbox to align items horizontally */
+    justify-content: center; /* Center the items */
+    align-items: center; /* Vertically center the items */
+    margin-top: 10px;
+}
+
+.qr-code-text {
+    color: white;
+    margin-right: 10px; /* Space between text and QR code */
+    text-align: left; /* Align text to the left */
+}
+
+.qr-code-container img {
+    width: 150px; /* QR code size */
+    margin-right: 15px; /* Space between QR code and side image */
+}
+
+.side-image-container {
+    width: 100px; /* Set a width for the side image container */
+}
+
+.side-image {
+    width: 10%; /* Make the side image responsive */
+    height: auto; /* Maintain aspect ratio */
+}
+
+.qr-and-image {
+    display: flex;
+    justify-content: center; /* Aligns items in the center */
+    align-items: center; /* Aligns items vertically center */
+}
+
+.description {
+    color: white;
+    padding: 20px;
+    line-height: 1.8;
+    text-align: center;
+}
+
+.sneakpeek {
+    padding: 20px;
+    color : white;
+}
+
+.sneakpeek h2 {
+    text-align: center;
+}
+
+.reference-section {
+    text-align: center;
+    margin-top: 20px;
+    padding: 20px;
+   
+}
+
+
+
+.gameplay-screenshots {
+    margin-top: 40px; /* Ensure there's space above the container */
+    padding: 20px; /* Optional: Add padding inside the container */
+    text-align: center; /* Center the text */
+}
+
+
+
+/* Removed the border from all elements */
+* {
+    box-sizing: border-box; /* Ensure padding and border are included in the element's total width and height */
+}
+
+.carousel-container {
+    position: relative;
+    max-width: 6000px; /* Adjust as needed */
+    margin: auto; /* Center the carousel */
+    overflow: hidden; /* Hide overflow to prevent images from spilling out */
+}
+
+.image-placeholder {
+    
+    text-align: center; /* Center the images */
+    width: 100%; /* Full width */
+}
+
+.image-placeholder img {
+    max-width: 100%; /* Make images responsive */
+    height: auto; /* Maintain aspect ratio */
+}
+
+.w3-button {
+    position: absolute; /* Position buttons absolutely */
+    top: 50%; /* Center vertically transform: translateY(-50%); /* Adjust for button height */
+    background-color: rgba(0 , 0, 0, 0.7); /* Semi-transparent black */
+    border: none; /* Remove border */
+    cursor: pointer;
+    padding: 10px;
+    z-index: 1; /* Ensure buttons are above images */
+}
+
+.w3-display-left {
+    left: 10px; /* Adjust as needed for spacing */
+}
+
+.w3-display-right {
+    right: 10px; /* Adjust as needed for spacing */
+}
+
+.footer {
+    background-color: rgba(0, 0, 0, 0.7); /* Semi-transparent background */
+    color: #fff; /* White text color */
+    text-align: center; /* Center the text */
+    padding: 10px 0; /* Padding for top and bottom */
+    position: relative; /* Position relative to the main content */
+    bottom: 0; /* Stick to the bottom */
+    width: 100%; /* Full width */
+}
+
+.copyright p {
+    margin: 0; /* Remove default margin */
+    font-size: 0.9em; /* Slightly smaller font size */
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .hero-section h1 {
+        font-size: 2em;
+    }
+
+    .qr-code-container img {
+        width: 120px;
+    }
+
+    .screenshots-grid {
+        grid-template-columns: repeat(1, 1fr);
+        gap: 15px;
+    }
+}

@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Student Account</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #8A1532;
+      --primary-light: #a53d56;
+      --secondary: #501121;
+      --text: #333333;
+      --bg: #f9f9f9;
+      --card-bg: #ffffff;
+      --border: #e0e0e0;
+      --success: #4CAF50;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg);
+      margin: 0;
+    }
+    .header {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      padding: 1.5rem;
+    }
+    .header-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .back-btn {
+      color: white;
+      text-decoration: none;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .main-content {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 1rem;
+    }
+    .form-card {
+      background-color: var(--card-bg);
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+      padding: 2rem;
+    }
+    .form-header h1 {
+      color: var(--primary);
+      font-size: 2rem;
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1rem;
+    }
+    .form-group label { font-weight: 600; display: block; margin-bottom: 0.5rem; }
+    .form-group input {
+      width: 100%;
+      padding: 0.8rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+    .btn {
+      padding: 0.8rem 1.8rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .btn-primary { background-color: var(--primary); color: white; }
+    .btn-secondary { background-color: white; color: var(--primary); border: 1px solid var(--primary); }
+    .floating-notification {
+      position: fixed; bottom: 2rem; right: 2rem;
+      background-color: var(--success); color: white;
+      padding: 1rem 1.5rem; border-radius: 8px;
+      display: none; align-items: center; gap: 0.75rem;
+    }
+    .floating-notification.show { display: flex; }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.6); display: none;
+      justify-content: center; align-items: center; z-index: 999;
+    }
+    .modal {
+      background: white; padding: 2rem; border-radius: 12px;
+      max-width: 500px; width: 90%; text-align: left;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    }
+    .modal h2 { margin-top: 0; color: var(--primary); }
+    .modal-details { margin: 1rem 0; font-size: 0.95rem; }
+    .modal-buttons { display: flex; justify-content: flex-end; gap: 1rem; }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="header-content">
+      <a href="accSecSetup.html" class="back-btn">
+        <i class="fas fa-arrow-left"></i> Back to Sections
+      </a>
+      <div class="logo"><i class="fas fa-calculator"></i> MIDNIGHT MATH</div>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <div class="form-card">
+      <div class="form-header">
+        <h1>Create Student Account</h1>
+        <p>Fill in the details to register a new student</p>
+      </div>
+
+      <div class="section-info" id="sectionInfo">Section: Loading...</div>
+
+      <form id="studentForm">
+        <div class="form-grid">
+          <div class="form-group"><label>Student Number</label><input type="text" id="studentNumber" required></div>
+          <div class="form-group"><label>Contact Number</label><input type="tel" id="contactNumber" required></div>
+          <div class="form-group"><label>Address</label><input type="text" id="address" required></div>
+          <div class="form-group"><label>Username</label><input type="text" id="username" required></div>
+          <div class="form-group"><label>Email</label><input type="email" id="email" required></div>
+          <div class="form-group"><label>Last Name</label><input type="text" id="lastName" required></div>
+          <div class="form-group"><label>First Name</label><input type="text" id="firstName" required></div>
+          <div class="form-group"><label>Middle Initial</label><input type="text" id="middleInitial" maxlength="2" placeholder="A." /></div>
+          <div class="form-group"><label>Password</label><input type="password" id="password" required></div>
+        </div>
+        <div class="form-footer">
+          <button type="submit" class="btn btn-primary"><i class="fas fa-user-plus"></i> Register Student</button>
+        </div>
+      </form>
+    </div>
+  </main>
+
+  <!-- Success Notification -->
+  <div id="successNotification" class="floating-notification">
+    <i class="fas fa-check-circle"></i>
+    <span>Student registered successfully!</span>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal-overlay" id="confirmModal">
+    <div class="modal">
+      <h2>Confirm Student Account</h2>
+      <div class="modal-details" id="modalDetails"></div>
+      <div class="modal-buttons">
+        <button id="cancelBtn" class="btn btn-secondary">Cancel</button>
+        <button id="confirmBtn" class="btn btn-primary">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBkmM4hueT7PlnvV8FeRdp8g4rk0qQQrn4",
+      authDomain: "midnightmathscape.firebaseapp.com",
+      databaseURL: "https://midnightmathscape-default-rtdb.firebaseio.com",
+      projectId: "midnightmathscape",
+      storageBucket: "midnightmathscape.appspot.com",
+      messagingSenderId: "1038485290511",
+      appId: "1:1038485290511:web:c8aa78fbcd5266b706ed7a",
+      measurementId: "G-WXGW44QMRD"
+    };
+
+    const app = firebase.initializeApp(firebaseConfig);
+    const rtdb = firebase.database();
+
+    let sectionId = '';
+    document.addEventListener('DOMContentLoaded', () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      sectionId = urlParams.get('sectionId') || '';
+      document.getElementById('sectionInfo').textContent = "Section: " + (urlParams.get('section') || 'Unknown');
+    });
+
+    function generateRandomId() {
+      return Math.floor(1000 + Math.random() * 9000).toString();
+    }
+
+    async function getUniqueId() {
+      let id;
+      let exists = true;
+      while (exists) {
+        id = generateRandomId();
+        const snap = await rtdb.ref('StudentAccount/' + id).get();
+        exists = snap.exists();
+      }
+      return id;
+    }
+
+    const form = document.getElementById('studentForm');
+    const modal = document.getElementById('confirmModal');
+    const modalDetails = document.getElementById('modalDetails');
+    let pendingData = null;
+    let pendingId = null;
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      pendingId = await getUniqueId();
+      pendingData = {
+        firstName: document.getElementById('firstName').value,
+        middleInitial: document.getElementById('middleInitial').value,
+        lastName: document.getElementById('lastName').value,
+        pass: document.getElementById('password').value,
+        studentNumber: document.getElementById('studentNumber').value,
+        contactNumber: document.getElementById('contactNumber').value,
+        address: document.getElementById('address').value,
+        username: document.getElementById('username').value,
+        email: document.getElementById('email').value,
+        sectionId: sectionId
+      };
+
+      modalDetails.innerHTML = `
+        <p><b>ID:</b> ${pendingId}</p>
+        <p><b>Name:</b> ${pendingData.firstName} ${pendingData.lastName}</p>
+        <p><b>Username:</b> ${pendingData.username}</p>
+        <p><b>Email:</b> ${pendingData.email}</p>
+        <p><b>Section:</b> ${pendingData.sectionId || "Unknown"}</p>
+      `;
+      modal.style.display = 'flex';
+    });
+
+    document.getElementById('cancelBtn').addEventListener('click', () => {
+      modal.style.display = 'none';
+      pendingData = null;
+    });
+
+    document.getElementById('confirmBtn').addEventListener('click', async () => {
+      if (!pendingData || !pendingId) return;
+
+      try {
+        await rtdb.ref('StudentAccount/' + pendingId).set({
+          firstName: pendingData.firstName,
+          middleInitial: pendingData.middleInitial || '',
+          lastName: pendingData.lastName,
+          pass: pendingData.pass
+        });
+
+        await rtdb.ref('Cridentials/' + pendingId).set({
+          studentNumber: pendingData.studentNumber,
+          contactNumber: pendingData.contactNumber,
+          address: pendingData.address,
+          username: pendingData.username,
+          email: pendingData.email,
+          sectionId: pendingData.sectionId,
+          createdAt: Date.now(),
+          status: "active"
+        });
+
+        document.getElementById('successNotification').classList.add('show');
+        setTimeout(() => document.getElementById('successNotification').classList.remove('show'), 3000);
+
+        form.reset();
+        modal.style.display = 'none';
+      } catch (err) {
+        alert("Error: " + err.message);
+        console.error(err);
+      }
+    });
+  </script>
+</body>
+</html>

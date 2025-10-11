@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Evaluation & Control</title>
+
+<link rel="stylesheet" href="dashboard.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+
+<style>
+body { font-family:'Inter', sans-serif; background:#f8f9fa; margin:0; }
+.data-header { cursor:pointer; padding:12px; border-radius:8px; margin:6px 0; background:#fff; display:flex; justify-content:space-between; align-items:center; box-shadow:0 2px 4px rgba(0,0,0,0.05); transition:0.2s; }
+.data-header.open { background:#fefefe; }
+.data-header i { transition: transform 0.2s; }
+.data-header.open i { transform: rotate(90deg); }
+
+.chapter-body { display:none; padding:16px; background:#fff; border-radius:10px; margin-bottom:16px; box-shadow:0 2px 6px rgba(0,0,0,0.03); max-height:400px; overflow-y:auto; }
+.chapter-body::-webkit-scrollbar { width:8px; }
+.chapter-body::-webkit-scrollbar-thumb { background:#a72344; border-radius:10px; }
+.chapter-body::-webkit-scrollbar-track { background:#f1f1f1; }
+
+.tabs { display:flex; margin-bottom:15px; border-bottom:1px solid #ddd; }
+.tab { padding:10px 20px; cursor:pointer; background:#f5f5f5; border:1px solid #ddd; border-bottom:none; border-radius:5px 5px 0 0; margin-right:5px; transition:0.2s; }
+.tab.active { background:#fff; border-bottom:1px solid #fff; font-weight:600; color:#a72344; }
+
+.question-item { background:#fefefe; padding:14px; border-radius:8px; margin-bottom:12px; border:1px solid #eee; }
+.question-text { font-weight:600; color:#501121; margin-bottom:8px; }
+.question-options { display:grid; grid-template-columns: repeat(2,1fr); gap:8px; margin-bottom:8px; }
+.question-option { padding:8px 10px; background:#fff; border-radius:6px; border:1px solid #e7e7e7; }
+.correct-answer { background: rgba(76,201,240,0.08); border-color:#4cc9f0; color:#4cc9f0; font-weight:600; }
+.question-actions { display:flex; justify-content:flex-end; gap:10px; }
+
+.progress-table { width:100%; border-collapse: collapse; margin-top:10px; }
+.progress-table th, .progress-table td { border:1px solid #ddd; padding:8px; text-align:left; }
+.progress-table th { background:#f2f2f2; font-weight:bold; }
+
+.add-question-btn { background: linear-gradient(180deg,#a72344,#7a1024); color:#fff; padding:10px 16px; border-radius:10px; font-weight:700; border:none; cursor:pointer; margin-bottom:12px; transition:0.2s; }
+.add-question-btn:hover { transform:scale(1.03); }
+
+.save-question-btn { background: linear-gradient(180deg,#4cc9f0,#2aa6c8); color:#fff; padding:10px 18px; border-radius:10px; font-weight:700; border:none; cursor:pointer; transition:0.2s; }
+.save-question-btn:hover { transform:scale(1.03); }
+
+.cancel-btn { background:#fff; color:#a72344; padding:10px 16px; border-radius:8px; font-weight:600; border:1px solid #a72344; cursor:pointer; transition:0.2s; }
+.cancel-btn:hover { background:#fef1f1; }
+
+.edit-btn { background:#501121; color:#fff; padding:8px 12px; border-radius:8px; border:none; cursor:pointer; font-weight:700; transition:0.2s; }
+.edit-btn:hover { opacity:0.85; }
+
+.delete-btn { background: linear-gradient(180deg,#ff6b6b,#d32f2f); color:#fff; padding:8px 12px; border-radius:8px; border:none; cursor:pointer; font-weight:700; transition:0.2s; }
+.delete-btn:hover { opacity:0.85; }
+
+.modal { display:none; position:fixed; z-index:3000; left:0; top:0; width:100%; height:100%; background: rgba(0,0,0,0.45); align-items:center; justify-content:center; padding:20px; }
+.modal-content { background:white; width:100%; max-width:600px; border-radius:12px; padding:25px; box-shadow:0 8px 20px rgba(0,0,0,0.15); animation:fadeIn 0.2s ease; }
+@keyframes fadeIn { from{opacity:0; transform:translateY(-10px);} to{opacity:1; transform:translateY(0);} }
+
+.modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; }
+.modal-header h2 { color:#501121; font-size:22px; margin:0; }
+.close { font-size:24px; cursor:pointer; color:#6c757d; transition:0.2s; }
+.close:hover { color:#a72344; }
+
+.question-form input[type=text] { width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #ddd; }
+.question-form select { width:100%; padding:10px; margin-bottom:12px; border-radius:8px; border:1px solid #ddd; }
+
+#mcFields input[type=radio] { margin-right:6px; }
+#tfFields label { margin-right:20px; }
+
+/* Toggle switch */
+.switch { display:inline-flex; align-items:center; gap:8px; cursor:pointer; }
+.switch input[type=checkbox] { width:0; height:0; opacity:0; position:absolute; }
+.switch .slider { width:44px; height:24px; background:#ccc; border-radius:20px; position:relative; transition:background 0.18s ease; display:inline-block; vertical-align:middle; }
+.switch .slider::after { content:''; width:18px; height:18px; background:#fff; border-radius:50%; position:absolute; left:3px; top:3px; transition:transform 0.18s ease; box-shadow:0 1px 3px rgba(0,0,0,0.2); }
+.switch input[type=checkbox]:checked + .slider { background:#4cc9f0; }
+.switch input[type=checkbox]:checked + .slider::after { transform:translateX(20px); }
+.switch .switch-label { margin-left:6px; display:inline-block; vertical-align:middle; color:#333; }
+.settings-row { display:flex; gap:12px; align-items:center; margin-bottom:8px; flex-wrap:wrap; }
+
+.chapters-scroll { max-height:600px; overflow-y:auto; padding-right:6px; }
+.chapters-scroll::-webkit-scrollbar { width:8px; }
+.chapters-scroll::-webkit-scrollbar-thumb { background:#a72344; border-radius:10px; }
+.chapters-scroll::-webkit-scrollbar-track { background:#f1f1f1; }
+</style>
+</head>
+<body>
+<div class="container-wrap">
+  <div class="-main">
+    <div class="main-menu">
+      <img src="images/profile logo.PNG" width="60" height="60">
+      <p>Math teacher</p>
+      <div class="main-section">
+        <p>Main</p>
+        <a href="studentList.html">Student List</a>
+        <a href="studentProgress.html">Student Progress</a>
+        <a href="evalControl.html">Evaluation & Control</a>
+        <a href="accSecSetup.html">Account & Section Setup</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="-side">
+    <div class="top-bar">
+      <div style="flex:1"></div>
+      <div class="logout"><a href="mainWeb.html">Logout</a></div>
+    </div>
+
+    <div class="dash-window">
+      <div class="header-title"><h1>Evaluation & Control</h1></div>
+      <div class="data-container">
+        <p>Total Students: <span id="totalStudents">Loading...</span></p>
+        <div class="chapters-scroll">
+          <div id="chaptersContainer"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal" id="questionModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 id="modalTitle">Add New Question</h2>
+      <span class="close" onclick="closeQuestionModal()">&times;</span>
+    </div>
+    <div class="question-form">
+      <input type="text" id="questionText" placeholder="Enter your question">
+      <select id="questionType" onchange="toggleQuestionType()">
+        <option value="multipleChoice">Multiple Choice</option>
+        <option value="identification">Identification</option>
+        <option value="true_false">True/False</option>
+      </select>
+      <div id="mcFields">
+        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px;">
+          <label><input type="radio" name="correctOption" value="0"> <input type="text" id="optionText0" placeholder="Option A"></label>
+          <label><input type="radio" name="correctOption" value="1"> <input type="text" id="optionText1" placeholder="Option B"></label>
+          <label><input type="radio" name="correctOption" value="2"> <input type="text" id="optionText2" placeholder="Option C"></label>
+          <label><input type="radio" name="correctOption" value="3"> <input type="text" id="optionText3" placeholder="Option D"></label>
+        </div>
+        <div class="settings-row">
+          <label class="switch"><input type="checkbox" id="optCaseSensitive"><span class="slider"></span><span class="switch-label" style="font-size:13px;">Case sensitive</span></label>
+          <label class="switch"><input type="checkbox" id="optOrderMatters"><span class="slider"></span><span class="switch-label" style="font-size:13px;">Order matters</span></label>
+          <label class="switch"><input type="checkbox" id="optRandomizeOptions"><span class="slider"></span><span class="switch-label" style="font-size:13px;">Randomize options</span></label>
+        </div>
+      </div>
+      <div id="idFields" style="display:none;">
+        <input type="text" id="identificationAnswer" placeholder="Correct answer">
+        <div style="margin-top:8px;" class="settings-row">
+          <label class="switch"><input type="checkbox" id="idCaseSensitive"><span class="slider"></span><span class="switch-label" style="font-size:13px;">Case sensitive</span></label>
+          <label class="switch"><input type="checkbox" id="idOrderMatters"><span class="slider"></span><span class="switch-label" style="font-size:13px;">Order matters</span></label>
+        </div>
+      </div>
+      <div id="tfFields" style="display:none;">
+        <label><input type="radio" name="trueFalseAnswer" value="True"> True</label>
+        <label><input type="radio" name="trueFalseAnswer" value="False"> False</label>
+      </div>
+      <div style="text-align:right; margin-top:12px;">
+        <button class="save-question-btn" onclick="saveQuestion()">Save</button>
+        <button class="cancel-btn" onclick="closeQuestionModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyBkmM4hueT7PlnvV8FeRdp8g4rk0qQQrn4",
+  authDomain: "midnightmathscape.firebaseapp.com",
+  databaseURL: "https://midnightmathscape-e8e70-default-rtdb.firebaseio.com/",
+  projectId: "midnightmathscape",
+  storageBucket: "midnightmathscape.appspot.com",
+  messagingSenderId: "1038485290511",
+  appId: "1:1038485290511:web:c8aa78fbcd5266b706ed7a"
+};
+firebase.initializeApp(firebaseConfig);
+const rtdb = firebase.database();
+
+// Count students from StudentAccount in realtime
+const totalStudentsEl = document.getElementById('totalStudents');
+rtdb.ref('StudentAccount').on('value', snap => {
+  if (!snap.exists()) {
+    totalStudentsEl.textContent = '0';
+    return;
+  }
+  const students = snap.val();
+  totalStudentsEl.textContent = Object.keys(students).length;
+});
+
+let editingQuestionId = null;
+let currentChapter = null;
+
+const chapterTitles = {
+  chapter1:"Chapter 1: Midnight Wake", chapter2:"Chapter 2", chapter3:"Chapter 3",
+  chapter4:"Chapter 4", chapter5:"Chapter 5", chapter6:"Chapter 6",
+  chapter7:"Chapter 7", chapter8:"Chapter 8", chapter9:"Chapter 9",
+  chapter10:"Chapter 10", chapter11:"Chapter 11", chapter12:"Chapter 12"
+};
+
+// Build chapters UI
+const container = document.getElementById('chaptersContainer');
+Object.keys(chapterTitles).forEach(ch => {
+  const header = document.createElement('div');
+  header.className = 'data-header';
+  header.dataset.chapter = ch;
+  header.innerHTML = `<h3>${chapterTitles[ch]}</h3><i class="fa-solid fa-chevron-right"></i>`;
+  const body = document.createElement('div');
+  body.className = 'chapter-body';
+  body.id = 'body-'+ch;
+  body.innerHTML = `
+    <div class="tabs">
+      <div class="tab active" data-tab="questions">Question Management</div>
+      <div class="tab" data-tab="progress">Student Progress</div>
+    </div>
+    <div id="questions-tab-${ch}"></div>
+    <div id="progress-tab-${ch}" style="display:none;"></div>
+  `;
+  container.appendChild(header);
+  container.appendChild(body);
+
+  header.addEventListener('click', () => {
+    const open = header.classList.contains('open');
+    document.querySelectorAll('.data-header').forEach(h=>h.classList.remove('open'));
+    document.querySelectorAll('.chapter-body').forEach(b=>b.style.display='none');
+    if(!open){ header.classList.add('open'); body.style.display='block'; loadChapterQuestions(ch); }
+  });
+});
+
+// Tabs
+document.addEventListener('click', e=>{
+  if(e.target.classList.contains('tab')){
+    const tab=e.target, ch=tab.closest('.chapter-body').id.replace('body-','');
+    tab.parentNode.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById(`questions-tab-${ch}`).style.display=tab.dataset.tab==='questions'?'block':'none';
+    document.getElementById(`progress-tab-${ch}`).style.display=tab.dataset.tab==='progress'?'block':'none';
+    if(tab.dataset.tab==='progress'){ subscribeStudentProgress(ch); }
+  }
+});
+
+// Get next sequential question index
+async function getNextQuestionIndex(ch){
+  const snap = await rtdb.ref(`quizzes/${ch}/questions`).get();
+  if(!snap.exists()) return 1;
+  const indexes = [];
+  snap.forEach(child=>indexes.push(parseInt(child.key)));
+  return Math.max(...indexes)+1;
+}
+
+// Load questions
+async function loadChapterQuestions(ch){
+  currentChapter = ch;
+  const container = document.getElementById(`questions-tab-${ch}`);
+  container.innerHTML = `<button class="add-question-btn" onclick="openQuestionModal('${ch}')"><i class="fas fa-plus"></i> Add Question</button><div id="questions-list-${ch}">Loading...</div>`;
+  const list = document.getElementById(`questions-list-${ch}`);
+  const snap = await rtdb.ref(`quizzes/${ch}/questions`).get();
+  if(!snap.exists()){ list.innerHTML="<p>No questions yet</p>"; return; }
+  list.innerHTML = "";
+    snap.forEach(child=>{
+    const q = child.val(), id = child.key;
+    let optionsHtml="";
+    if(q.type==="multiple_choice"){
+      // respect randomizeOptions: when randomizing, we must still mark correct answer
+      const choices = Array.isArray(q.choices) ? q.choices.slice() : [];
+      let displayChoices = choices.slice();
+      if(q.randomizeOptions){ displayChoices = shuffle(displayChoices); }
+      displayChoices.forEach(opt=>{
+        const correct = (q.orderMatters) ? (q.answer===opt) : (q.answer===opt);
+        optionsHtml += `<div class="question-option ${correct?'correct-answer':''}">${opt}</div>`;
+      });
+      optionsHtml += `<p style="font-size:12px;color:#666;margin-top:6px">Case sensitive: ${q.caseSensitive? 'Yes':'No'} &nbsp; | &nbsp; Order matters: ${q.orderMatters? 'Yes':'No'} &nbsp; | &nbsp; Randomize: ${q.randomizeOptions? 'Yes':'No'}</p>`;
+    } else {
+      optionsHtml = `<div class="question-option"><b>Answer:</b> ${q.answer}</div>`;
+    }
+    list.innerHTML += `
+      <div class="question-item">
+        <div class="question-text">[${q.questionIndex}] ${q.question}</div>
+        <div class="question-options">${optionsHtml}</div>
+        <p><b>Show Answer:</b> ${q.showAnswer}</p>
+        <div class="question-actions">
+          <button class="edit-btn" onclick="openEditModal('${ch}','${id}')">Edit</button>
+          <button class="delete-btn" onclick="deleteQuestion('${ch}','${id}')">Delete</button>
+        </div>
+      </div>`;
+  });
+}
+
+// --- Preview / Evaluation helper (instructor testing) ---
+// Render a simple preview box at the bottom of the questions list for the current chapter
+function renderPreviewBox(ch){
+  const container = document.getElementById(`questions-tab-${ch}`);
+  // append preview area if not present
+  if(!document.getElementById('previewArea')){
+    const preview = document.createElement('div');
+    preview.id = 'previewArea';
+    preview.style.marginTop = '12px';
+    preview.innerHTML = `<div style="padding:12px;border-radius:8px;background:#fff;border:1px solid #eee;"><h4>Preview / Test</h4><div id='previewContent'>Select a question from the list to preview it here (click Edit then Close to return)</div></div>`;
+    container.appendChild(preview);
+  }
+}
+
+// Evaluate answer against a question object q and a provided response
+// For multiple_choice: response can be the option text (string) or array of strings if multiple answers expected
+function evaluateAnswer(q, response){
+  if(!q) return false;
+  if(q.type === 'multiple_choice'){
+    // normalize based on caseSensitive
+    const caseSensitive = !!q.caseSensitive;
+    const normalize = v => caseSensitive ? v : String(v).toLowerCase().trim();
+    // if orderMatters is used, comparing arrays (not typical for single-answer MC)
+    if(Array.isArray(response) && Array.isArray(q.answer)){
+      if(q.orderMatters){
+        for(let i=0;i<q.answer.length;i++) if(normalize(response[i]) !== normalize(q.answer[i])) return false;
+        return true;
+      } else {
+        // compare as sets
+        const a = response.map(normalize).sort(), b = q.answer.map(normalize).sort();
+        return JSON.stringify(a) === JSON.stringify(b);
+      }
+    }
+    // single-answer multiple choice
+    const resp = normalize(response);
+    const ans = normalize(q.answer);
+    return resp === ans;
+  } else if(q.type === 'identification'){
+    const caseSensitive = !!q.caseSensitive;
+    const normalize = v => caseSensitive ? v.trim() : String(v).toLowerCase().trim();
+    // orderMatters for identification could imply exact match on tokens order; default exact
+    return normalize(response) === normalize(q.answer);
+  } else if(q.type === 'true_false'){
+    return String(response).toLowerCase() === String(q.answer).toLowerCase();
+  }
+  return false;
+}
+
+// Shuffle helper
+function shuffle(array){
+  for(let i = array.length -1; i>0; i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+
+// Fetch student name
+async function getStudentName(sid){
+  const snap = await rtdb.ref("StudentAccount/"+sid).get();
+  if(!snap.exists()) return sid;
+  const acc = snap.val();
+  // prefer canonical camelCase keys, fallback to older lowercase ones
+  const fn = acc.firstName || acc.firstname || acc.name || '';
+  const ln = acc.lastName || acc.lastname || '';
+  const full = (fn + ' ' + ln).trim();
+  return full || sid;
+}
+
+// Subscribe to student progress (real-time)
+function subscribeStudentProgress(ch){
+  const container=document.getElementById(`progress-tab-${ch}`);
+  container.innerHTML="<p>Loading...</p>";
+
+  rtdb.ref().on("value", async snapshot=>{
+    let html="<table class='progress-table'><tr><th>Student</th><th>Score</th><th>Date</th><th>Time Spent</th><th>Attempts</th></tr>";
+    const allData = snapshot.val();
+    const quizResults = allData.QuizResults || {};
+    const studentsProgress = allData.StudentsProgress || {};
+
+    let rows = [];
+
+    // QuizResults
+    for(const sid in quizResults){
+      const studentName = await getStudentName(sid);
+      if(quizResults[sid][ch]){
+        let attempts = Object.keys(quizResults[sid][ch]).length;
+        for(const key in quizResults[sid][ch]){
+          const res = quizResults[sid][ch][key];
+          rows.push({
+            student: studentName,
+            score: res.score||0,
+            date: res.date||"",
+            timeSpent: res.timeSpent||0,
+            attempts: attempts
+          });
+        }
+      }
+    }
+
+    // StudentsProgress
+    for(const sid in studentsProgress){
+      const studentName = await getStudentName(sid);
+      if(studentsProgress[sid][ch]){
+        let attempts = Object.keys(studentsProgress[sid][ch]).length;
+        for(const key in studentsProgress[sid][ch]){
+          const res = studentsProgress[sid][ch][key];
+          rows.push({
+            student: studentName,
+            score: res.keysFound||0,
+            date: res.date||"",
+            timeSpent: res.timeSpent||0,
+            attempts: attempts
+          });
+        }
+      }
+    }
+
+    // Sort alphabetically by student name
+    rows.sort((a,b)=>a.student.localeCompare(b.student));
+
+    // Build table rows
+    rows.forEach(r=>{
+      html+=`<tr><td>${r.student}</td><td>${r.score}</td><td>${r.date}</td><td>${r.timeSpent} mins</td><td>${r.attempts}</td></tr>`;
+    });
+
+    html+="</table>";
+    container.innerHTML=html;
+  });
+}
+
+// Modal helpers
+function openQuestionModal(ch){ currentChapter=ch; editingQuestionId=null; resetModal(); document.getElementById('questionModal').style.display='flex'; }
+function closeQuestionModal(){ document.getElementById('questionModal').style.display='none'; }
+function toggleQuestionType(){ const t=document.getElementById('questionType').value; document.getElementById('mcFields').style.display=t==='multipleChoice'?'block':'none'; document.getElementById('idFields').style.display=t==='identification'?'block':'none'; document.getElementById('tfFields').style.display=t==='true_false'?'block':'none'; }
+function resetModal(){ document.getElementById('modalTitle').innerText="Add New Question"; document.getElementById('questionText').value=""; document.getElementById('questionType').value="multipleChoice"; toggleQuestionType(); ["0","1","2","3"].forEach(i=>{document.getElementById('optionText'+i).value=""; document.querySelector(`input[name='correctOption'][value='${i}']`).checked=false;}); document.getElementById('identificationAnswer').value=""; document.querySelectorAll("input[name='trueFalseAnswer']").forEach(r=>r.checked=false); }
+
+// Reset extended settings
+function resetExtendedSettings(){
+  document.getElementById('optCaseSensitive').checked = false;
+  document.getElementById('optOrderMatters').checked = false;
+  document.getElementById('optRandomizeOptions').checked = false;
+  document.getElementById('idCaseSensitive').checked = false;
+  document.getElementById('idOrderMatters').checked = false;
+}
+
+// Save question
+async function saveQuestion(){
+  const text=document.getElementById('questionText').value.trim();
+  const type=document.getElementById('questionType').value;
+  if(!text){alert("Enter question"); return;}
+  let payload={question:text, showAnswer:true};
+  if(type==="multipleChoice"){
+    const opts=[0,1,2,3].map(i=>document.getElementById('optionText'+i).value.trim());
+    const checked=document.querySelector("input[name='correctOption']:checked");
+    if(!checked){alert("Select correct option"); return;}
+    if(opts.some(o=>!o)){alert("Fill all options"); return;}
+    payload.choices=opts; payload.answer=opts[checked.value]; payload.type="multiple_choice";
+    // extended options
+    payload.caseSensitive = !!document.getElementById('optCaseSensitive').checked;
+    payload.orderMatters = !!document.getElementById('optOrderMatters').checked;
+    payload.randomizeOptions = !!document.getElementById('optRandomizeOptions').checked;
+  } else if(type==="identification"){
+    const ans=document.getElementById('identificationAnswer').value.trim();
+    if(!ans){alert("Enter answer"); return;}
+    payload.answer=ans; payload.type="identification";
+    payload.caseSensitive = !!document.getElementById('idCaseSensitive').checked;
+    payload.orderMatters = !!document.getElementById('idOrderMatters').checked;
+  } else if(type==="true_false"){
+    const checked=document.querySelector("input[name='trueFalseAnswer']:checked");
+    if(!checked){alert("Select True/False"); return;}
+    payload.answer=checked.value; payload.type="true_false";
+  }
+
+  const ref=rtdb.ref(`quizzes/${currentChapter}/questions`);
+  if(editingQuestionId){
+    await ref.child(editingQuestionId).set(payload);
+    alert("Question updated!");
+  } else {
+    const nextIndex = await getNextQuestionIndex(currentChapter);
+    payload.questionIndex = nextIndex;
+    await ref.child(nextIndex.toString()).set(payload);
+    alert("Question added!");
+  }
+  closeQuestionModal();
+  loadChapterQuestions(currentChapter);
+}
+
+// Edit
+async function openEditModal(ch,id){
+  currentChapter=ch; editingQuestionId=id; resetModal();
+  const snap=await rtdb.ref(`quizzes/${ch}/questions/${id}`).get();
+  if(!snap.exists()){alert("Missing"); return;}
+  const q = snap.val();
+  document.getElementById('modalTitle').innerText="Edit Question";
+  document.getElementById('questionText').value=q.question;
+  document.getElementById('questionType').value=q.type==="multiple_choice"?"multipleChoice":q.type;
+  toggleQuestionType();
+  if(q.type==="multiple_choice"){
+    q.choices.forEach((opt,i)=>{document.getElementById('optionText'+i).value=opt; if(opt===q.answer) document.querySelector(`input[name='correctOption'][value='${i}']`).checked=true;});
+    // populate extended settings
+    document.getElementById('optCaseSensitive').checked = !!q.caseSensitive;
+    document.getElementById('optOrderMatters').checked = !!q.orderMatters;
+    document.getElementById('optRandomizeOptions').checked = !!q.randomizeOptions;
+  } else if(q.type==="identification"){ document.getElementById('identificationAnswer').value=q.answer; }
+  else if(q.type==="true_false"){ document.querySelector(`input[name='trueFalseAnswer'][value='${q.answer}']`).checked=true; }
+  document.getElementById('questionModal').style.display='flex';
+}
+
+// Delete
+async function deleteQuestion(ch,id){
+  if(confirm("Delete this question?")){
+    await rtdb.ref(`quizzes/${ch}/questions/${id}`).remove();
+    loadChapterQuestions(ch);
+  }
+}
+</script>
+</body>
+</html>

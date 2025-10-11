@@ -1,0 +1,178 @@
+/* -- default --  */
+/* -- First Page -- */
+
+/* -- Formats the body -- */
+body {
+    height: 100%;
+    overflow: hidden;
+    height: calc(var(--vh, 1vh) * 100); 
+}
+
+/* -- Sets a box dividing into two sections -- */
+.container-wrap {
+  display: flex;
+  flex-direction: column-reverse;
+  background-color: var(--color-primary-p-50);
+  width: 100%;
+  height: 100%;
+
+  /* -- Structure of hte Main Content -- */
+  .-main {
+    display: flex;
+    align-items: flex-start;
+    flex-grow: 1;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    justify-content: center;
+  }
+  /* -- Structure of the Side login -- */
+  .-side {
+    display: flex;
+    justify-content: left;
+    align-items: center;
+    height: 90px;
+    /* background-color: #00b894; */
+  }
+}
+
+/* -- Adjusts the two section based on screen -- */
+@media screen {
+  .container-wrap {
+    display: grid;
+    /* -- Below is their adjustable width  -- */
+    grid-template-columns: 2fr 2fr;
+    background-color: #fefefe;
+
+    .-main {
+      align-items: center;
+    }
+
+    .-side {
+      height: auto;
+      position: relative;
+      /* padding: 40px; */
+    }
+  }
+}
+  
+/* -- Below is for the main image -- */
+.main-image img {
+    border-radius: 10%;
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+/* -- Below is for the login form section -- */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+/* -- bg and stuff --  */
+body {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: 'Inter', sans-serif;
+}
+/* -- Container w/ perspective --  */
+.flip-container {
+    perspective: 2000px;
+    width: 380px;
+    height: 500px;
+    position: relative;
+}
+.flip-inner {
+    width: 100%;
+    height: 100%;
+    transition: transform 1s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-style: preserve-3d;
+    position: relative;
+}
+/* -- Common styles for front/back sides | This is the login box -- */
+.flip-front {
+    width: 100%;
+    height: 100%;
+    padding: 40px 30px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    backface-visibility: hidden;
+}
+/* -- Heading styles -- */
+h2 {
+    font-size: 2.5rem;
+    margin-bottom: 20px;
+    color: #8A1532;
+    font-weight: 600;
+    text-align: left;
+}
+.flip-front h3 {
+    margin-bottom: 5%;
+    color: #d6d6d6;
+}
+.flip-front a {
+    margin-bottom: 3%;
+    color: #666;
+}
+.flip-front img {
+   filter: opacity(50%);
+}
+p {
+    font-size: small;
+    color: #acacac;
+}
+/* -- Form styles -- */
+form {
+    display: flex;
+    flex-direction: column;
+}
+/* -- ADjusts spacing -- */
+.input-group {
+    position: relative;
+    margin-bottom: 15px;
+}
+.input-group i {
+    position: absolute;
+    top: 50%;
+    left: 20px;
+    transform: translateY(-50%);
+    color: #666;
+    font-size: 1.1rem;
+    transition: color 0.3s;
+}
+/* -- Input field styles with padding -- */
+input {
+    width: 150%;
+    padding: 12px 12px 12px 40px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    font-size: 1rem;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+input:focus {
+    border-color: #66a6ff;
+    box-shadow: 0 0 8px rgba(102, 166, 255, 0.3);
+    outline: none;
+}
+/* -- Button styles -- */
+button {
+  padding: 14px;
+  margin-top: 20px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #8A1532, #8A1532);
+  color: #fff;
+  font-size: 1.1rem;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.3s, transform 0.2s;
+}
+button:hover {
+  background: linear-gradient(135deg, #d83e55, #ff5bb2);
+  transform: translateY(-2px);
+}
+

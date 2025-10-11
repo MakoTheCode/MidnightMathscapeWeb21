@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Account & Section Setup</title>
+
+<link rel="stylesheet" href="dashboard.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+<style>
+/* --- Your original design styles --- */
+#accsetup { color: white; font-weight: 600; }
+.section-card { width: 250px; background: white; border-radius: 10px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: flex; flex-direction: column; justify-content: space-between; }
+.section-card { position: relative; }
+.section-card:hover { transform: translateY(-3px); box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
+.section-container { display: flex; flex-wrap: wrap; gap: 20px; justify-content: flex-start; max-height: 70vh; overflow-y: auto; padding: 10px; }
+.add-btn { background:#8A1532;color:#fff;padding:8px 10px;border-radius:8px;border:none;cursor:pointer; }
+.add-btn:hover { background:#501121; }
+.student-count { background: #f5f5f5; padding: 5px 10px; border-radius: 15px; margin-top: 10px; display: inline-block; }
+.delete-btn { position: absolute; top: 15px; right: 15px; background: #e74c3c; color: white; border: none; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.3s; }
+.delete-btn:hover { background: #c0392b; }
+
+/* Modal */
+.account-modal { display:none; position:fixed; z-index:4000; left:0; top:0; width:100%; height:100%; background: rgba(0,0,0,0.45); align-items:center; justify-content:center; padding:20px; }
+.account-modal .modal-content { background:white; width:100%; max-width:900px; border-radius:12px; padding:25px; box-shadow:0 8px 20px rgba(0,0,0,0.15); max-height:90vh; overflow:auto; }
+.account-modal .close { font-size:24px; cursor:pointer; color:#6c757d; }
+.account-modal .close:hover { color:#a72344; }
+ .account-modal .modal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
+ .account-modal h2 { margin:0; font-size:1.5em; color:#8A1532; }
+ .account-modal .form-row { display:flex; gap:15px; margin-bottom:15px; }
+ .account-modal .form-group { flex:1; }
+ .account-modal .form-group label { display:block; margin-bottom:5px; font-weight:500; }
+ .account-modal .form-input { width:100%; padding:8px 12px; border:1px solid #ddd; border-radius:4px; box-sizing:border-box; }
+ .account-modal .save-question-btn { background:#8A1532; color:#fff; border:none; padding:8px 16px; border-radius:8px; cursor:pointer; margin-left:10px; }
+ .account-modal .save-question-btn:hover { background:#501121; }
+ .account-modal .cancel-btn { background:#ddd; color:#333; border:none; padding:8px 16px; border-radius:8px; cursor:pointer; }
+ .account-modal .cancel-btn:hover { background:#bbb; }
+
+@keyframes fadeIn { from{opacity:0; transform:translateY(-10px);} to{opacity:1; transform:translateY(0);} }
+</style>
+</head>
+<body>
+<div class="container-wrap">
+  <div class="-main">
+    <div class="main-menu">
+      <img src="images/profile logo.PNG" width="60" height="60">
+      <p>Math teacher</p>
+      <div class="main-section">
+        <p>Main</p>
+        <a href="studentList.html">Student List</a>
+        <a href="studentProgress.html">Student Progress</a>
+        <a href="evalControl.html">Evaluation & Control</a>
+        <a href="accSecSetup.html">Account & Section Setup</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="-side">
+    <div class="top-bar">
+  <div style="flex:1"></div>
+  <div class="logout"><a href="#" id="logoutLink">Logout</a></div>
+    </div>
+
+    <div class="dash-window">
+      <div class="header-title"><h1>Account & Section Setup</h1></div>
+      <div class="data-container">
+        <p>Total Sections: <span id="totalSections">0</span></p>
+
+        <div class="section-container">
+          <div class="card" style="width:100%; max-width:920px; margin-bottom:20px;">
+            <h3 style="cursor:pointer;user-select:none;" id="toggleCreateSection">Create New Section <span id="toggleIcon" style="font-size:1.2em;">&#x25BC;</span></h3>
+            <div class="section-form" id="createSectionFormWrap" style="display:none;">
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Section Name</label>
+                  <input type="text" id="newSectionName" class="form-input" placeholder="e.g. Kamagong">
+                </div>
+              </div>
+              <div style="margin-top:10px;">
+                <button id="saveSectionBtn" class="add-btn" style="width:auto;">Save Section</button>
+              </div>
+            </div>
+          </div>
+
+          <div id="sectionListWrap" style="width:100%; max-width:920px;">
+            <h3 style="color:#501121; margin-bottom:8px;">Sections</h3>
+            <div id="sectionContainer" class="section-container" style="padding:8px;"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Student Modal -->
+<div class="account-modal" id="accountModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Create Student Account</h2>
+      <span class="close" id="closeAccountModal">&times;</span>
+    </div>
+
+    <div class="section-info" style="margin-bottom:16px;">
+      <i class="fas fa-users-class"></i> Section: <strong id="modalSectionName">Loading...</strong>
+    </div>
+
+    <form id="studentModalForm">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Student Number</label>
+          <input type="text" id="modalStudentNumber" class="form-input" required>
+        </div>
+        <div class="form-group">
+          <label>Contact Number</label>
+          <input type="tel" id="modalContactNumber" class="form-input" required>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Address</label>
+          <input type="text" id="modalAddress" class="form-input" required>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Username</label>
+          <input type="text" id="modalUsername" class="form-input" required>
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="modalEmail" class="form-input" required>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Last Name</label>
+          <input type="text" id="modalLastname" class="form-input" required>
+        </div>
+        <div class="form-group">
+          <label>First Name</label>
+          <input type="text" id="modalFirstname" class="form-input" required>
+        </div>
+        <div class="form-group">
+          <label>Middle Initial</label>
+          <input type="text" id="modalMiddleInitial" class="form-input" maxlength="2" placeholder="A." />
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="modalPassword" class="form-input" required>
+        </div>
+      </div>
+
+      <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:12px;">
+        <button type="button" class="cancel-btn" id="cancelModalBtn">Cancel</button>
+        <button type="submit" class="save-question-btn">Save Student</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="successToast" style="display:none; position:fixed; right:20px; bottom:20px; background:#4cc9f0; color:#fff; padding:12px 18px; border-radius:10px; z-index:5000;">
+  Student saved.
+</div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+
+<script>
+// --- Integrated logic from user, preserving UI ---
+const firebaseConfig = {
+  apiKey: "AIzaSyBkmM4hueT7PlnvV8FeRdp8g4rk0qQQrn4",
+  authDomain: "midnightmathscape.firebaseapp.com",
+  databaseURL: "https://midnightmathscape-e8e70-default-rtdb.firebaseio.com/",
+  projectId: "midnightmathscape",
+  storageBucket: "midnightmathscape.appspot.com",
+  messagingSenderId: "1038485290511",
+  appId: "1:1038485290511:web:c8aa78fbcd5266b706ed7a",
+};
+firebase.initializeApp(firebaseConfig);
+const rtdb = firebase.database();
+
+const totalSectionsEl = document.getElementById('totalSections');
+const sectionContainer = document.getElementById('sectionContainer');
+const saveSectionBtn = document.getElementById('saveSectionBtn');
+
+const accountModal = document.getElementById('accountModal');
+const closeAccountModal = document.getElementById('closeAccountModal');
+const cancelModalBtn = document.getElementById('cancelModalBtn');
+const studentModalForm = document.getElementById('studentModalForm');
+const modalSectionNameEl = document.getElementById('modalSectionName');
+
+let activeSectionId = null;
+let activeSectionName = '';
+
+// Collapsible Create Section
+const createSectionFormWrap = document.getElementById('createSectionFormWrap');
+const toggleCreateSection = document.getElementById('toggleCreateSection');
+const toggleIcon = document.getElementById('toggleIcon');
+toggleCreateSection.addEventListener('click', () => {
+  if (createSectionFormWrap.style.display === 'none') {
+    createSectionFormWrap.style.display = 'block';
+    toggleIcon.innerHTML = '&#x25B2;'; // up arrow
+  } else {
+    createSectionFormWrap.style.display = 'none';
+    toggleIcon.innerHTML = '&#x25BC;'; // down arrow
+  }
+});
+// Save Section
+saveSectionBtn.addEventListener('click', async () => {
+  const name = document.getElementById('newSectionName').value.trim();
+  if(!name){ alert('Enter section name'); return; }
+  const newRef = rtdb.ref('SectionList').push();
+  await newRef.set({ name, createdAt: Date.now() });
+  document.getElementById('newSectionName').value='';
+  createSectionFormWrap.style.display = 'none';
+  toggleIcon.innerHTML = '&#x25BC;';
+});
+
+/* Real-time Section Listener */
+rtdb.ref('SectionList').on('value', snap => {
+  sectionContainer.innerHTML = '';
+  if(!snap.exists()){ totalSectionsEl.textContent='0'; return; }
+  const data = snap.val();
+  const entries = Object.entries(data);
+  totalSectionsEl.textContent = entries.length;
+
+  entries.forEach(([id, sec]) => {
+    const card = document.createElement('div');
+    card.className='section-card';
+    card.innerHTML = `
+      <div>
+        <h4 style="color:#501121;margin:0;">${sec.name}</h4>
+        <div class="student-count">Loading...</div>
+      </div>
+      <div style="margin-top:10px;">
+        <button class="add-btn" data-id="${id}">Add Student</button>
+        <button class="delete-btn" data-id="${id}"><i class="fas fa-trash"></i></button>
+      </div>
+    `;
+    sectionContainer.appendChild(card);
+
+    const addBtn = card.querySelector('.add-btn');
+    addBtn.addEventListener('click', ()=>openAccountModalForSection(id, sec.name));
+
+    const delBtn = card.querySelector('.delete-btn');
+    delBtn.addEventListener('click', async ()=>{
+      if(!confirm('Delete this section?')) return;
+      await rtdb.ref(`SectionList/${id}`).remove();
+    });
+
+    updateStudentCount(id, card);
+  });
+});
+
+/* Update Student Count */
+async function updateStudentCount(sectionId, cardEl){
+  const snap = await rtdb.ref('Cridentials').orderByChild('sectionId').equalTo(sectionId).once('value');
+  const count = snap.exists()? Object.keys(snap.val()).length : 0;
+  const sc = cardEl.querySelector('.student-count');
+  if(sc) sc.textContent=`${count} Students`;
+}
+
+/* Account Modal */
+function openAccountModalForSection(id, name){
+  activeSectionId = id;
+  activeSectionName = name;
+  modalSectionNameEl.textContent = name;
+  studentModalForm.reset();
+  accountModal.style.display='flex';
+}
+closeAccountModal.addEventListener('click', ()=>accountModal.style.display='none');
+cancelModalBtn.addEventListener('click', ()=>accountModal.style.display='none');
+window.addEventListener('click', ev=>{ if(ev.target===accountModal) accountModal.style.display='none'; });
+
+/* Generate 4-digit unique ID */
+async function generateUniqueId(){
+  let id, exists=true;
+  while(exists){
+    id=Math.floor(1000+Math.random()*9000).toString();
+    const snap=await rtdb.ref(`StudentAccount/${id}`).get();
+    exists=snap.exists();
+  }
+  return id;
+}
+
+/* Submit Student Form */
+studentModalForm.addEventListener('submit', async e=>{
+  e.preventDefault();
+  if(!activeSectionId) return alert('No section selected');
+
+  const firstname=document.getElementById('modalFirstname').value.trim();
+  const lastname=document.getElementById('modalLastname').value.trim();
+  const pass=document.getElementById('modalPassword').value;
+  const studentNumber=document.getElementById('modalStudentNumber').value.trim();
+  const contactNumber=document.getElementById('modalContactNumber').value.trim();
+  const address=document.getElementById('modalAddress').value.trim();
+  const username=document.getElementById('modalUsername').value.trim();
+  const email=document.getElementById('modalEmail').value.trim();
+
+  if(!firstname||!lastname||!pass||!username||!email) return alert('Fill required fields');
+
+  const newId=await generateUniqueId();
+
+  // use canonical 'pass' key to match existing DB usage and avoid duplication
+  const middleInitialVal = (document.getElementById('modalMiddleInitial').value||'').trim();
+  await rtdb.ref(`StudentAccount/${newId}`).set({ firstName: firstname, lastName: lastname, pass, middleInitial: middleInitialVal });
+  await rtdb.ref(`Cridentials/${newId}`).set({ studentNumber,contactNumber,address,username,email,sectionId:activeSectionId,createdAt:Date.now(),status:"active", middleInitial: middleInitialVal });
+  // Add student to section's students node
+  await rtdb.ref(`SectionList/${activeSectionId}/students/${newId}`).set(true);
+
+  document.getElementById('successToast').style.display='block';
+  setTimeout(()=>document.getElementById('successToast').style.display='none',2500);
+
+  accountModal.style.display='none';
+});
+</script>
+</body>
+</html>

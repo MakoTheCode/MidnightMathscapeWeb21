@@ -1,0 +1,316 @@
+/* --- Dashboard styles --- */
+/* -- Formats the body -- */
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+body {
+    overflow: hidden;
+    font-family: 'Inter', sans-serif;
+    height: calc(var(--vh, 1vh) * 100); 
+    background-color: #09ffce;
+}
+
+/* -- Sets a box dividing into two sections -- */
+.container-wrap {
+  display: flex;
+  flex-direction: column-reverse;
+  background-color: var(--color-primary-p-50);
+  width: 100%;
+  height: 100%;
+
+  /* -- Structure of hte Main Content -- */
+  .-main {
+    /* display: flex; */
+    align-items: flex-start;
+    flex-grow: 1;
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    justify-content: center;
+    background-color: #8A1532;
+  }
+  /* -- Structure of the Side login -- */
+  .-side {
+    /* display: flex; */
+    justify-content: left;
+    /* align-items: center; */
+    height: 90px;
+    background-color: #F4F4F4;
+  }
+}
+
+/* -- Adjusts the two section based on screen -- */
+@media screen {
+  .container-wrap {
+    display: grid;
+    /* -- Below is their adjustable width  -- */
+    grid-template-columns: .5fr 2fr;
+    background-color: #fefefe;
+
+    .-main {
+      padding-top: 25%;
+    }
+
+    .-side {
+      height: auto;
+      position: relative;
+      /* padding: 40px; */
+    }
+  }
+}
+
+/* -- Styles -- */
+.main-menu {
+    color: #F0FFDD;
+    text-align: center;
+    overflow: hidden;
+}
+.main-menu h2 {
+    font-size: large;
+}
+/* -- main section -- */
+.main-section {
+    display: grid;
+    line-height: 2;
+    text-align: left;
+    margin-top: 20%;
+    padding-left: 15%;
+}
+.main-section a {
+    text-decoration: none;
+    color: #F0FFDD;
+    font-weight: 300;
+}
+.main-section p {
+    filter: opacity(50%);
+}
+/* -- settings section -- */
+.settings-section {
+    display: grid;
+    line-height: 2;
+    text-align: left;
+    margin-top: 20%;
+    padding-left: 15%;
+}
+.settings-section p {
+    filter: opacity(50%);
+}
+.settings-section a {
+    text-decoration: none;
+    color: #F0FFDD;
+    font-weight: 300;
+}
+/* -- Top bar -- */
+.top-bar {
+    background-color: #FFFFFF;
+    /* position: fixed; */
+    top: 0;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 80px;
+    box-shadow: 0 15px 100px rgba(0,0,0,0.1);
+}
+.top-bar a {
+    text-decoration: none;
+    color: rgb(31, 31, 31);
+    font-weight: 700;
+    padding-right: 10%;
+}
+.top-bar i {
+    font-size: large;
+}
+/* -- Logout area -- */
+.logout {
+    /* margin: auto; */
+    margin-right: 7%;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    max-width: auto;
+}
+/* -- info section | anything you want here -- */
+.info {
+    margin:auto;
+    margin-left: 20px;
+    font-size: 39px;
+    font-weight: 200;
+    margin-bottom: 10px;
+}
+/* -- Main Dashboard window -- */
+.dash-window {
+    padding-top: 3%;
+    padding-left: 5%;
+    color: #501121;
+    width: auto;
+}
+.header-title h1 {
+    background-image: linear-gradient(#c6284f, #541122);
+    color: transparent;
+    background-clip: text;
+    font-size: 50px;
+    margin-bottom: 1%;
+}
+select {
+    width: 50%;
+    margin-left: 1.5%;
+    margin-top: 2%;
+    padding: 12px 12px 12px 10px;
+    color: #460c1b;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+input {
+    width: 90%;
+    margin-left: 1.5%;
+    margin-top: 2%;
+    padding: 12px 12px 12px 40px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    font-size: 1rem;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+/* .data-container {
+    
+} */
+.input-group {
+    position: relative;
+    margin-bottom: 15px;
+    padding: 20px;
+    width: 50%;
+    float: left;
+    /* border: 2px solid red; */
+}
+.input-group i {
+    position: absolute;
+    top: 55%;
+    left: 40px;
+    transform: translateY(-50%);
+    color: #7f7f7f;
+    font-size: 1.1rem;
+    transition: color 0.3s;
+}
+
+/* -- Data of Students Table -- */
+.data-container {
+    /* justify-content: space-evenly; */
+    float: left;
+    width: 100%;
+    max-width: auto;
+    max-height: auto;
+}
+.data-container p {
+    width: 90%;
+}
+.data-container h3 {
+    float: left;
+    padding-right: 9%;
+}
+.secondHeader {
+    color: #a72344;
+}
+.data-header {
+    display: flex;
+    justify-content: space-between;
+    background-color: #FFFFFF;
+    width: 92.5%;
+    margin-left: 1.5%;
+    margin-top: 2%;
+    padding: 12px 12px 12px 40px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    font-size: 1rem;
+}
+.data-header i {
+    float:right;
+    font-size: large;
+    color: #a72344;
+    font-size:x-large;
+}
+
+/* -- Section Setup Area -- */
+.add-section a {
+    text-decoration: none;
+    float: right;
+    margin-left: 1.5%;
+    margin-top: 1%;
+    margin-right: 10%;
+    padding: 12px 12px 12px 10px;
+    color: #a72344;
+    background-color: #F4F4F4;
+    border: 1px solid #F4F4F4;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 700;
+}
+.add-section i {
+    float: right;
+    color: #a72344;
+    font-size:x-large;
+}
+.add-section {
+    position: relative;
+    margin-bottom: 15px;
+    padding: 20px;
+    width: 50%;
+    float: right;
+    /* border: 2px solid red; */
+}
+.section-container {
+    /* justify-content: space-evenly; */
+    float: left;
+    width: 100%;
+    height: 100%;
+    max-width: auto;
+    max-height: auto;
+}
+
+ /* --- Section card --- */
+ .section-card {
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
+    max-width: 400px;
+    padding: 2rem;
+    border-radius: 1rem;
+    box-shadow: rgba(99,99,99,0.2) 0px 2px 8px 0px;
+    background-color: #FFFFFF;
+    color: #842a41;
+    justify-content: space-between;
+    align-items: center;
+ }
+ .col i {
+    font-size: xx-large;
+    float: right;
+    transform: translateY(-100%);
+ }
+
+/* home return button (match sidebar design) */
+:root { --accent: #8A1532; }
+
+.return-btn {
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  background: var(--accent);
+  color: #fff;
+  padding:8px 14px;
+  border-radius:8px;
+  text-decoration:none;
+  font-weight:700;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+  transition: transform .12s ease, opacity .12s ease;
+}
+.return-btn:hover { opacity:0.95; transform: translateY(-1px); }
+
+/* small wrapper to center button in sidebar */
+.sidebar .return-wrapper { display:flex; justify-content:center; margin-top:10px; }
+
+
+
