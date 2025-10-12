@@ -6,5 +6,5 @@
 
 [[redirects]]
   from = "/*"
-  to = "/homepage1.html"
+  to = "/index.html"
   status = 200
