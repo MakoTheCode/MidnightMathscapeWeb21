@@ -71,8 +71,18 @@
 
         <div class="section-container">
           <div class="card" style="width:100%; max-width:920px; margin-bottom:20px;">
-            <h3 style="cursor:pointer;user-select:none;" id="toggleCreateSection">Create New Section <span id="toggleIcon" style="font-size:1.2em;">&#x25BC;</span></h3>
-            <div class="section-form" id="createSectionFormWrap" style="display:none;">
+              <h3 style="cursor:pointer;user-select:none;" id="toggleCreateSection">Create New Section <span id="toggleIcon" style="font-size:1.2em;">&#x25BC;</span></h3>
+              <!-- Button opens modal; modal defined below -->
+            </div>
+          </div>
+          <!-- Create Section Modal -->
+          <div class="section-modal account-modal" id="createSectionModal" style="display:none;">
+            <div class="modal-content" style="max-width:760px;">
+              <div class="modal-header">
+                <h2>Add Section</h2>
+                <span class="close" id="closeCreateSection">&times;</span>
+              </div>
+              <div class="section-form">
                 <div class="form-row">
                   <div class="form-group">
                     <label>Section Code</label>
@@ -126,10 +136,12 @@
                     </div>
                   </div>
                 </div>
-                <div style="margin-top:10px;">
-                  <button id="saveSectionBtn" class="add-btn" style="width:auto;">Add Section</button>
+                <div style="margin-top:14px; display:flex; justify-content:flex-end; gap:10px;">
+                  <button class="cancel-btn" id="cancelCreateSection">Cancel</button>
+                  <button id="saveSectionBtn" class="save-question-btn">Add Section</button>
                 </div>
-               </div>
+              </div>
+            </div>
           </div>
 
           <div id="sectionListWrap" style="width:100%; max-width:920px;">
@@ -250,18 +262,31 @@ let activeSectionId = null;
 let activeSectionName = '';
 
 // Collapsible Create Section
-const createSectionFormWrap = document.getElementById('createSectionFormWrap');
 const toggleCreateSection = document.getElementById('toggleCreateSection');
 const toggleIcon = document.getElementById('toggleIcon');
+const createSectionModal = document.getElementById('createSectionModal');
+const closeCreateSection = document.getElementById('closeCreateSection');
+const cancelCreateSection = document.getElementById('cancelCreateSection');
+
 toggleCreateSection.addEventListener('click', () => {
-  if (createSectionFormWrap.style.display === 'none') {
-    createSectionFormWrap.style.display = 'block';
-    toggleIcon.innerHTML = '&#x25B2;'; // up arrow
-  } else {
-    createSectionFormWrap.style.display = 'none';
-    toggleIcon.innerHTML = '&#x25BC;'; // down arrow
+  createSectionModal.style.display = 'flex';
+  toggleIcon.innerHTML = '&#x25B2;'; // up arrow
+});
+closeCreateSection.addEventListener('click', () => {
+  createSectionModal.style.display = 'none';
+  toggleIcon.innerHTML = '&#x25BC;';
+});
+cancelCreateSection.addEventListener('click', () => {
+  createSectionModal.style.display = 'none';
+  toggleIcon.innerHTML = '&#x25BC;';
+});
+window.addEventListener('click', ev => {
+  if (ev.target === createSectionModal) {
+    createSectionModal.style.display = 'none';
+    toggleIcon.innerHTML = '&#x25BC;';
   }
 });
+
 // Save Section
 saveSectionBtn.addEventListener('click', async () => {
   const name = document.getElementById('newSectionName').value.trim();
@@ -303,7 +328,8 @@ saveSectionBtn.addEventListener('click', async () => {
   document.getElementById('endHour').value = '';
   document.getElementById('endMin').value = '';
 
-  createSectionFormWrap.style.display = 'none';
+  // hide modal
+  createSectionModal.style.display = 'none';
   toggleIcon.innerHTML = '&#x25BC;';
 });
 
