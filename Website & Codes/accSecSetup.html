@@ -73,16 +73,63 @@
           <div class="card" style="width:100%; max-width:920px; margin-bottom:20px;">
             <h3 style="cursor:pointer;user-select:none;" id="toggleCreateSection">Create New Section <span id="toggleIcon" style="font-size:1.2em;">&#x25BC;</span></h3>
             <div class="section-form" id="createSectionFormWrap" style="display:none;">
-              <div class="form-row">
-                <div class="form-group">
-                  <label>Section Name</label>
-                  <input type="text" id="newSectionName" class="form-input" placeholder="e.g. Kamagong">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Section Code</label>
+                    <input type="text" id="newSectionCode" class="form-input" placeholder="e.g. KAM01901">
+                  </div>
+                  <div class="form-group">
+                    <label>Grade Level</label>
+                    <input type="number" id="newGradeLevel" class="form-input" min="1" max="12" placeholder="6">
+                  </div>
                 </div>
-              </div>
-              <div style="margin-top:10px;">
-                <button id="saveSectionBtn" class="add-btn" style="width:auto;">Save Section</button>
-              </div>
-            </div>
+                <div class="form-row">
+                  <div class="form-group" style="flex:2">
+                    <label>Section Name</label>
+                    <input type="text" id="newSectionName" class="form-input" placeholder="e.g. Kamagong">
+                  </div>
+                </div>
+                <div style="margin-top:8px;">
+                  <label style="display:block; margin-bottom:6px;">Schedule</label>
+                  <div class="form-row">
+                    <div class="form-group" style="max-width:180px;">
+                      <label>Day</label>
+                      <select id="scheduleDay" class="form-input">
+                        <option>Monday</option>
+                        <option>Tuesday</option>
+                        <option>Wednesday</option>
+                        <option>Thursday</option>
+                        <option>Friday</option>
+                        <option>Saturday</option>
+                        <option>Sunday</option>
+                      </select>
+                    </div>
+                    <div class="form-group" style="max-width:160px;">
+                      <label>Start</label>
+                      <div style="display:flex; gap:6px;">
+                        <input type="number" id="startHour" class="form-input" min="1" max="12" placeholder="2" style="width:48px;">
+                        <input type="number" id="startMin" class="form-input" min="0" max="59" placeholder="00" style="width:56px;">
+                        <select id="startAmpm" class="form-input" style="width:72px;">
+                          <option>AM</option><option>PM</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="form-group" style="max-width:160px;">
+                      <label>End</label>
+                      <div style="display:flex; gap:6px;">
+                        <input type="number" id="endHour" class="form-input" min="1" max="12" placeholder="3" style="width:48px;">
+                        <input type="number" id="endMin" class="form-input" min="0" max="59" placeholder="00" style="width:56px;">
+                        <select id="endAmpm" class="form-input" style="width:72px;">
+                          <option>AM</option><option>PM</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div style="margin-top:10px;">
+                  <button id="saveSectionBtn" class="add-btn" style="width:auto;">Add Section</button>
+                </div>
+               </div>
           </div>
 
           <div id="sectionListWrap" style="width:100%; max-width:920px;">
@@ -218,10 +265,44 @@ toggleCreateSection.addEventListener('click', () => {
 // Save Section
 saveSectionBtn.addEventListener('click', async () => {
   const name = document.getElementById('newSectionName').value.trim();
+  const code = (document.getElementById('newSectionCode').value || '').trim();
+  const grade = parseInt(document.getElementById('newGradeLevel').value) || null;
+  const day = document.getElementById('scheduleDay').value;
+  const startHour = document.getElementById('startHour').value.trim();
+  const startMin = document.getElementById('startMin').value.trim();
+  const startAmpm = document.getElementById('startAmpm').value;
+  const endHour = document.getElementById('endHour').value.trim();
+  const endMin = document.getElementById('endMin').value.trim();
+  const endAmpm = document.getElementById('endAmpm').value;
+
   if(!name){ alert('Enter section name'); return; }
+
+  const schedule = {
+    day,
+    start: { hour: startHour || '', minute: startMin || '', ampm: startAmpm },
+    end: { hour: endHour || '', minute: endMin || '', ampm: endAmpm }
+  };
+
+  const payload = {
+    name,
+    code: code || null,
+    gradeLevel: grade,
+    schedule,
+    createdAt: Date.now()
+  };
+
   const newRef = rtdb.ref('SectionList').push();
-  await newRef.set({ name, createdAt: Date.now() });
-  document.getElementById('newSectionName').value='';
+  await newRef.set(payload);
+
+  // clear form
+  document.getElementById('newSectionName').value = '';
+  document.getElementById('newSectionCode').value = '';
+  document.getElementById('newGradeLevel').value = '';
+  document.getElementById('startHour').value = '';
+  document.getElementById('startMin').value = '';
+  document.getElementById('endHour').value = '';
+  document.getElementById('endMin').value = '';
+
   createSectionFormWrap.style.display = 'none';
   toggleIcon.innerHTML = '&#x25BC;';
 });
