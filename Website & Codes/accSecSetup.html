@@ -13,9 +13,17 @@
 <style>
 /* --- Your original design styles --- */
 #accsetup { color: white; font-weight: 600; }
-.section-card { width: 250px; background: white; border-radius: 10px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: flex; flex-direction: column; justify-content: space-between; }
-.section-card { position: relative; }
-.section-card:hover { transform: translateY(-3px); box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
+.section-card {
+  background: #fff;
+  border-radius: 18px;
+  padding: 22px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  width: 100%;
+  max-width: 520px;
+  box-sizing: border-box;
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+.section-card:hover { transform: translateY(-4px); box-shadow: 0 10px 28px rgba(0,0,0,0.12); }
 .section-container { display: flex; flex-wrap: wrap; gap: 20px; justify-content: flex-start; max-height: 70vh; overflow-y: auto; padding: 10px; }
 .add-btn { background:#8A1532;color:#fff;padding:8px 10px;border-radius:8px;border:none;cursor:pointer; }
 .add-btn:hover { background:#501121; }
@@ -341,28 +349,95 @@ rtdb.ref('SectionList').on('value', snap => {
   const entries = Object.entries(data);
   totalSectionsEl.textContent = entries.length;
 
+  // helpers
+  function pad(n){ n = n == null ? '' : String(n); if(n==='') return '00'; return n.length===1? '0'+n : n; }
+  function formatTimeObj(t){
+    if(!t) return '';
+    const h = t.hour || '';
+    const m = (t.minute==null || t.minute==='') ? '00' : pad(t.minute);
+    const am = t.ampm || '';
+    if(!h) return '';
+    return `${h}:${m} ${am}`.trim();
+  }
+  function formatRange(s){
+    if(!s) return '';
+    const start = formatTimeObj(s.start);
+    const end = formatTimeObj(s.end);
+    return start && end ? `${start} - ${end}` : (start || end || '');
+  }
+
   entries.forEach(([id, sec]) => {
     const card = document.createElement('div');
     card.className='section-card';
+
+    // build schedule HTML (handles single schedule, array or object map)
+    let scheduleHTML = '';
+    if(sec.schedule){
+      if(Array.isArray(sec.schedule)){
+        sec.schedule.forEach(sch => {
+          scheduleHTML += `<div class="schedule-row"><div>${sch.day||''}</div><div>${formatRange(sch)}</div></div>`;
+        });
+      } else if(sec.schedule.day){
+        scheduleHTML = `<div class="schedule-row"><div>${sec.schedule.day||''}</div><div>${formatRange(sec.schedule)}</div></div>`;
+      } else {
+        // object with multiple keys
+        Object.values(sec.schedule).forEach(sch => {
+          scheduleHTML += `<div class="schedule-row"><div>${sch?.day||''}</div><div>${formatRange(sch)}</div></div>`;
+        });
+      }
+    } else {
+      scheduleHTML = `<div style="color:#777; padding:8px 0;">No schedule</div>`;
+    }
+
     card.innerHTML = `
-      <div>
-        <h4 style="color:#501121;margin:0;">${sec.name}</h4>
-        <div class="student-count">Loading...</div>
+      <div class="card-top">
+        <div>
+          <h3 class="section-title">${sec.name || ''}</h3>
+          <div class="section-code">${sec.code || ''}</div>
+        </div>
+        <div class="card-actions">
+          <div class="grade-level">Grade ${sec.gradeLevel ?? '-'}</div>
+          <div>
+            <button class="icon-btn" data-id="${id}" title="Edit"><i class="fas fa-edit"></i></button>
+            <button class="icon-btn delete-btn" data-id="${id}" title="Delete"><i class="fas fa-trash"></i></button>
+          </div>
+        </div>
       </div>
-      <div style="margin-top:10px;">
-        <button class="add-btn" data-id="${id}">Add Student</button>
-        <button class="delete-btn" data-id="${id}"><i class="fas fa-trash"></i></button>
+
+      <div class="section-code-divider"></div>
+
+      <div class="schedule-list">
+        ${scheduleHTML}
+      </div>
+
+      <div class="section-code-divider" style="margin-top:8px;"></div>
+
+      <div class="card-footer">
+        <div class="student-count">Loading...</div>
+        <div>
+          <button class="add-btn" data-id="${id}">Add Student</button>
+          <a href="#" class="see-students" data-id="${id}">See Students <i class="fas fa-chevron-right"></i></a>
+        </div>
       </div>
     `;
+
     sectionContainer.appendChild(card);
 
+    // events
     const addBtn = card.querySelector('.add-btn');
-    addBtn.addEventListener('click', ()=>openAccountModalForSection(id, sec.name));
+    if(addBtn) addBtn.addEventListener('click', ()=>openAccountModalForSection(id, sec.name));
 
     const delBtn = card.querySelector('.delete-btn');
-    delBtn.addEventListener('click', async ()=>{
+    if(delBtn) delBtn.addEventListener('click', async ()=>{
       if(!confirm('Delete this section?')) return;
       await rtdb.ref(`SectionList/${id}`).remove();
+    });
+
+    // optional: edit button handler (placeholder)
+    const editBtn = card.querySelector('.icon-btn[title="Edit"]');
+    if(editBtn) editBtn.addEventListener('click', ()=> {
+      // TODO: open edit modal / populate fields for section ${id}
+      alert('Edit section feature not implemented yet.');
     });
 
     updateStudentCount(id, card);
