@@ -11,41 +11,71 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 
 <style>
-/* --- Your original design styles --- */
+/* --- Updated styles: improved card layout + modal --- */
 #accsetup { color: white; font-weight: 600; }
+
+.section-container { display: flex; flex-wrap: wrap; gap: 20px; justify-content: flex-start; max-height: 70vh; overflow-y: auto; padding: 10px; }
 .section-card {
   background: #fff;
   border-radius: 18px;
   padding: 22px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.06);
   width: 100%;
   max-width: 520px;
   box-sizing: border-box;
   transition: transform .12s ease, box-shadow .12s ease;
+  position: relative;
+  overflow: hidden;
 }
-.section-card:hover { transform: translateY(-4px); box-shadow: 0 10px 28px rgba(0,0,0,0.12); }
-.section-container { display: flex; flex-wrap: wrap; gap: 20px; justify-content: flex-start; max-height: 70vh; overflow-y: auto; padding: 10px; }
+.section-card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(0,0,0,0.10); }
+
+.card-top { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
+.section-title { font-size:1.6rem; color:#8A1532; margin:0; font-weight:700; letter-spacing:0.2px; }
+.section-code { color:#6c6c6c; font-size:0.85rem; margin-top:6px; letter-spacing:0.6px; }
+.card-actions { display:flex; flex-direction:column; align-items:flex-end; gap:8px; min-width:120px; }
+.grade-level { color:#777; font-weight:600; font-size:0.95rem; }
+
+.icon-btn { background:transparent; border:none; color:#8A1532; font-size:1.05rem; cursor:pointer; padding:6px; border-radius:8px; }
+.icon-btn:hover { background:rgba(138,21,50,0.06); }
+
+.delete-btn { background:transparent; color:#e35b55; border:none; font-size:1.05rem; cursor:pointer; padding:6px; border-radius:8px; }
+.delete-btn:hover{ background:rgba(227,91,85,0.06); }
+
+.section-code-divider { height:1px; background:#f2eaea; margin:14px 0; border-radius:2px; }
+.schedule-list { padding:4px 0 8px 0; }
+.schedule-row { display:flex; justify-content:space-between; color:#444; padding:10px 0; border-bottom:1px dashed #f1eded; }
+.schedule-row:last-child { border-bottom:0; }
+
+.card-footer { display:flex; justify-content:space-between; align-items:center; margin-top:12px; }
+.student-count { background: #f5f5f5; padding: 6px 10px; border-radius: 16px; color:#555; font-weight:600; }
+
 .add-btn { background:#8A1532;color:#fff;padding:8px 10px;border-radius:8px;border:none;cursor:pointer; }
 .add-btn:hover { background:#501121; }
-.student-count { background: #f5f5f5; padding: 5px 10px; border-radius: 15px; margin-top: 10px; display: inline-block; }
-.delete-btn { position: absolute; top: 15px; right: 15px; background: #e74c3c; color: white; border: none; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.3s; }
-.delete-btn:hover { background: #c0392b; }
+
+.see-students { color:#8A1532; text-decoration:none; font-weight:600; margin-left:12px; }
 
 /* Modal */
 .account-modal { display:none; position:fixed; z-index:4000; left:0; top:0; width:100%; height:100%; background: rgba(0,0,0,0.45); align-items:center; justify-content:center; padding:20px; }
 .account-modal .modal-content { background:white; width:100%; max-width:900px; border-radius:12px; padding:25px; box-shadow:0 8px 20px rgba(0,0,0,0.15); max-height:90vh; overflow:auto; }
 .account-modal .close { font-size:24px; cursor:pointer; color:#6c757d; }
 .account-modal .close:hover { color:#a72344; }
- .account-modal .modal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
- .account-modal h2 { margin:0; font-size:1.5em; color:#8A1532; }
- .account-modal .form-row { display:flex; gap:15px; margin-bottom:15px; }
- .account-modal .form-group { flex:1; }
- .account-modal .form-group label { display:block; margin-bottom:5px; font-weight:500; }
- .account-modal .form-input { width:100%; padding:8px 12px; border:1px solid #ddd; border-radius:4px; box-sizing:border-box; }
- .account-modal .save-question-btn { background:#8A1532; color:#fff; border:none; padding:8px 16px; border-radius:8px; cursor:pointer; margin-left:10px; }
- .account-modal .save-question-btn:hover { background:#501121; }
- .account-modal .cancel-btn { background:#ddd; color:#333; border:none; padding:8px 16px; border-radius:8px; cursor:pointer; }
- .account-modal .cancel-btn:hover { background:#bbb; }
+.account-modal .modal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
+.account-modal h2 { margin:0; font-size:1.5em; color:#8A1532; }
+.account-modal .form-row { display:flex; gap:15px; margin-bottom:15px; }
+.account-modal .form-group { flex:1; }
+.account-modal .form-group label { display:block; margin-bottom:5px; font-weight:500; }
+.account-modal .form-input { width:100%; padding:8px 12px; border:1px solid #ddd; border-radius:4px; box-sizing:border-box; }
+.account-modal .save-question-btn { background:#8A1532; color:#fff; border:none; padding:8px 16px; border-radius:8px; cursor:pointer; margin-left:10px; }
+.account-modal .save-question-btn:hover { background:#501121; }
+.account-modal .cancel-btn { background:#ddd; color:#333; border:none; padding:8px 16px; border-radius:8px; cursor:pointer; }
+.account-modal .cancel-btn:hover { background:#bbb; }
+
+@media (max-width:700px){
+  .section-card{ max-width:100%; }
+  .card-top{flex-direction:column;align-items:flex-start;}
+  .card-actions{align-items:flex-start;}
+  .account-modal .form-row{flex-direction:column;}
+}
 
 @keyframes fadeIn { from{opacity:0; transform:translateY(-10px);} to{opacity:1; transform:translateY(0);} }
 </style>
@@ -87,7 +117,7 @@
           <div class="section-modal account-modal" id="createSectionModal" style="display:none;">
             <div class="modal-content" style="max-width:760px;">
               <div class="modal-header">
-                <h2>Add Section</h2>
+                <h2 id="createSectionModalTitle">Add Section</h2>
                 <span class="close" id="closeCreateSection">&times;</span>
               </div>
               <div class="section-form">
@@ -268,17 +298,18 @@ const modalSectionNameEl = document.getElementById('modalSectionName');
 
 let activeSectionId = null;
 let activeSectionName = '';
+let editingSectionId = null; // null = creating new, otherwise editing existing
 
-// Collapsible Create Section
+// Collapsible / create modal controls
 const toggleCreateSection = document.getElementById('toggleCreateSection');
 const toggleIcon = document.getElementById('toggleIcon');
 const createSectionModal = document.getElementById('createSectionModal');
 const closeCreateSection = document.getElementById('closeCreateSection');
 const cancelCreateSection = document.getElementById('cancelCreateSection');
+const createSectionModalTitle = document.getElementById('createSectionModalTitle');
 
 toggleCreateSection.addEventListener('click', () => {
-  createSectionModal.style.display = 'flex';
-  toggleIcon.innerHTML = '&#x25B2;'; // up arrow
+  openCreateSectionModal(null, null);
 });
 closeCreateSection.addEventListener('click', () => {
   createSectionModal.style.display = 'none';
@@ -295,7 +326,66 @@ window.addEventListener('click', ev => {
   }
 });
 
-// Save Section
+// Open create/edit modal. If id is provided then populate fields for edit.
+function openCreateSectionModal(id=null, data=null){
+  editingSectionId = id;
+  toggleIcon.innerHTML = (id ? '&#x25B2;' : '&#x25B2;');
+  createSectionModal.style.display = 'flex';
+
+  if(id && data){
+    createSectionModalTitle.textContent = 'Edit Section';
+    saveSectionBtn.textContent = 'Save Changes';
+    // populate fields from data (supports single schedule or map)
+    document.getElementById('newSectionName').value = data.name || '';
+    document.getElementById('newSectionCode').value = data.code || '';
+    document.getElementById('newGradeLevel').value = data.gradeLevel || '';
+
+    // pick first schedule found
+    let sch = null;
+    if(data.schedule){
+      if(Array.isArray(data.schedule)) sch = data.schedule[0];
+      else if(data.schedule.day) sch = data.schedule;
+      else {
+        const vals = Object.values(data.schedule);
+        sch = vals.length ? vals[0] : null;
+      }
+    }
+    if(sch){
+      document.getElementById('scheduleDay').value = sch.day || 'Monday';
+      document.getElementById('startHour').value = sch.start?.hour || '';
+      document.getElementById('startMin').value = sch.start?.minute || '';
+      document.getElementById('startAmpm').value = sch.start?.ampm || 'AM';
+      document.getElementById('endHour').value = sch.end?.hour || '';
+      document.getElementById('endMin').value = sch.end?.minute || '';
+      document.getElementById('endAmpm').value = sch.end?.ampm || 'PM';
+    } else {
+      // clear schedule inputs
+      document.getElementById('scheduleDay').value = 'Monday';
+      document.getElementById('startHour').value = '';
+      document.getElementById('startMin').value = '';
+      document.getElementById('startAmpm').value = 'AM';
+      document.getElementById('endHour').value = '';
+      document.getElementById('endMin').value = '';
+      document.getElementById('endAmpm').value = 'PM';
+    }
+  } else {
+    // creating new
+    createSectionModalTitle.textContent = 'Add Section';
+    saveSectionBtn.textContent = 'Add Section';
+    document.getElementById('newSectionName').value = '';
+    document.getElementById('newSectionCode').value = '';
+    document.getElementById('newGradeLevel').value = '';
+    document.getElementById('scheduleDay').value = 'Monday';
+    document.getElementById('startHour').value = '';
+    document.getElementById('startMin').value = '';
+    document.getElementById('startAmpm').value = 'AM';
+    document.getElementById('endHour').value = '';
+    document.getElementById('endMin').value = '';
+    document.getElementById('endAmpm').value = 'PM';
+  }
+}
+
+// Save Section (create or update)
 saveSectionBtn.addEventListener('click', async () => {
   const name = document.getElementById('newSectionName').value.trim();
   const code = (document.getElementById('newSectionCode').value || '').trim();
@@ -321,11 +411,18 @@ saveSectionBtn.addEventListener('click', async () => {
     code: code || null,
     gradeLevel: grade,
     schedule,
-    createdAt: Date.now()
+    updatedAt: Date.now()
   };
 
-  const newRef = rtdb.ref('SectionList').push();
-  await newRef.set(payload);
+  if(editingSectionId){
+    // update existing
+    await rtdb.ref(`SectionList/${editingSectionId}`).update(payload);
+  } else {
+    // create new
+    payload.createdAt = Date.now();
+    const newRef = rtdb.ref('SectionList').push();
+    await newRef.set(payload);
+  }
 
   // clear form
   document.getElementById('newSectionName').value = '';
@@ -336,9 +433,10 @@ saveSectionBtn.addEventListener('click', async () => {
   document.getElementById('endHour').value = '';
   document.getElementById('endMin').value = '';
 
-  // hide modal
+  // hide modal and reset edit mode
   createSectionModal.style.display = 'none';
   toggleIcon.innerHTML = '&#x25BC;';
+  editingSectionId = null;
 });
 
 /* Real-time Section Listener */
@@ -398,8 +496,8 @@ rtdb.ref('SectionList').on('value', snap => {
         <div class="card-actions">
           <div class="grade-level">Grade ${sec.gradeLevel ?? '-'}</div>
           <div>
-            <button class="icon-btn" data-id="${id}" title="Edit"><i class="fas fa-edit"></i></button>
-            <button class="icon-btn delete-btn" data-id="${id}" title="Delete"><i class="fas fa-trash"></i></button>
+            <button class="icon-btn edit-btn" data-id="${id}" title="Edit"><i class="fas fa-edit"></i></button>
+            <button class="delete-btn" data-id="${id}" title="Delete"><i class="fas fa-trash"></i></button>
           </div>
         </div>
       </div>
@@ -433,11 +531,10 @@ rtdb.ref('SectionList').on('value', snap => {
       await rtdb.ref(`SectionList/${id}`).remove();
     });
 
-    // optional: edit button handler (placeholder)
-    const editBtn = card.querySelector('.icon-btn[title="Edit"]');
+    // edit: open same modal and prefill
+    const editBtn = card.querySelector('.edit-btn');
     if(editBtn) editBtn.addEventListener('click', ()=> {
-      // TODO: open edit modal / populate fields for section ${id}
-      alert('Edit section feature not implemented yet.');
+      openCreateSectionModal(id, sec);
     });
 
     updateStudentCount(id, card);
@@ -469,7 +566,7 @@ async function generateUniqueId(){
   let id, exists=true;
   while(exists){
     id=Math.floor(1000+Math.random()*9000).toString();
-    const snap=await rtdb.ref(`StudentAccount/${id}`).get();
+    const snap=await rtdb.ref(`StudentAccount/${id}`).once('value');
     exists=snap.exists();
   }
   return id;
