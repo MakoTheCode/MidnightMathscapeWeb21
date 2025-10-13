@@ -302,7 +302,14 @@
   <div class="-side">
     <div class="top-bar">
   <div style="flex:1"></div>
-  <div class="logout"><a href="#" id="logoutLink">Logout</a></div>
+  <div class="logout" style="display:flex; align-items:center; gap:8px;">
+    <!-- text link (keeps visible text) -->
+    <a href="mainWeb.html" id="logoutLink" style="color:#333; text-decoration:none;">Logout</a>
+    <!-- icon button you added — now clickable and accessible -->
+    <button id="logoutBtn" class="icon-btn" title="Logout" aria-label="Logout" style="color:#333; background:transparent;border:0;padding:6px;cursor:pointer;">
+      <i class="fas fa-sign-out-alt"></i>
+    </button>
+  </div>
     </div>
 
     <div class="dash-window">
