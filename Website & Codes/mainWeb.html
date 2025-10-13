@@ -52,7 +52,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
     <script>
-        // Firebase configuration
+        // Firebase configuration (unchanged)
         const firebaseConfig = {
             apiKey: "AIzaSyDNp5EX5oKWWIFWjQ5o5e5MnaVZTgFVLwo",
             authDomain: "midnightmathscape-e8e70.firebaseapp.com",
@@ -64,49 +64,61 @@
             measurementId: "G-FTYBFHGQ4T"
         };
 
-        // Initialize Firebase
+        // Initialize Firebase (unchanged)
         const app = firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
 
         document.addEventListener('DOMContentLoaded', function() {
             const loginForm = document.getElementById('loginFormElement');
-            
+
             loginForm.addEventListener('submit', async function(e) {
                 e.preventDefault();
-                
+
                 const email = document.getElementById('loginEmail').value;
                 const password = document.getElementById('loginPassword').value;
-                
+
                 // Clear previous errors
                 document.getElementById('loginEmailError').textContent = '';
                 document.getElementById('loginPasswordError').textContent = '';
-                
+
                 try {
-                    // Check for static admin credentials
+                    // Special-case: admin@stmichael.com -> settingsPage.html
+                    if (email === 'admin@stmichael.com' && password === '12345') {
+                        await auth.signInWithEmailAndPassword(email, password).catch(()=>{});
+                        window.location.href = 'settingsPage.html';
+                        return;
+                    }
+
+                    // Existing special-case: admin@stmichael.edu.ph -> accSecSetup.html
                     if (email === 'admin@stmichael.edu.ph' && password === '12345') {
                         const userCredential = await auth.signInWithEmailAndPassword(email, password);
                         window.location.href = 'accSecSetup.html';
                         return;
                     }
-                    
+
                     // Regular teacher login
                     const userCredential = await auth.signInWithEmailAndPassword(email, password);
-                    
+
                     // Check if user is admin in Firestore (graceful fallback if offline)
                     try {
-                        // try to read user's role from Firestore
                         const userDoc = await db.collection('users').doc(userCredential.user.uid).get();
                         if (userDoc.exists && userDoc.data().role === 'admin') {
-                            window.location.href = 'accSecSetup.html';
+                            // route admin users: specific email goes to settingsPage, others to accSecSetup
+                            if (email === 'admin@stmichael.com') {
+                                window.location.href = 'settingsPage.html';
+                            } else {
+                                window.location.href = 'accSecSetup.html';
+                            }
                         } else {
                             window.location.href = 'studentList.html';
                         }
                     } catch (err) {
-                        // common failure: "client is offline" or network issue
                         console.warn('Firestore lookup failed, proceeding with fallback navigation:', err);
-                        // fallback: if the email matches known admin, go to admin area, otherwise go to student list
-                        if (email === 'admin@stmichael.edu.ph') {
+                        // fallback by email
+                        if (email === 'admin@stmichael.com') {
+                            window.location.href = 'settingsPage.html';
+                        } else if (email === 'admin@stmichael.edu.ph') {
                             window.location.href = 'accSecSetup.html';
                         } else {
                             window.location.href = 'studentList.html';

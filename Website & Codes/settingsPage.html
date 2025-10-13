@@ -237,7 +237,20 @@
         button[type="submit"]:hover {
             background-color: #501121;
         }
-        
+
+        /* users list */
+        .users-section { margin-top: 20px; max-width: 1100px; }
+        .users-list { display:grid; gap:12px; margin-top:10px; }
+        .user-card { background:#fff; border-radius:10px; padding:12px; box-shadow:0 6px 16px rgba(0,0,0,0.04); display:flex; gap:12px; align-items:center; justify-content:space-between; }
+        .user-info { min-width:0; flex:1; }
+        .user-name { font-weight:700; color:#40101a; font-size:1rem; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .user-email { color:#666; font-size:0.9rem; margin-bottom:6px; }
+        .user-actions { display:flex; gap:8px; align-items:center; }
+        .btn-sm { padding:8px 10px; border-radius:8px; border:0; cursor:pointer; font-weight:600; }
+        .btn-reset { background:#f5f5f5; color:#333; border:1px solid #eee; }
+        .btn-change { background:#fff3f4; color:#7e142a; border:1px solid rgba(126,20,42,0.06); }
+        .btn-delete { background:#fff; color:#d64f4f; border:1px solid rgba(214,79,79,0.08); }
+
         /* -- Responsive adjustments -- */
         @media (max-width: 768px) {
             .container-wrap {
@@ -257,6 +270,8 @@
                 flex-direction: column;
                 gap: 15px;
             }
+            .user-card { flex-direction:column; align-items:flex-start; }
+            .user-actions { width:100%; justify-content:flex-end; }
         }
     </style>
 </head>
@@ -334,6 +349,16 @@
                         </div>
                     </form>
                 </div>
+
+                <!-- Users Section (Authentication accounts) -->
+                <!-- removed: Authentication account list not needed -->
+                <!--
+                <div class="users-section">
+                    <h3 style="margin-bottom:8px;">All Authentication Accounts</h3>
+                    <div class="users-list" id="usersList"></div>
+                </div>
+                -->
+
             </div>
         </div>
     </div>
@@ -342,21 +367,43 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
     <script>
+        // CONFIG: set this to your deployed Cloud Function base URL (example: https://us-central1-YOUR-PROJECT.cloudfunctions.net/api)
+        const FUNCTIONS_BASE = 'https://us-central1-YOUR-PROJECT.cloudfunctions.net/api';
+
         // Firebase initialization
         const firebaseConfig = {
-            apiKey: "AIzaSyBkmM4hueT7PlnvV8FeRdp8g4rk0qQQrn4",
-            authDomain: "midnightmathscape.firebaseapp.com",
-            databaseURL: "https://midnightmathscape-default-rtdb.firebaseio.com",
-            projectId: "midnightmathscape",
-            storageBucket: "midnightmathscape.firebasestorage.app",
-            messagingSenderId: "1038485290511",
-            appId: "1:1038485290511:web:c8aa78fbcd5266b706ed7a",
-            measurementId: "G-WXGW44QMRD"
+            apiKey: "AIzaSyDNp5EX5oKWWIFWjQ5o5e5MnaVZTgFVLwo",
+            authDomain: "midnightmathscape-e8e70.firebaseapp.com",
+            databaseURL: "https://midnightmathscape-e8e70-default-rtdb.firebaseio.com",
+            projectId: "midnightmathscape-e8e70",
+            storageBucket: "midnightmathscape-e8e70.firebasestorage.app",
+            messagingSenderId: "643428213528",
+            appId: "1:643428213528:web:e14dfea52725d1b647746d",
+            measurementId: "G-FTYBFHGQ4T"
         };
 
         const app = firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
+
+        // Helper: call Cloud Function with current user's idToken (throws on network failure)
+        async function callApi(path, body = {}) {
+            const user = auth.currentUser;
+            if (!user) throw new Error('Not signed in');
+            const idToken = await user.getIdToken();
+            const res = await fetch(FUNCTIONS_BASE + path, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + idToken
+                },
+                body: JSON.stringify(body)
+            });
+            // treat non-2xx as error object from function
+            const json = await res.json().catch(()=>({ ok:false, error:'Invalid JSON response' }));
+            if (!res.ok) throw new Error(json && json.error ? json.error : 'Function returned error');
+            return json;
+        }
 
         document.addEventListener('DOMContentLoaded', function() {
             // Check auth state
@@ -369,60 +416,313 @@
                 // Set user info
                 document.getElementById('displayName').textContent = user.displayName || user.email;
                 
-                // Check if admin
-                const isAdmin = user.email === 'admin@stmichael.edu.ph' || 
-                              (await db.collection('users').doc(user.uid).get()).data()?.role === 'admin';
-                
+                // Check if admin (UI-level)
+                let isAdmin = false;
+                try {
+                    const doc = await db.collection('users').doc(user.uid).get();
+                    if (doc.exists && doc.data()?.role === 'admin') isAdmin = true;
+                } catch (e) { /* ignore */ }
+                if (user.email === 'admin@stmichael.edu.ph' || user.email === 'admin@stmichael.com') isAdmin = true;
+
                 if (isAdmin) {
                     document.getElementById('userRole').textContent = 'Administrator';
                     document.getElementById('accountCreationSection').style.display = 'block';
                 } else {
                     document.getElementById('userRole').textContent = 'Teacher';
                     document.getElementById('accountCreationSection').style.display = 'none';
-                   
                 }
 
-                // User creation form
-                document.getElementById('createUserForm').addEventListener('submit', async function(e) {
-                    e.preventDefault();
-                    
-                    const email = document.getElementById('newUserEmail').value;
-                    const password = document.getElementById('newUserPassword').value;
-                    const name = document.getElementById('newUserName').value;
-                    const role = document.getElementById('newUserRole').value;
-                    
+                // Try cloud functions first; fallback to Firestore-based operations on failure
+                try {
+                    await loadAuthUsersUsingFunctions();
+                } catch (err) {
+                    console.warn('Cloud Functions unavailable, falling back to Firestore-based user management:', err);
+                    await loadAuthUsersFromFirestore();
+                }
+            });
+
+            /* ===== Implementation A: Cloud Functions path ===== */
+            async function loadAuthUsersUsingFunctions() {
+                const usersListEl = document.getElementById('usersList');
+                usersListEl.innerHTML = '<div style="padding:14px;color:#666;background:#fff;border-radius:8px;">Loading accounts...</div>';
+                const r = await callApi('/admin/users/list', {}); // may throw
+                if (!r.ok) throw new Error(r.error || 'Failed to load');
+                const arr = r.users || [];
+                usersListEl.innerHTML = '';
+                if (arr.length === 0) {
+                    usersListEl.innerHTML = '<div style="color:#666;padding:14px;background:#fff;border-radius:8px;">No accounts found.</div>';
+                    return;
+                }
+                arr.forEach(u => renderUserCardFunction(u));
+            }
+
+            function renderUserCardFunction(u) {
+                const usersListEl = document.getElementById('usersList');
+                const card = document.createElement('div');
+                card.className = 'user-card';
+                const created = u.metadata && u.metadata.creationTime ? u.metadata.creationTime : '';
+                card.innerHTML = `
+                    <div class="user-info">
+                        <div class="user-name" title="${u.displayName || ''}">${u.displayName || '(No name)'}</div>
+                        <div class="user-email">${u.email || ''}</div>
+                        <div class="user-meta" style="color:#555;font-size:0.9rem;margin-top:6px">
+                            Providers: <strong style="margin-left:6px">${(u.providerData||[]).map(p=>p.providerId).join(', ')||'local'}</strong>
+                            <span style="margin-left:12px;color:#888">${created}</span>
+                        </div>
+                    </div>
+                    <div class="user-actions">
+                        <button class="btn-sm btn-reset" data-email="${u.email}"><i class="fas fa-key"></i> Reset PW</button>
+                        <button class="btn-sm btn-change" data-uid="${u.uid}"><i class="fas fa-pen"></i> Change PW</button>
+                        <button class="btn-sm btn-delete" data-uid="${u.uid}"><i class="fas fa-trash"></i> Delete</button>
+                    </div>
+                `;
+                usersListEl.appendChild(card);
+
+                // Reset -> send password reset email (client)
+                card.querySelector('.btn-reset').addEventListener('click', async (ev) => {
+                    const email = ev.currentTarget.dataset.email;
+                    if (!email) return alert('No email available');
+                    if (!confirm(`Send password reset email to ${email}?`)) return;
                     try {
-                        // Create user in Authentication
-                        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-                        
-                        // Set display name
-                        await userCredential.user.updateProfile({ displayName: name });
-                        
-                        // Create user in Firestore
-                        await db.collection('users').doc(userCredential.user.uid).set({
-                            email: email,
-                            name: name,
-                            role: role,
-                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                        });
-                        
-                        alert('Account created successfully!');
-                        this.reset();
-                    } catch (error) {
-                        alert('Error creating account: ' + error.message);
-                        console.error(error);
+                        await auth.sendPasswordResetEmail(email);
+                        alert('Password reset email sent.');
+                    } catch (err) {
+                        alert('Error sending reset email: ' + (err.message || err));
                     }
                 });
 
-                // Logout button
-                document.getElementById('logoutBtn').addEventListener('click', function(e) {
-                    e.preventDefault();
-                    auth.signOut().then(() => {
-                        window.location.href = 'login.html';
+                // Change PW -> call cloud function updatePassword
+                card.querySelector('.btn-change').addEventListener('click', async (ev) => {
+                    const uid = ev.currentTarget.dataset.uid;
+                    const pw = prompt('Enter new password (min 6 chars):');
+                    if (pw === null) return;
+                    if (pw.length < 6) return alert('Password must be at least 6 characters.');
+                    try {
+                        const res = await callApi('/admin/users/updatePassword', { uid, password: pw });
+                        if (res.ok) alert('Password updated successfully.');
+                        else alert('Update failed: ' + (res.error || 'unknown'));
+                    } catch (err) {
+                        alert('Error: ' + (err.message || err));
+                    }
+                });
+
+                // Delete -> call cloud function delete
+                card.querySelector('.btn-delete').addEventListener('click', async (ev) => {
+                    const uid = ev.currentTarget.dataset.uid;
+                    if (!confirm('Delete this Authentication user? This permanently removes the account.')) return;
+                    try {
+                        const res = await callApi('/admin/users/delete', { uid });
+                        if (res.ok) {
+                            alert('User deleted.');
+                            card.remove();
+                        } else {
+                            alert('Delete failed: ' + (res.error || 'unknown'));
+                        }
+                    } catch (err) {
+                        alert('Error: ' + (err.message || err));
+                    }
+                });
+            }
+
+            /* ===== Implementation B: Firestore fallback (no Cloud Functions) =====
+               - Reads from your Firestore 'users' collection
+               - Can create auth users client-side (this signs you out; code asks for admin password to re-login)
+               - Can send password-reset emails
+               - Can delete Firestore user documents (does NOT delete Authentication user)
+            */
+            async function loadAuthUsersFromFirestore() {
+                const usersListEl = document.getElementById('usersList');
+                usersListEl.innerHTML = '<div style="padding:14px;color:#666;background:#fff;border-radius:8px;">Loading accounts (Firestore)...</div>';
+                try {
+                    // use snapshot so UI updates automatically
+                    db.collection('users').orderBy('createdAt','desc').onSnapshot(snapshot => {
+                        usersListEl.innerHTML = '';
+                        if (snapshot.empty) {
+                            usersListEl.innerHTML = '<div style="color:#666;padding:14px;background:#fff;border-radius:8px;">No accounts found.</div>';
+                            return;
+                        }
+                        snapshot.forEach(doc => {
+                            const data = doc.data();
+                            const uid = doc.id;
+                            const card = document.createElement('div');
+                            card.className = 'user-card';
+                            card.innerHTML = `
+                                <div class="user-info">
+                                    <div class="user-name" title="${data.name || ''}">${data.name || '(No name)'}</div>
+                                    <div class="user-email">${data.email || ''}</div>
+                                    <div class="user-meta" style="color:#555;font-size:0.9rem;margin-top:6px">
+                                        Role: <strong style="margin-left:6px">${data.role||'teacher'}</strong>
+                                    </div>
+                                </div>
+                                <div class="user-actions">
+                                    <button class="btn-sm btn-reset" data-email="${data.email}"><i class="fas fa-key"></i> Reset PW</button>
+                                    <button class="btn-sm btn-change" data-uid="${uid}"><i class="fas fa-pen"></i> Change Name/Role</button>
+                                    <button class="btn-sm btn-delete" data-uid="${uid}"><i class="fas fa-trash"></i> Delete</button>
+                                </div>
+                            `;
+                            usersListEl.appendChild(card);
+
+                            // Reset -> send password reset email
+                            card.querySelector('.btn-reset').addEventListener('click', async (ev) => {
+                                const email = ev.currentTarget.dataset.email;
+                                if (!email) return alert('No email available');
+                                if (!confirm(`Send password reset email to ${email}?`)) return;
+                                try {
+                                    await auth.sendPasswordResetEmail(email);
+                                    alert('Password reset email sent.');
+                                } catch (err) {
+                                    alert('Error sending reset email: ' + (err.message || err));
+                                }
+                            });
+
+                            // Change name/role -> inline edit, update Firestore
+                            card.querySelector('.btn-change').addEventListener('click', (ev) => {
+                                const uid = ev.currentTarget.dataset.uid;
+                                const nameEl = card.querySelector('.user-name');
+                                const roleStrong = card.querySelector('.user-meta strong');
+                                const curName = nameEl.textContent;
+                                const curRole = roleStrong.textContent;
+                                nameEl.innerHTML = `<input class="input-inline" value="${curName}" id="name_input_${uid}">`;
+                                roleStrong.innerHTML = `<select class="input-inline" id="role_input_${uid}">
+                                    <option value="teacher" ${curRole==='teacher'?'selected':''}>Teacher</option>
+                                    <option value="admin" ${curRole==='admin'?'selected':''}>Admin</option>
+                                </select>`;
+                                const actions = card.querySelector('.user-actions');
+                                const saveBtn = document.createElement('button');
+                                saveBtn.className = 'btn-sm btn-change';
+                                saveBtn.textContent = 'Save';
+                                const cancelBtn = document.createElement('button');
+                                cancelBtn.className = 'btn-sm';
+                                cancelBtn.textContent = 'Cancel';
+                                actions.insertBefore(saveBtn, ev.currentTarget.nextSibling);
+                                actions.insertBefore(cancelBtn, saveBtn.nextSibling);
+
+                                saveBtn.addEventListener('click', async () => {
+                                    const newName = document.getElementById(`name_input_${uid}`).value.trim();
+                                    const newRole = document.getElementById(`role_input_${uid}`).value;
+                                    try {
+                                        await db.collection('users').doc(uid).update({
+                                            name: newName,
+                                            role: newRole,
+                                            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                                        });
+                                        alert('Updated.');
+                                        // snapshot listener will refresh UI
+                                    } catch (err) {
+                                        alert('Update failed: ' + (err.message || err));
+                                    } finally {
+                                        saveBtn.remove();
+                                        cancelBtn.remove();
+                                    }
+                                });
+
+                                cancelBtn.addEventListener('click', () => {
+                                    // revert by triggering a snapshot refresh (no-op here)
+                                    saveBtn.remove();
+                                    cancelBtn.remove();
+                                    loadAuthUsersFromFirestore();
+                                });
+                            });
+
+                            // Delete -> remove Firestore doc only
+                            card.querySelector('.btn-delete').addEventListener('click', async (ev) => {
+                                const uid = ev.currentTarget.dataset.uid;
+                                if (!confirm('Delete this account record from Firestore? This will NOT delete Authentication user.')) return;
+                                try {
+                                    await db.collection('users').doc(uid).delete();
+                                    alert('Record deleted from Firestore.');
+                                } catch (err) {
+                                    alert('Delete failed: ' + (err.message || err));
+                                }
+                            });
+                        });
+                    }, err => {
+                        usersListEl.innerHTML = `<div style="color:#c00;padding:12px">Snapshot error: ${err.message||err}</div>`;
                     });
+                } catch (err) {
+                    usersListEl.innerHTML = `<div style="color:#c00;padding:12px">${err.message||err}</div>`;
+                }
+            }
+
+            // Create user: prefer cloud function create, fallback to client-side create (will sign you out)
+            document.getElementById('createUserForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const name = document.getElementById('newUserName').value.trim();
+                const email = document.getElementById('newUserEmail').value.trim();
+                const password = document.getElementById('newUserPassword').value;
+                const role = document.getElementById('newUserRole').value;
+                if (!name || !email || !password) return alert('Fill required fields.');
+                const submitBtn = this.querySelector('button[type="submit"]');
+                submitBtn.disabled = true;
+
+                // try cloud function create if available
+                try {
+                    const res = await callApi('/admin/users/create', { email, password, displayName: name, role });
+                    if (res.ok) {
+                        alert('Account created successfully.');
+                        this.reset();
+                        // refresh list (function or firestore listener will handle)
+                        try { await loadAuthUsersUsingFunctions(); } catch(e){ /* ignore */ }
+                        submitBtn.disabled = false;
+                        return;
+                    } else {
+                        throw new Error(res.error || 'Create failed');
+                    }
+                } catch (fnErr) {
+                    console.warn('Cloud create failed, falling back to client create:', fnErr);
+                    // fallback: create user client-side (this signs you in as the new user)
+                    try {
+                        const adminEmail = auth.currentUser ? auth.currentUser.email : null;
+                        const adminUid = auth.currentUser ? auth.currentUser.uid : null;
+                        // require admin password to re-sign-in after create
+                        const adminPassword = prompt('Creating user client-side will sign you out. Enter your admin password now to restore session after creation:');
+                        if (adminPassword === null) throw new Error('Cancelled by user');
+
+                        // create auth user (this will sign in as new user)
+                        const userCred = await auth.createUserWithEmailAndPassword(email, password);
+                        await userCred.user.updateProfile({ displayName: name }).catch(()=>{});
+                        // write Firestore metadata
+                        await db.collection('users').doc(userCred.user.uid).set({
+                            email, name, role, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+
+                        // sign out and sign back in as admin
+                        await auth.signOut();
+                        if (!adminEmail) throw new Error('Admin email not available to restore session.');
+                        await auth.signInWithEmailAndPassword(adminEmail, adminPassword);
+
+                        alert('Account created and admin session restored.');
+                        this.reset();
+                        // refresh Firestore list (listener active)
+                    } catch (clientErr) {
+                        alert('Client create failed: ' + (clientErr.message || clientErr));
+                    } finally {
+                        submitBtn.disabled = false;
+                    }
+                }
+            });
+
+            // Logout button
+            document.getElementById('logoutBtn').addEventListener('click', function(e) {
+                e.preventDefault();
+                auth.signOut().then(() => {
+                    window.location.href = 'mainWeb.html';
                 });
             });
         });
+
+        (async()=>{
+  const token = await firebase.auth().currentUser.getIdToken();
+  const res = await fetch('https://us-central1-YOUR-PROJECT.cloudfunctions.net/api/admin/users/list', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + token
+    }
+  });
+  console.log('status', res.status);
+  console.log(await res.text());
+})();
     </script>
 </body>
 </html>
