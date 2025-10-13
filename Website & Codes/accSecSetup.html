@@ -316,6 +316,20 @@
 #batchChooseBtn:hover, #batchUploadBtn:hover { background: #501121 !important; }
 
 /* --- Existing styles continue --- */
+#toggleCreateSection {
+  color: #7e142a;
+  background: transparent;
+  border: 1px solid rgba(126,20,42,0.06);
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+#toggleCreateSection .chev { color: #7e142a; }
+#toggleCreateSection:hover { background: rgba(126,20,42,0.04); }
 </style>
 </head>
 <body>
@@ -356,7 +370,11 @@
           <div class="card" style="width:100%; max-width:920px; margin-bottom:20px;">
             <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
               <div style="display:flex; align-items:center; gap:12px;">
-                <h3 style="cursor:pointer;user-select:none;margin:0;" id="toggleCreateSection">Create New Section <span id="toggleIcon" style="font-size:1.2em;">&#x25BC;</span></h3>
+                <button id="toggleCreateSection" aria-expanded="false">
+                  <i class="fas fa-plus" aria-hidden="true"></i>
+                  Create New Section
+                  <span id="toggleIcon" class="chev" style="font-size:1.1em">▾</span>
+                </button>
                 <button id="toggleImportBtn" class="icon-btn" aria-expanded="false" style="font-weight:700;padding:8px 10px;border-radius:8px;">
                   Import via Excel <span class="chev" style="margin-left:6px">▾</span>
                 </button>
