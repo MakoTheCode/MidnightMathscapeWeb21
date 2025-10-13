@@ -280,6 +280,41 @@
   .icon-btn, .delete-btn { padding: 8px; }
 }
 
+/* Make Download Template button match site's maroon theme */
+#downloadTemplateBtn {
+  background: #7e142a !important;     /* primary maroon used across the UI */
+  color: #fff !important;
+  border: 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+}
+#downloadTemplateBtn i { color: #fff; }
+#downloadTemplateBtn:hover { background: #501121 !important; }
+
+/* Tweak Import chevron button to match theme */
+#toggleImportBtn {
+  color: #7e142a;
+  background: transparent;
+  border: 1px solid rgba(126,20,42,0.06);
+  padding: 8px 10px;
+  border-radius: 8px;
+}
+#toggleImportBtn .chev { color: #7e142a; }
+
+/* Ensure batch action buttons remain consistent */
+#batchChooseBtn, #batchUploadBtn {
+  background: linear-gradient(#8A1532, #7e142a) !important;
+  color: #fff !important;
+  border-radius: 8px;
+  padding: 8px 10px;
+  border: 0;
+}
+#batchChooseBtn:hover, #batchUploadBtn:hover { background: #501121 !important; }
+
 /* --- Existing styles continue --- */
 </style>
 </head>
@@ -319,88 +354,114 @@
 
         <div class="section-container">
           <div class="card" style="width:100%; max-width:920px; margin-bottom:20px;">
-              <h3 style="cursor:pointer;user-select:none;" id="toggleCreateSection">Create New Section <span id="toggleIcon" style="font-size:1.2em;">&#x25BC;</span></h3>
-              <!-- Button opens modal; modal defined below -->
-            </div>
-          </div>
-          <!-- Create Section Modal -->
-          <div class="section-modal account-modal" id="createSectionModal" style="display:none;">
-            <div class="modal-content" style="max-width:760px;">
-              <div class="modal-header">
-                <h2 id="createSectionModalTitle">Add Section</h2>
-                <span class="close" id="closeCreateSection">&times;</span>
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+              <div style="display:flex; align-items:center; gap:12px;">
+                <h3 style="cursor:pointer;user-select:none;margin:0;" id="toggleCreateSection">Create New Section <span id="toggleIcon" style="font-size:1.2em;">&#x25BC;</span></h3>
+                <button id="toggleImportBtn" class="icon-btn" aria-expanded="false" style="font-weight:700;padding:8px 10px;border-radius:8px;">
+                  Import via Excel <span class="chev" style="margin-left:6px">▾</span>
+                </button>
+                <!-- TEMPLATE DOWNLOAD BUTTON (placed beside Import) -->
+                <button id="downloadTemplateBtn" class="add-btn" style="background:#1f7fb3;padding:8px 10px;border-radius:8px;">
+                  <i class="fas fa-file-excel" style="margin-right:8px"></i> Download Template
+                </button>
               </div>
-              <div class="section-form">
-                <div class="form-row">
-                  <div class="form-group">
-                    <label>Section Code</label>
-                    <input type="text" id="newSectionCode" class="form-input" placeholder="e.g. KAM01901">
-                  </div>
-                  <div class="form-group">
-                    <label>Grade Level</label>
-                    <input type="number" id="newGradeLevel" class="form-input" min="1" max="12" placeholder="6">
-                  </div>
+            </div>
+
+            <!-- hidden batch controls (toggle with chevron) -->
+            <div id="batchControlsWrap" style="display:none; margin-top:12px; gap:10px; align-items:center; flex-wrap:wrap;">
+              <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                <label for="batchSectionSelect" style="font-weight:600;color:#501121;margin-right:6px;">Assign to:</label>
+                <select id="batchSectionSelect" class="form-input" style="min-width:220px; max-width:320px;">
+                  <option value="">Select section...</option>
+                </select>
+              </div>
+              <div style="display:flex; align-items:center; gap:8px; margin-top:8px;">
+                <input id="batchFileInput" type="file" accept=".xlsx,.xls,.csv" style="display:none">
+                <button id="batchChooseBtn" class="add-btn" style="background:#6b1a33;padding:8px 10px;">Choose File</button>
+                <button id="batchUploadBtn" class="add-btn" style="background:#7e142a;padding:8px 10px;">Upload</button>
+              </div>
+            </div>
+
+            <!-- small status / filename -->
+            <div id="batchStatus" style="margin-top:10px;color:#444;font-size:0.95rem;"></div>
+          </div>
+        </div>
+        <!-- Create Section Modal -->
+        <div class="section-modal account-modal" id="createSectionModal" style="display:none;">
+          <div class="modal-content" style="max-width:760px;">
+            <div class="modal-header">
+              <h2 id="createSectionModalTitle">Add Section</h2>
+              <span class="close" id="closeCreateSection">&times;</span>
+            </div>
+            <div class="section-form">
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Section Code</label>
+                  <input type="text" id="newSectionCode" class="form-input" placeholder="e.g. KAM01901">
                 </div>
-                <div class="form-row">
-                  <div class="form-group" style="flex:2">
-                    <label>Section Name</label>
-                    <input type="text" id="newSectionName" class="form-input" placeholder="e.g. Kamagong">
-                  </div>
+                <div class="form-group">
+                  <label>Grade Level</label>
+                  <input type="number" id="newGradeLevel" class="form-input" min="1" max="12" placeholder="6">
                 </div>
-                <div style="margin-top:8px;">
-                  <label style="display:block; margin-bottom:6px;">Schedule</label>
-                  <div class="form-row">
-                    <div class="form-group" style="max-width:180px;">
-                      <label>Day</label>
-                      <select id="scheduleDay" class="form-input">
-                        <option>Monday</option>
-                        <option>Tuesday</option>
-                        <option>Wednesday</option>
-                        <option>Thursday</option>
-                        <option>Friday</option>
-                        <option>Saturday</option>
-                        <option>Sunday</option>
+              </div>
+              <div class="form-row">
+                <div class="form-group" style="flex:2">
+                  <label>Section Name</label>
+                  <input type="text" id="newSectionName" class="form-input" placeholder="e.g. Kamagong">
+                </div>
+              </div>
+              <div style="margin-top:8px;">
+                <label style="display:block; margin-bottom:6px;">Schedule</label>
+                <div class="form-row">
+                  <div class="form-group" style="max-width:180px;">
+                    <label>Day</label>
+                    <select id="scheduleDay" class="form-input">
+                      <option>Monday</option>
+                      <option>Tuesday</option>
+                      <option>Wednesday</option>
+                      <option>Thursday</option>
+                      <option>Friday</option>
+                      <option>Saturday</option>
+                      <option>Sunday</option>
+                    </select>
+                  </div>
+                  <div class="form-group" style="max-width:160px;">
+                    <label>Start</label>
+                    <div style="display:flex; gap:6px;">
+                      <input type="number" id="startHour" class="form-input" min="1" max="12" placeholder="2" style="width:48px;">
+                      <input type="number" id="startMin" class="form-input" min="0" max="59" placeholder="00" style="width:56px;">
+                      <select id="startAmpm" class="form-input" style="width:72px;">
+                        <option>AM</option><option>PM</option>
                       </select>
                     </div>
-                    <div class="form-group" style="max-width:160px;">
-                      <label>Start</label>
-                      <div style="display:flex; gap:6px;">
-                        <input type="number" id="startHour" class="form-input" min="1" max="12" placeholder="2" style="width:48px;">
-                        <input type="number" id="startMin" class="form-input" min="0" max="59" placeholder="00" style="width:56px;">
-                        <select id="startAmpm" class="form-input" style="width:72px;">
-                          <option>AM</option><option>PM</option>
-                        </select>
-                      </div>
-                    </div>
-                    <div class="form-group" style="max-width:160px;">
-                      <label>End</label>
-                      <div style="display:flex; gap:6px;">
-                        <input type="number" id="endHour" class="form-input" min="1" max="12" placeholder="3" style="width:48px;">
-                        <input type="number" id="endMin" class="form-input" min="0" max="59" placeholder="00" style="width:56px;">
-                        <select id="endAmpm" class="form-input" style="width:72px;">
-                          <option>AM</option><option>PM</option>
-                        </select>
-                      </div>
+                  </div>
+                  <div class="form-group" style="max-width:160px;">
+                    <label>End</label>
+                    <div style="display:flex; gap:6px;">
+                      <input type="number" id="endHour" class="form-input" min="1" max="12" placeholder="3" style="width:48px;">
+                      <input type="number" id="endMin" class="form-input" min="0" max="59" placeholder="00" style="width:56px;">
+                      <select id="endAmpm" class="form-input" style="width:72px;">
+                        <option>AM</option><option>PM</option>
+                      </select>
                     </div>
                   </div>
                 </div>
-                <div style="margin-top:14px; display:flex; justify-content:flex-end; gap:10px;">
-                  <button class="cancel-btn" id="cancelCreateSection">Cancel</button>
-                  <button id="saveSectionBtn" class="save-question-btn">Add Section</button>
-                </div>
               </div>
-            </div>
-          </div>
-
-          <div id="sectionListWrap" style="width:100%; max-width:920px;">
-            <h3 style="color:#501121; margin-bottom:8px;">Sections</h3>
-            <!-- Scrollable box that contains the grid of section cards -->
-            <div class="sections-box">
-              <div id="sectionContainer" class="section-container"></div>
+              <div style="margin-top:14px; display:flex; justify-content:flex-end; gap:10px;">
+                <button class="cancel-btn" id="cancelCreateSection">Cancel</button>
+                <button id="saveSectionBtn" class="save-question-btn">Add Section</button>
+              </div>
             </div>
           </div>
         </div>
 
+        <div id="sectionListWrap" style="width:100%; max-width:920px;">
+          <h3 style="color:#501121; margin-bottom:8px;">Sections</h3>
+          <!-- Scrollable box that contains the grid of section cards -->
+          <div class="sections-box">
+            <div id="sectionContainer" class="section-container"></div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -485,6 +546,8 @@
 <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
 
+<!-- SheetJS for client-side Excel parsing -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <script>
 // --- Integrated logic from user, preserving UI ---
 const firebaseConfig = {
@@ -819,6 +882,161 @@ studentModalForm.addEventListener('submit', async e=>{
 
   accountModal.style.display='none';
 });
+
+/* ------------------ Batch upload (Excel -> students) ------------------ */
+const batchFileInput = document.getElementById('batchFileInput');
+const batchChooseBtn = document.getElementById('batchChooseBtn');
+const batchUploadBtn = document.getElementById('batchUploadBtn');
+const batchSectionSelect = document.getElementById('batchSectionSelect');
+const batchStatus = document.getElementById('batchStatus');
+
+batchChooseBtn.addEventListener('click', () => batchFileInput.click());
+
+batchFileInput.addEventListener('change', () => {
+  const f = batchFileInput.files[0];
+  batchStatus.textContent = f ? `Selected: ${f.name}` : 'No file selected';
+});
+
+// populate sections dropdown once (and refresh on changes)
+function populateBatchSectionSelect(data){
+  // data = object map from SectionList
+  batchSectionSelect.innerHTML = '<option value="">Select section...</option>';
+  if(!data) return;
+  Object.entries(data).forEach(([id, sec])=>{
+    const opt = document.createElement('option');
+    opt.value = id;
+    opt.textContent = `${sec.name || 'Unnamed'} ${sec.code ? '• '+sec.code : ''}`;
+    batchSectionSelect.appendChild(opt);
+  });
+}
+
+// initial load and live updates
+rtdb.ref('SectionList').on('value', snap => {
+  const v = snap.exists() ? snap.val() : null;
+  populateBatchSectionSelect(v);
+});
+
+// parse Excel (or CSV) and upload rows to Firebase under selected section
+batchUploadBtn.addEventListener('click', async () => {
+  const file = batchFileInput.files[0];
+  const sectionId = batchSectionSelect.value;
+  if(!file) return alert('Choose an Excel/CSV file first.');
+  if(!sectionId) return alert('Select a section to assign students to.');
+
+  batchStatus.textContent = 'Parsing file...';
+
+  const reader = new FileReader();
+  reader.onload = async (evt) => {
+    try{
+      const data = evt.target.result;
+      let workbook;
+      if(file.name.endsWith('.csv')){
+        // CSV: read as text and convert
+        const text = typeof data === 'string' ? data : new TextDecoder().decode(data);
+        const ws = XLSX.utils.sheet_new();
+        const parsed = XLSX.utils.sheet_to_json(XLSX.read(text, {type:'string'}).Sheets.Sheet1, {header:1});
+        workbook = XLSX.read(text, {type:'string'});
+      } else {
+        workbook = XLSX.read(data, {type: 'binary'});
+      }
+
+      const firstSheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[firstSheetName];
+      const rows = XLSX.utils.sheet_to_json(worksheet, {defval: ''});
+      if(!rows || rows.length === 0) { batchStatus.textContent = 'No rows found.'; return; }
+
+      // Expected column names (case-insensitive): firstName, lastName, pass, studentNumber, contactNumber, address, username, email, middleInitial
+      batchStatus.textContent = `Found ${rows.length} rows — uploading...`;
+      let success = 0, skipped = 0, failed = 0;
+
+      for(let i=0;i<rows.length;i++){
+        const r = rows[i];
+        // normalize keys
+        const norm = {};
+        Object.keys(r).forEach(k => { if(k) norm[k.trim().toLowerCase()] = r[k]; });
+
+        const firstname = (norm.firstname || norm.first_name || norm['first name'] || '').toString().trim();
+        const lastname = (norm.lastname || norm.last_name || norm['last name'] || '').toString().trim();
+        const pass = (norm.pass || norm.password || norm.pwd || '').toString();
+        const studentNumber = (norm.studentnumber || norm['student number'] || norm.studnum || '').toString();
+        const contactNumber = (norm.contactnumber || norm['contact number'] || norm.contact || '').toString();
+        const address = (norm.address || '').toString();
+        const username = (norm.username || '').toString().trim();
+        const email = (norm.email || '').toString().trim();
+        const middleInitialVal = (norm.middleinitial || norm['middle initial'] || '').toString().trim();
+
+        // basic validation: need firstname, lastname, pass and username & email (at least username/email)
+        if(!firstname || !lastname || !pass){
+          skipped++;
+          continue;
+        }
+
+        try{
+          const newId = await generateUniqueId();
+          // write records similar to single add flow
+          await rtdb.ref(`StudentAccount/${newId}`).set({ firstName: firstname, lastName: lastname, pass, middleInitial: middleInitialVal });
+          await rtdb.ref(`Cridentials/${newId}`).set({
+            studentNumber, contactNumber, address, username, email,
+            sectionId, createdAt: Date.now(), status: "active", middleInitial: middleInitialVal
+          });
+          await rtdb.ref(`SectionList/${sectionId}/students/${newId}`).set(true);
+          success++;
+          batchStatus.textContent = `Uploading... ${i+1}/${rows.length} (success ${success})`;
+        }catch(err){
+          console.error('row upload error', err);
+          failed++;
+        }
+      }
+
+      batchStatus.textContent = `Done. Success: ${success}, Skipped: ${skipped}, Failed: ${failed}`;
+      // clear file input so user can choose again
+      batchFileInput.value = '';
+    }catch(err){
+      console.error(err);
+      batchStatus.textContent = 'Error parsing or uploading file. See console.';
+    }
+  };
+
+  // read as binary string for xlsx
+  if(file.name.endsWith('.csv')){
+    reader.readAsText(file);
+  } else {
+    reader.readAsBinaryString(file);
+  }
+});
+/* ------------------ end batch upload ------------------ */
+
+/* toggle import controls (keeps existing batch upload handlers intact) */
+(function(){
+  const toggleBtn = document.getElementById('toggleImportBtn');
+  const wrap = document.getElementById('batchControlsWrap');
+  if(!toggleBtn || !wrap) return;
+  toggleBtn.addEventListener('click', () => {
+    const isOpen = wrap.style.display !== 'none' && wrap.style.display !== '';
+    wrap.style.display = isOpen ? 'none' : 'flex';
+    toggleBtn.setAttribute('aria-expanded', !isOpen);
+    const chev = toggleBtn.querySelector('.chev');
+    if(chev) chev.textContent = isOpen ? '▾' : '▴';
+  });
+})();
+
+/* Download Excel template (placed beside Import via Excel) */
+(function(){
+  const btn = document.getElementById('downloadTemplateBtn');
+  if(!btn) return;
+  btn.addEventListener('click', () => {
+    // header + two sample rows
+    const ws_data = [
+      ["firstName","lastName","pass","studentNumber","contactNumber","address","username","email","middleInitial","sectionId"],
+      ["Juan","Dela Cruz","secret123","2023001","09171234567","123 Main St","juan.dc","juan@example.com","A",""],
+      ["Maria","Santos","password!","2023002","09179876543","45 Side St","maria.s","maria@example.com","B",""]
+    ];
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(ws_data);
+    XLSX.utils.book_append_sheet(wb, ws, "Students");
+    XLSX.writeFile(wb, "students-template.xlsx");
+  });
+})();
 </script>
 </body>
 </html>
