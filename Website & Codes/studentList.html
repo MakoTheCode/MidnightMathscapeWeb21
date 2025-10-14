@@ -570,6 +570,36 @@
       const ch = mi.charAt(0).toUpperCase();
       return ch + '.';
     }
+
+    // Function to check if account is disabled
+async function isAccountDisabled(uid) {
+    try {
+        // Check disabledAccounts collection first
+        const disabledDoc = await db.collection('disabledAccounts').doc(uid).get();
+        if (disabledDoc.exists) {
+            return true;
+        }
+        
+        // Check users collection disabled flag
+        const userDoc = await db.collection('users').doc(uid).get();
+        if (userDoc.exists && userDoc.data().disabled === true) {
+            return true;
+        }
+        
+        return false;
+    } catch (error) {
+        console.warn('Error checking disabled status:', error);
+        return false;
+    }
+}
+
+// Simple auth check - no account validation needed
+firebase.auth().onAuthStateChanged((user) => {
+    if (!user) {
+        window.location.href = 'mainWeb.html';
+    }
+    // If user exists, they're already validated from mainWeb.html
+});
   </script>
 </body>
 </html>

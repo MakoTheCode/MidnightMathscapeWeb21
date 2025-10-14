@@ -240,17 +240,20 @@
 
         /* users list */
         .users-section { margin-top: 20px; max-width: 1100px; }
-        .users-list { display:grid; gap:12px; margin-top:10px; }
-        .user-card { background:#fff; border-radius:10px; padding:12px; box-shadow:0 6px 16px rgba(0,0,0,0.04); display:flex; gap:12px; align-items:center; justify-content:space-between; }
-        .user-info { min-width:0; flex:1; }
-        .user-name { font-weight:700; color:#40101a; font-size:1rem; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-        .user-email { color:#666; font-size:0.9rem; margin-bottom:6px; }
-        .user-actions { display:flex; gap:8px; align-items:center; }
-        .btn-sm { padding:8px 10px; border-radius:8px; border:0; cursor:pointer; font-weight:600; }
+        /* table variant (studentList style + chevron) */
+        .users-table { width:100%; border-collapse:collapse; background:#fff; border-radius:10px; overflow:hidden; box-shadow:0 6px 16px rgba(0,0,0,0.04); }
+        .users-table thead { background: linear-gradient(90deg,#f7f7f7,#fff); }
+        .users-table th, .users-table td { padding:12px 16px; text-align:left; border-bottom:1px solid #f5f5f5; color:#40101a; vertical-align:middle; }
+        .users-table th { font-weight:700; color:#541122; font-size:0.95rem; }
+        .users-table tr:hover td { background:#fff7f7; }
+        .chevron { color:#8A1532; margin-left:8px; opacity:.9; }
+        .action-btn { padding:6px 8px; border-radius:8px; border:0; cursor:pointer; font-weight:600; margin-left:6px; }
         .btn-reset { background:#f5f5f5; color:#333; border:1px solid #eee; }
         .btn-change { background:#fff3f4; color:#7e142a; border:1px solid rgba(126,20,42,0.06); }
         .btn-delete { background:#fff; color:#d64f4f; border:1px solid rgba(214,79,79,0.08); }
-
+        @media (max-width:768px) {
+            .users-table th:nth-child(3), .users-table td:nth-child(3) { display:none; } /* hide providers/created on small */
+        }
         /* -- Responsive adjustments -- */
         @media (max-width: 768px) {
             .container-wrap {
@@ -351,13 +354,20 @@
                 </div>
 
                 <!-- Users Section (Authentication accounts) -->
-                <!-- removed: Authentication account list not needed -->
-                <!--
                 <div class="users-section">
                     <h3 style="margin-bottom:8px;">All Authentication Accounts</h3>
-                    <div class="users-list" id="usersList"></div>
+                    <table class="users-table" aria-label="Authentication accounts">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Providers / Created</th>
+                                <th style="width:220px;text-align:right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody"></tbody>
+                    </table>
                 </div>
-                -->
 
             </div>
         </div>
@@ -418,19 +428,23 @@
                 
                 // Check if admin (UI-level)
                 let isAdmin = false;
+                const userEmail = (user && user.email) ? String(user.email).trim().toLowerCase() : '';
                 try {
                     const doc = await db.collection('users').doc(user.uid).get();
                     if (doc.exists && doc.data()?.role === 'admin') isAdmin = true;
-                } catch (e) { /* ignore */ }
-                if (user.email === 'admin@stmichael.edu.ph' || user.email === 'admin@stmichael.com') isAdmin = true;
-
-                if (isAdmin) {
-                    document.getElementById('userRole').textContent = 'Administrator';
-                    document.getElementById('accountCreationSection').style.display = 'block';
-                } else {
-                    document.getElementById('userRole').textContent = 'Teacher';
-                    document.getElementById('accountCreationSection').style.display = 'none';
+                } catch (e) { console.warn('Failed to read users/doc for role check', e); }
+                // Explicit exception: treat these known emails as admin (case-insensitive)
+                if (userEmail === 'admin@stmichael.edu.ph' || userEmail === 'admin@stmichael.com') {
+                    isAdmin = true;
                 }
+ 
+                 if (isAdmin) {
+                     document.getElementById('userRole').textContent = 'Administrator';
+                     document.getElementById('accountCreationSection').style.display = 'block';
+                 } else {
+                     document.getElementById('userRole').textContent = 'Teacher';
+                     document.getElementById('accountCreationSection').style.display = 'none';
+                 }
 
                 // Try cloud functions first; fallback to Firestore-based operations on failure
                 try {
@@ -443,86 +457,143 @@
 
             /* ===== Implementation A: Cloud Functions path ===== */
             async function loadAuthUsersUsingFunctions() {
-                const usersListEl = document.getElementById('usersList');
-                usersListEl.innerHTML = '<div style="padding:14px;color:#666;background:#fff;border-radius:8px;">Loading accounts...</div>';
+                const tbody = document.getElementById('usersTableBody');
+                tbody.innerHTML = '<tr><td colspan="4" style="padding:14px;color:#666">Loading accounts...</td></tr>';
                 const r = await callApi('/admin/users/list', {}); // may throw
                 if (!r.ok) throw new Error(r.error || 'Failed to load');
                 const arr = r.users || [];
-                usersListEl.innerHTML = '';
+                tbody.innerHTML = '';
+                // render auth users from functions
+                const seenEmails = new Set();
+                const seenUids = new Set();
                 if (arr.length === 0) {
-                    usersListEl.innerHTML = '<div style="color:#666;padding:14px;background:#fff;border-radius:8px;">No accounts found.</div>';
-                    return;
+                    // still try to show Firestore users if functions returns empty
+                    // (use fallback merge below)
+                } else {
+                    arr.forEach(u => {
+                        renderUserRowFunction(u);
+                        if (u.email) seenEmails.add(u.email.toLowerCase());
+                        if (u.uid) seenUids.add(u.uid);
+                    });
                 }
-                arr.forEach(u => renderUserCardFunction(u));
+
+                // merge Firestore users so Firestore-only records (or REST-created then saved to Firestore) appear
+                try {
+                    const snap = await db.collection('users').orderBy('createdAt','desc').get();
+                    snap.forEach(doc => {
+                        const data = doc.data();
+                        const uid = doc.id;
+                        const email = (data.email||'').toLowerCase();
+                        // avoid duplicates
+                        if (seenUids.has(uid) || (email && seenEmails.has(email))) return;
+                        // create a minimal object shaped like auth user for rendering
+                        renderUserRowFunction({
+                            uid,
+                            email: data.email || '',
+                            displayName: data.name || '(No name)',
+                            providerData: [],
+                            metadata: { creationTime: (data.createdAt && data.createdAt.toDate) ? data.createdAt.toDate().toLocaleString() : '' }
+                        });
+                    });
+                    // if nothing rendered at all -> show no accounts message
+                    if (tbody.children.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="4" style="padding:14px;color:#666">No accounts found.</td></tr>';
+                    }
+                } catch (err) {
+                    // if Firestore merge fails, still show what we have or an error
+                    if (tbody.children.length === 0) {
+                        tbody.innerHTML = `<tr><td colspan="4" style="color:#c00;padding:12px">Error loading accounts: ${err.message||err}</td></tr>`;
+                    }
+                }
             }
-
-            function renderUserCardFunction(u) {
-                const usersListEl = document.getElementById('usersList');
-                const card = document.createElement('div');
-                card.className = 'user-card';
+            function renderUserRowFunction(u) {
+                const tbody = document.getElementById('usersTableBody');
+                const tr = document.createElement('tr');
                 const created = u.metadata && u.metadata.creationTime ? u.metadata.creationTime : '';
-                card.innerHTML = `
-                    <div class="user-info">
-                        <div class="user-name" title="${u.displayName || ''}">${u.displayName || '(No name)'}</div>
-                        <div class="user-email">${u.email || ''}</div>
-                        <div class="user-meta" style="color:#555;font-size:0.9rem;margin-top:6px">
-                            Providers: <strong style="margin-left:6px">${(u.providerData||[]).map(p=>p.providerId).join(', ')||'local'}</strong>
-                            <span style="margin-left:12px;color:#888">${created}</span>
-                        </div>
-                    </div>
-                    <div class="user-actions">
-                        <button class="btn-sm btn-reset" data-email="${u.email}"><i class="fas fa-key"></i> Reset PW</button>
-                        <button class="btn-sm btn-change" data-uid="${u.uid}"><i class="fas fa-pen"></i> Change PW</button>
-                        <button class="btn-sm btn-delete" data-uid="${u.uid}"><i class="fas fa-trash"></i> Delete</button>
-                    </div>
-                `;
-                usersListEl.appendChild(card);
+                const providers = (u.providerData||[]).map(p=>p.providerId).join(', ')||'local';
+                const isDisabled = !!(u.disabled);
+                tr.innerHTML = `
+                     <td title="${u.displayName||''}">${u.displayName||'(No name)'} <i class="fas fa-chevron-right chevron" aria-hidden="true"></i></td>
+                     <td class="user-email">${u.email||''}</td>
+                     <td class="user-meta">Providers: <strong>${providers}</strong><div style="color:#888;font-size:0.85rem;margin-top:6px">${created}</div></td>
+                    <td style="text-align:right">
+                        <button class="action-btn btn-reset" data-email="${u.email}" title="Reset password"><i class="fas fa-key"></i></button>
+                        <button class="action-btn btn-change" data-uid="${u.uid}" title="Change password"><i class="fas fa-pen"></i></button>
+                        <button class="action-btn btn-disable" data-uid="${u.uid}" data-email="${u.email||''}" title="${isDisabled ? 'Enable user' : 'Disable user'}"><i class="fas ${isDisabled ? 'fa-user-check' : 'fa-user-slash'}"></i></button>
+                        <button class="action-btn btn-delete" data-uid="${u.uid}" title="Delete user"><i class="fas fa-trash"></i></button>
+                    </td>
+                 `;
+                 tbody.appendChild(tr);
 
-                // Reset -> send password reset email (client)
-                card.querySelector('.btn-reset').addEventListener('click', async (ev) => {
+                 // helper to toggle visual state of row/button
+                 function setRowDisabledVisual(disabled) {
+                     const btn = tr.querySelector('.btn-disable');
+                     if (!btn) return;
+                     btn.title = disabled ? 'Enable user' : 'Disable user';
+                     btn.querySelector('i').className = 'fas ' + (disabled ? 'fa-user-check' : 'fa-user-slash');
+                     tr.dataset.disabled = disabled ? '1' : '';
+                     tr.style.opacity = disabled ? '0.6' : '';
+                 }
+
+                 // initialize visual state
+                 setRowDisabledVisual(isDisabled);
+ 
+                 tr.querySelector('.btn-reset').addEventListener('click', async (ev) => {
+                     const email = ev.currentTarget.dataset.email;
+                     if (!email) return alert('No email available');
+                     if (!confirm(`Send password reset email to ${email}?`)) return;
+                     try { await auth.sendPasswordResetEmail(email); alert('Password reset email sent.'); } catch(err){ alert('Error: '+(err.message||err)); }
+                 });
+ 
+                 tr.querySelector('.btn-change').addEventListener('click', async (ev) => {
+                     const uid = ev.currentTarget.dataset.uid;
+                     const pw = prompt('Enter new password (min 6 chars):');
+                     if (pw === null) return;
+                     if (pw.length < 6) return alert('Password must be at least 6 characters.');
+                     try { const res = await callApi('/admin/users/updatePassword',{uid,password:pw}); if(res.ok) alert('Password updated.'); else alert('Update failed: '+(res.error||'unknown')); } catch(err){ alert('Error: '+(err.message||err)); }
+                 });
+ 
+                // Disable / Enable handler: Cloud Functions only approach
+                tr.querySelector('.btn-disable').addEventListener('click', async (ev) => {
+                    const uid = ev.currentTarget.dataset.uid;
                     const email = ev.currentTarget.dataset.email;
-                    if (!email) return alert('No email available');
-                    if (!confirm(`Send password reset email to ${email}?`)) return;
+                    const isCurrentlyDisabled = tr.dataset.disabled === '1';
+                    
+                    if (!uid) return alert('No UID available for this user.');
+                    
                     try {
-                        await auth.sendPasswordResetEmail(email);
-                        alert('Password reset email sent.');
-                    } catch (err) {
-                        alert('Error sending reset email: ' + (err.message || err));
-                    }
-                });
-
-                // Change PW -> call cloud function updatePassword
-                card.querySelector('.btn-change').addEventListener('click', async (ev) => {
-                    const uid = ev.currentTarget.dataset.uid;
-                    const pw = prompt('Enter new password (min 6 chars):');
-                    if (pw === null) return;
-                    if (pw.length < 6) return alert('Password must be at least 6 characters.');
-                    try {
-                        const res = await callApi('/admin/users/updatePassword', { uid, password: pw });
-                        if (res.ok) alert('Password updated successfully.');
-                        else alert('Update failed: ' + (res.error || 'unknown'));
-                    } catch (err) {
-                        alert('Error: ' + (err.message || err));
-                    }
-                });
-
-                // Delete -> call cloud function delete
-                card.querySelector('.btn-delete').addEventListener('click', async (ev) => {
-                    const uid = ev.currentTarget.dataset.uid;
-                    if (!confirm('Delete this Authentication user? This permanently removes the account.')) return;
-                    try {
-                        const res = await callApi('/admin/users/delete', { uid });
-                        if (res.ok) {
-                            alert('User deleted.');
-                            card.remove();
+                        if (isCurrentlyDisabled) {
+                            // Enable user
+                            if (!confirm(`Re-enable account ${email || uid}?`)) return;
+                            const res = await callApi('/admin/users/enable', { uid });
+                            if (res.ok) {
+                                setRowDisabledVisual(false);
+                                alert('Account re-enabled.');
+                            } else {
+                                throw new Error(res.error || 'Enable failed');
+                            }
                         } else {
-                            alert('Delete failed: ' + (res.error || 'unknown'));
+                            // Disable user
+                            if (!confirm(`Disable account ${email || uid}? This prevents the user from signing in.`)) return;
+                            const res = await callApi('/admin/users/disable', { uid });
+                            if (res.ok) {
+                                setRowDisabledVisual(true);
+                                alert('Account disabled.');
+                            } else {
+                                throw new Error(res.error || 'Disable failed');
+                            }
                         }
                     } catch (err) {
-                        alert('Error: ' + (err.message || err));
+                        alert('Failed to toggle disabled state: ' + (err.message || err));
                     }
                 });
-            }
+ 
+                 tr.querySelector('.btn-delete').addEventListener('click', async (ev) => {
+                     const uid = ev.currentTarget.dataset.uid;
+                     if (!confirm('Delete this Authentication user? This permanently removes the account.')) return;
+                     try { const res = await callApi('/admin/users/delete',{uid}); if(res.ok){ alert('User deleted.'); tr.remove(); } else alert('Delete failed: '+(res.error||'unknown')); } catch(err){ alert('Error: '+(err.message||err)); }
+                 });
+             }
 
             /* ===== Implementation B: Firestore fallback (no Cloud Functions) =====
                - Reads from your Firestore 'users' collection
@@ -531,120 +602,130 @@
                - Can delete Firestore user documents (does NOT delete Authentication user)
             */
             async function loadAuthUsersFromFirestore() {
-                const usersListEl = document.getElementById('usersList');
-                usersListEl.innerHTML = '<div style="padding:14px;color:#666;background:#fff;border-radius:8px;">Loading accounts (Firestore)...</div>';
+                const tbody = document.getElementById('usersTableBody');
+                tbody.innerHTML = '<tr><td colspan="4" style="padding:14px;color:#666">Loading accounts (Firestore)...</td></tr>';
                 try {
-                    // use snapshot so UI updates automatically
                     db.collection('users').orderBy('createdAt','desc').onSnapshot(snapshot => {
-                        usersListEl.innerHTML = '';
+                        tbody.innerHTML = '';
                         if (snapshot.empty) {
-                            usersListEl.innerHTML = '<div style="color:#666;padding:14px;background:#fff;border-radius:8px;">No accounts found.</div>';
+                            tbody.innerHTML = '<tr><td colspan="4" style="padding:14px;color:#666">No accounts found.</td></tr>';
                             return;
                         }
                         snapshot.forEach(doc => {
                             const data = doc.data();
                             const uid = doc.id;
-                            const card = document.createElement('div');
-                            card.className = 'user-card';
-                            card.innerHTML = `
-                                <div class="user-info">
-                                    <div class="user-name" title="${data.name || ''}">${data.name || '(No name)'}</div>
-                                    <div class="user-email">${data.email || ''}</div>
-                                    <div class="user-meta" style="color:#555;font-size:0.9rem;margin-top:6px">
-                                        Role: <strong style="margin-left:6px">${data.role||'teacher'}</strong>
-                                    </div>
-                                </div>
-                                <div class="user-actions">
-                                    <button class="btn-sm btn-reset" data-email="${data.email}"><i class="fas fa-key"></i> Reset PW</button>
-                                    <button class="btn-sm btn-change" data-uid="${uid}"><i class="fas fa-pen"></i> Change Name/Role</button>
-                                    <button class="btn-sm btn-delete" data-uid="${uid}"><i class="fas fa-trash"></i> Delete</button>
-                                </div>
+                            const tr = document.createElement('tr');
+                            const disabled = !!data.disabled;
+                            tr.innerHTML = `
+                                <td title="${data.name||''}">${data.name||'(No name)'} <i class="fas fa-chevron-right chevron" aria-hidden="true"></i></td>
+                                <td>${data.email||''}</td>
+                                <td>Role: <strong>${data.role||'teacher'}</strong></td>
+                                <td style="text-align:right">
+                                    <button class="action-btn btn-reset" data-uid="${uid}" title="${disabled ? 'Change password (disabled)' : 'Change password'}"><i class="fas fa-key"></i></button>
+                                    <button class="action-btn btn-change" data-uid="${uid}" title="Edit"><i class="fas fa-pen"></i></button>
+                                    <button class="action-btn btn-disable" data-uid="${uid}" data-email="${data.email||''}" title="${disabled ? 'Enable user' : 'Disable user'}"><i class="fas ${disabled ? 'fa-user-check' : 'fa-user-slash'}"></i></button>
+                                    <button class="action-btn btn-delete" data-uid="${uid}" title="Delete"><i class="fas fa-trash"></i></button>
+                                </td>
                             `;
-                            usersListEl.appendChild(card);
+                            tbody.appendChild(tr);
 
-                            // Reset -> send password reset email
-                            card.querySelector('.btn-reset').addEventListener('click', async (ev) => {
-                                const email = ev.currentTarget.dataset.email;
-                                if (!email) return alert('No email available');
-                                if (!confirm(`Send password reset email to ${email}?`)) return;
+                            // set visual disabled state
+                            if (disabled) {
+                                tr.style.opacity = '0.6';
+                                tr.dataset.disabled = '1';
+                            }
+
+                            tr.querySelector('.btn-reset').addEventListener('click', async (ev) => {
+                                const uid = ev.currentTarget.dataset.uid;
+                                const pw = prompt('Enter new password (min 6 chars):');
+                                if (pw === null) return;
+                                if (pw.length < 6) return alert('Password must be at least 6 characters.');
                                 try {
-                                    await auth.sendPasswordResetEmail(email);
-                                    alert('Password reset email sent.');
+                                    const res = await callApi('/admin/users/updatePassword',{uid,password:pw});
+                                    if (res.ok) alert('Password updated.');
+                                    else alert('Update failed: '+(res.error||'unknown'));
+                                } catch(err){ alert('Error: '+(err.message||err)); }
+                            });
+
+                            tr.querySelector('.btn-change').addEventListener('click', () => {
+                                const name = data.name || '';
+                                const role = data.role || 'teacher';
+                                const newName = prompt('New name', name);
+                                if (newName === null) return;
+                                const newRole = prompt('New role (teacher/admin)', role);
+                                if (newRole === null) return;
+                                db.collection('users').doc(uid).update({ name: newName, role: newRole, updatedAt: firebase.firestore.FieldValue.serverTimestamp() })
+                                  .then(()=> alert('Updated.')).catch(err=> alert('Update failed: '+(err.message||err)));
+                            });
+
+                            // enable/disable toggle (Firestore-backed)
+                            tr.querySelector('.btn-disable').addEventListener('click', async (ev) => {
+                                const uid = ev.currentTarget.dataset.uid;
+                                const email = ev.currentTarget.dataset.email;
+                                const isCurrentlyDisabled = tr.dataset.disabled === '1';
+                                
+                                try {
+                                    if (isCurrentlyDisabled) {
+                                        // Enable user
+                                        if (!confirm(`Re-enable account ${email || uid}?`)) return;
+                                        // Try Cloud Functions first
+                                        try {
+                                            const res = await callApi('/admin/users/enable', { uid });
+                                            if (res.ok) {
+                                                tr.style.opacity = '';
+                                                tr.dataset.disabled = '';
+                                                alert('Account re-enabled.');
+                                                return;
+                                            }
+                                        } catch (cfErr) {
+                                            console.warn('Cloud enable failed, using Firestore fallback:', cfErr);
+                                        }
+                                        // Firestore fallback
+                                        await db.collection('users').doc(uid).update({ disabled: false });
+                                        tr.style.opacity = '';
+                                        tr.dataset.disabled = '';
+                                        alert('Account re-enabled.');
+                                    } else {
+                                        // Disable user
+                                        if (!confirm(`Disable account ${email || uid}? This prevents the user from signing in.`)) return;
+                                        // Try Cloud Functions first
+                                        try {
+                                            const res = await callApi('/admin/users/disable', { uid });
+                                            if (res.ok) {
+                                                tr.style.opacity = '0.6';
+                                                tr.dataset.disabled = '1';
+                                                alert('Account disabled.');
+                                                return;
+                                            }
+                                        } catch (cfErr) {
+                                            console.warn('Cloud disable failed, using Firestore fallback:', cfErr);
+                                        }
+                                        // Firestore fallback
+                                        await db.collection('users').doc(uid).update({ disabled: true });
+                                        tr.style.opacity = '0.6';
+                                        tr.dataset.disabled = '1';
+                                        alert('Account disabled.');
+                                    }
                                 } catch (err) {
-                                    alert('Error sending reset email: ' + (err.message || err));
+                                    alert('Failed to toggle disabled state: ' + (err.message || err));
                                 }
                             });
 
-                            // Change name/role -> inline edit, update Firestore
-                            card.querySelector('.btn-change').addEventListener('click', (ev) => {
-                                const uid = ev.currentTarget.dataset.uid;
-                                const nameEl = card.querySelector('.user-name');
-                                const roleStrong = card.querySelector('.user-meta strong');
-                                const curName = nameEl.textContent;
-                                const curRole = roleStrong.textContent;
-                                nameEl.innerHTML = `<input class="input-inline" value="${curName}" id="name_input_${uid}">`;
-                                roleStrong.innerHTML = `<select class="input-inline" id="role_input_${uid}">
-                                    <option value="teacher" ${curRole==='teacher'?'selected':''}>Teacher</option>
-                                    <option value="admin" ${curRole==='admin'?'selected':''}>Admin</option>
-                                </select>`;
-                                const actions = card.querySelector('.user-actions');
-                                const saveBtn = document.createElement('button');
-                                saveBtn.className = 'btn-sm btn-change';
-                                saveBtn.textContent = 'Save';
-                                const cancelBtn = document.createElement('button');
-                                cancelBtn.className = 'btn-sm';
-                                cancelBtn.textContent = 'Cancel';
-                                actions.insertBefore(saveBtn, ev.currentTarget.nextSibling);
-                                actions.insertBefore(cancelBtn, saveBtn.nextSibling);
-
-                                saveBtn.addEventListener('click', async () => {
-                                    const newName = document.getElementById(`name_input_${uid}`).value.trim();
-                                    const newRole = document.getElementById(`role_input_${uid}`).value;
-                                    try {
-                                        await db.collection('users').doc(uid).update({
-                                            name: newName,
-                                            role: newRole,
-                                            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                                        });
-                                        alert('Updated.');
-                                        // snapshot listener will refresh UI
-                                    } catch (err) {
-                                        alert('Update failed: ' + (err.message || err));
-                                    } finally {
-                                        saveBtn.remove();
-                                        cancelBtn.remove();
-                                    }
-                                });
-
-                                cancelBtn.addEventListener('click', () => {
-                                    // revert by triggering a snapshot refresh (no-op here)
-                                    saveBtn.remove();
-                                    cancelBtn.remove();
-                                    loadAuthUsersFromFirestore();
-                                });
-                            });
-
-                            // Delete -> remove Firestore doc only
-                            card.querySelector('.btn-delete').addEventListener('click', async (ev) => {
+                            tr.querySelector('.btn-delete').addEventListener('click', async (ev) => {
                                 const uid = ev.currentTarget.dataset.uid;
                                 if (!confirm('Delete this account record from Firestore? This will NOT delete Authentication user.')) return;
-                                try {
-                                    await db.collection('users').doc(uid).delete();
-                                    alert('Record deleted from Firestore.');
-                                } catch (err) {
-                                    alert('Delete failed: ' + (err.message || err));
-                                }
+                                try { await db.collection('users').doc(uid).delete(); alert('Record deleted from Firestore.'); } catch(err){ alert('Delete failed: '+(err.message||err)); }
                             });
                         });
                     }, err => {
-                        usersListEl.innerHTML = `<div style="color:#c00;padding:12px">Snapshot error: ${err.message||err}</div>`;
+                        tbody.innerHTML = `<tr><td colspan="4" style="color:#c00;padding:12px">Snapshot error: ${err.message||err}</td></tr>`;
                     });
                 } catch (err) {
-                    usersListEl.innerHTML = `<div style="color:#c00;padding:12px">${err.message||err}</div>`;
+                    tbody.innerHTML = `<tr><td colspan="4" style="color:#c00;padding:12px">${err.message||err}</td></tr>`;
                 }
             }
 
-            // Create user: prefer cloud function create, fallback to client-side create (will sign you out)
+            // Create user: prefer cloud function create, fallback to REST + Firestore (does NOT sign out admin)
             document.getElementById('createUserForm').addEventListener('submit', async function(e) {
                 e.preventDefault();
                 const name = document.getElementById('newUserName').value.trim();
@@ -669,33 +750,62 @@
                         throw new Error(res.error || 'Create failed');
                     }
                 } catch (fnErr) {
-                    console.warn('Cloud create failed, falling back to client create:', fnErr);
-                    // fallback: create user client-side (this signs you in as the new user)
+                    console.warn('Cloud create failed, falling back to client-side Auth REST create + Firestore:', fnErr);
+                    // Fallback: create the Auth user via Identity Toolkit REST API (does NOT change current signed-in user),
+                    // then create/seed Firestore users/doc so UI can list it and admin can edit/delete.
                     try {
-                        const adminEmail = auth.currentUser ? auth.currentUser.email : null;
-                        const adminUid = auth.currentUser ? auth.currentUser.uid : null;
-                        // require admin password to re-sign-in after create
-                        const adminPassword = prompt('Creating user client-side will sign you out. Enter your admin password now to restore session after creation:');
-                        if (adminPassword === null) throw new Error('Cancelled by user');
+                        const apiKey = (typeof firebaseConfig !== 'undefined' && firebaseConfig.apiKey) ? firebaseConfig.apiKey : null;
+                        if (!apiKey) throw new Error('Missing firebaseConfig.apiKey');
 
-                        // create auth user (this will sign in as new user)
-                        const userCred = await auth.createUserWithEmailAndPassword(email, password);
-                        await userCred.user.updateProfile({ displayName: name }).catch(()=>{});
-                        // write Firestore metadata
-                        await db.collection('users').doc(userCred.user.uid).set({
-                            email, name, role, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        const restRes = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${apiKey}`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ email, password, returnSecureToken: true })
                         });
-
-                        // sign out and sign back in as admin
-                        await auth.signOut();
-                        if (!adminEmail) throw new Error('Admin email not available to restore session.');
-                        await auth.signInWithEmailAndPassword(adminEmail, adminPassword);
-
-                        alert('Account created and admin session restored.');
+                        const restJson = await restRes.json();
+                        if (restJson && restJson.error) throw new Error(restJson.error.message || JSON.stringify(restJson.error));
+                        const uid = restJson.localId;
+                        // create a Firestore document for the user (mirror what the functions would do)
+                        await db.collection('users').doc(uid).set({
+                            email,
+                            name,
+                            role,
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                            authCreated: true
+                        });
+                        alert('Account created in Firebase Authentication and saved to Firestore.');
                         this.reset();
-                        // refresh Firestore list (listener active)
-                    } catch (clientErr) {
-                        alert('Client create failed: ' + (clientErr.message || clientErr));
+
+                        // update UI: try to reload from functions; if unavailable, render the created user row
+                        try {
+                            await loadAuthUsersUsingFunctions();
+                        } catch (e) {
+                            // minimal object to render row
+                            renderUserRowFunction({
+                                uid,
+                                email,
+                                displayName: name,
+                                providerData: [],
+                                metadata: { creationTime: new Date().toLocaleString() }
+                            });
+                        }
+                    } catch (err) {
+                        // Final fallback: create Firestore-only record (old behavior)
+                        console.warn('REST create failed, falling back to Firestore-only record:', err);
+                        try {
+                            await db.collection('users').add({
+                                email,
+                                name,
+                                role,
+                                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                                authCreated: false // marker to indicate Auth account not created yet
+                            });
+                            alert('Account record created in Firestore. Authentication user NOT created. Deploy Cloud Function or create in Firebase Console to make real Auth account.');
+                            this.reset();
+                            try { await loadAuthUsersFromFirestore(); } catch(e){ /* ignore */ }
+                        } catch (err2) {
+                            alert('Failed to create record in Firestore: ' + (err2.message || err2));
+                        }
                     } finally {
                         submitBtn.disabled = false;
                     }
@@ -710,19 +820,6 @@
                 });
             });
         });
-
-        (async()=>{
-  const token = await firebase.auth().currentUser.getIdToken();
-  const res = await fetch('https://us-central1-YOUR-PROJECT.cloudfunctions.net/api/admin/users/list', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + token
-    }
-  });
-  console.log('status', res.status);
-  console.log(await res.text());
-})();
     </script>
 </body>
 </html>

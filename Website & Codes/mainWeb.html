@@ -7,8 +7,63 @@
     <link rel="stylesheet" href="mainCSS.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        .disabled-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-family: 'Inter', sans-serif;
+            text-align: center;
+        }
+        
+        .disabled-message {
+            background: #8A1532;
+            padding: 40px;
+            border-radius: 10px;
+            max-width: 400px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        .disabled-message h2 {
+            margin-bottom: 20px;
+            color: white;
+        }
+        
+        .disabled-message p {
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        
+        .disabled-message button {
+            background: #501121;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+    </style>
 </head>
 <body>
+    <!-- Disabled Account Overlay -->
+    <div class="disabled-overlay" id="disabledOverlay">
+        <div class="disabled-message">
+            <h2><i class="fas fa-user-slash"></i> Account Disabled</h2>
+            <p>This account has been disabled by the administrator.</p>
+            <p>Please contact your system administrator to regain access.</p>
+            <button onclick="location.reload()">Try Again</button>
+        </div>
+    </div>
+
     <div class="container-wrap">
         <div class="-main">
             <div class="main-image">
@@ -52,89 +107,192 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
     <script>
-        // Firebase configuration (unchanged)
-        const firebaseConfig = {
-            apiKey: "AIzaSyDNp5EX5oKWWIFWjQ5o5e5MnaVZTgFVLwo",
-            authDomain: "midnightmathscape-e8e70.firebaseapp.com",
-            databaseURL: "https://midnightmathscape-e8e70-default-rtdb.firebaseio.com",
-            projectId: "midnightmathscape-e8e70",
-            storageBucket: "midnightmathscape-e8e70.firebasestorage.app",
-            messagingSenderId: "643428213528",
-            appId: "1:643428213528:web:e14dfea52725d1b647746d",
-            measurementId: "G-FTYBFHGQ4T"
-        };
+  // helper: sha256 -> hex (same as settingsPage)
+    async function sha256hex(text) {
+        const enc = new TextEncoder();
+        const data = enc.encode(text);
+        const hash = await crypto.subtle.digest('SHA-256', data);
+        return Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,'0')).join('');
+    }
 
-        // Initialize Firebase (unchanged)
-        const app = firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
+    // Firebase configuration
+    const firebaseConfig = {
+        apiKey: "AIzaSyDNp5EX5oKWWIFWjQ5o5e5MnaVZTgFVLwo",
+        authDomain: "midnightmathscape-e8e70.firebaseapp.com",
+        databaseURL: "https://midnightmathscape-e8e70-default-rtdb.firebaseio.com",
+        projectId: "midnightmathscape-e8e70",
+        storageBucket: "midnightmathscape-e8e70.firebasestorage.app",
+        messagingSenderId: "643428213528",
+        appId: "1:643428213528:web:e14dfea52725d1b647746d",
+        measurementId: "G-FTYBFHGQ4T"
+    };
 
-        document.addEventListener('DOMContentLoaded', function() {
-            const loginForm = document.getElementById('loginFormElement');
+    // Initialize Firebase
+    const app = firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
 
-            loginForm.addEventListener('submit', async function(e) {
-                e.preventDefault();
+    // Function to check if account is disabled
+    async function isAccountDisabled(uid) {
+        try {
+            // Check disabledAccounts collection first
+            const disabledDoc = await db.collection('disabledAccounts').doc(uid).get();
+            if (disabledDoc.exists) {
+                return true;
+            }
+            
+            // Check users collection disabled flag
+            const userDoc = await db.collection('users').doc(uid).get();
+            if (userDoc.exists && userDoc.data().disabled === true) {
+                return true;
+            }
+            
+            return false;
+        } catch (error) {
+            console.warn('Error checking disabled status:', error);
+            return false; // Default to enabled if we can't check
+        }
+    }
 
-                const email = document.getElementById('loginEmail').value;
-                const password = document.getElementById('loginPassword').value;
+    // Function to redirect to appropriate page after successful validation
+    async function redirectAfterValidation(user, normalizedEmail) {
+        // Check if account is disabled BEFORE redirecting
+        const isDisabled = await isAccountDisabled(user.uid);
+        if (isDisabled) {
+            document.getElementById('disabledOverlay').style.display = 'flex';
+            await auth.signOut();
+            localStorage.removeItem('fsmUser');
+            return;
+        }
 
-                // Clear previous errors
-                document.getElementById('loginEmailError').textContent = '';
-                document.getElementById('loginPasswordError').textContent = '';
+        const idTokenResult = await user.getIdTokenResult();
+        const isAdminClaim = !!(idTokenResult && idTokenResult.claims && idTokenResult.claims.admin === true);
+        const isException = (normalizedEmail === 'admin@stmichael.com' || normalizedEmail === 'admin@stmichael.edu.ph');
 
+        // If auth indicates admin (or known-exception email) -> treat as admin
+        if (isAdminClaim || isException) {
+            let name = user.displayName || '';
+            let role = 'admin';
+            try {
+                const doc = await db.collection('users').doc(user.uid).get();
+                if (doc.exists) { 
+                    const d = doc.data();
+                    name = d.name || name; 
+                    role = d.role || role; 
+                }
+            } catch (e) { /* ignore */ }
+
+            const session = { uid: user.uid, email: normalizedEmail, name, role };
+            localStorage.setItem('fsmUser', JSON.stringify(session));
+            
+            // Redirect based on admin type
+            if (normalizedEmail === 'admin@stmichael.edu.ph') {
+                window.location.href = 'accSecSetup.html';
+            } else {
+                window.location.href = 'settingsPage.html';
+            }
+            return;
+        }
+
+        // Auth sign-in succeeded but not admin -> treat as normal user
+        try {
+            const doc = await db.collection('users').doc(user.uid).get();
+            if (doc.exists) {
+                const d = doc.data();
+                const session = { uid: user.uid, email: normalizedEmail, name: d.name || user.displayName || '', role: d.role || 'teacher' };
+                localStorage.setItem('fsmUser', JSON.stringify(session));
+                window.location.href = (session.role === 'admin') ? 'settingsPage.html' : 'studentList.html';
+                return;
+            }
+        } catch (e) { /* ignore */ }
+
+        // No Firestore doc found — create session from Auth and go to studentList
+        localStorage.setItem('fsmUser', JSON.stringify({ uid: user.uid, email: normalizedEmail, name: user.displayName||'', role: 'teacher' }));
+        window.location.href = 'studentList.html';
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const loginForm = document.getElementById('loginFormElement');
+
+        loginForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const emailRaw = document.getElementById('loginEmail').value || '';
+            const password = document.getElementById('loginPassword').value || '';
+            const email = String(emailRaw).trim();
+            const normalizedEmail = email.toLowerCase();
+
+            // Clear previous errors
+            document.getElementById('loginEmailError').textContent = '';
+            document.getElementById('loginPasswordError').textContent = '';
+
+            try {
+                // Try Firebase Authentication sign-in first (admins stored in Auth)
                 try {
-                    // Special-case: admin@stmichael.com -> settingsPage.html
-                    if (email === 'admin@stmichael.com' && password === '12345') {
-                        await auth.signInWithEmailAndPassword(email, password).catch(()=>{});
-                        window.location.href = 'settingsPage.html';
-                        return;
-                    }
-
-                    // Existing special-case: admin@stmichael.edu.ph -> accSecSetup.html
-                    if (email === 'admin@stmichael.edu.ph' && password === '12345') {
-                        const userCredential = await auth.signInWithEmailAndPassword(email, password);
-                        window.location.href = 'accSecSetup.html';
-                        return;
-                    }
-
-                    // Regular teacher login
                     const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                    const authUser = userCredential.user;
+                    
+                    // Use the validation and redirect function
+                    await redirectAfterValidation(authUser, normalizedEmail);
 
-                    // Check if user is admin in Firestore (graceful fallback if offline)
-                    try {
-                        const userDoc = await db.collection('users').doc(userCredential.user.uid).get();
-                        if (userDoc.exists && userDoc.data().role === 'admin') {
-                            // route admin users: specific email goes to settingsPage, others to accSecSetup
-                            if (email === 'admin@stmichael.com') {
-                                window.location.href = 'settingsPage.html';
-                            } else {
-                                window.location.href = 'accSecSetup.html';
-                            }
-                        } else {
-                            window.location.href = 'studentList.html';
+                } catch (authErr) {
+                    // If auth user not found -> fallback to Firestore-only accounts (teachers)
+                    if (authErr && authErr.code === 'auth/user-not-found') {
+                        const q = await db.collection('users').where('email','==', normalizedEmail).limit(1).get();
+                        if (q.empty) {
+                            document.getElementById('loginEmailError').textContent = 'User not found';
+                            return;
                         }
-                    } catch (err) {
-                        console.warn('Firestore lookup failed, proceeding with fallback navigation:', err);
-                        // fallback by email
-                        if (email === 'admin@stmichael.com') {
+                        
+                        const doc = q.docs[0];
+                        const user = doc.data();
+                        
+                        // Check if Firestore-only account is disabled
+                        const isDisabled = await isAccountDisabled(doc.id);
+                        if (isDisabled) {
+                            document.getElementById('disabledOverlay').style.display = 'flex';
+                            return;
+                        }
+                        
+                        const pwHash = await sha256hex(password);
+                        if (!user.passwordHash || user.passwordHash !== pwHash) {
+                            document.getElementById('loginPasswordError').textContent = 'Incorrect password';
+                            return;
+                        }
+                        
+                        const session = { uid: doc.id, email: user.email, name: user.name || '', role: user.role || 'teacher' };
+                        localStorage.setItem('fsmUser', JSON.stringify(session));
+                        
+                        // Redirect based on role
+                        if (session.role === 'admin' || normalizedEmail === 'admin@stmichael.com') {
                             window.location.href = 'settingsPage.html';
-                        } else if (email === 'admin@stmichael.edu.ph') {
+                        } else if (normalizedEmail === 'admin@stmichael.edu.ph') {
                             window.location.href = 'accSecSetup.html';
                         } else {
                             window.location.href = 'studentList.html';
                         }
+                        return;
                     }
-                } catch (error) {
-                    if (error.code === 'auth/user-not-found') {
-                        document.getElementById('loginEmailError').textContent = 'User not found';
-                    } else if (error.code === 'auth/wrong-password') {
+
+                    // Wrong password or other auth error -> surface appropriate message
+                    if (authErr && authErr.code === 'auth/wrong-password') {
                         document.getElementById('loginPasswordError').textContent = 'Incorrect password';
-                    } else {
-                        alert('Login error: ' + error.message);
+                        return;
                     }
+                    
+                    // Handle Firebase Auth disabled account error
+                    if (authErr && authErr.code === 'auth/user-disabled') {
+                        document.getElementById('disabledOverlay').style.display = 'flex';
+                        return;
+                    }
+                    
+                    throw authErr;
                 }
-            });
-        });
-    </script>
+            } catch (error) {
+                alert('Login error: ' + (error.message || error));
+            }
+         });
+     });
+          </script>
 </body>
 </html>

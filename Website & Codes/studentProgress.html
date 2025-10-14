@@ -715,6 +715,13 @@
       }catch(err){ console.error('Export error', err); alert('Error exporting StudentsProgress: '+err.message); }
     });
 
+    // Simple auth check - no account validation needed
+firebase.auth().onAuthStateChanged((user) => {
+    if (!user) {
+        window.location.href = 'mainWeb.html';
+    }
+    // If user exists, they're already validated from mainWeb.html
+});
   </script>
 </body>
 </html>
