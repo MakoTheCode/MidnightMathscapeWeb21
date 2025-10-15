@@ -280,6 +280,50 @@
   .icon-btn, .delete-btn { padding: 8px; }
 }
 
+/* Extra responsive improvements for small screens */
+@media (max-width:600px) {
+  /* Make section grid single-column and remove side paddings */
+  .section-container { grid-template-columns: 1fr !important; gap:12px; }
+  .sections-box { padding: 10px; max-height: none; }
+
+  /* Cards should expand naturally and allow content to wrap */
+  .section-card { padding: 12px; min-height: auto; }
+  .card-top { flex-direction: column; align-items: flex-start; gap:8px; }
+  .card-actions { flex-direction: row; gap:8px; align-items:center; width:100%; justify-content:space-between; }
+
+  /* Make header action buttons wrap and be easy to tap */
+  .section-container > .card:first-child { flex-direction: column; align-items:stretch; gap:8px; }
+  #toggleCreateSection, #toggleImportBtn, #downloadTemplateBtn { width:100%; justify-content:center; }
+
+  /* Modals: use bottom sheet style on phones for better UX */
+  .account-modal { align-items: flex-end; padding:0; }
+  .account-modal .modal-content { width:100%; max-width:100%; border-radius:12px 12px 0 0; margin:0; box-shadow: 0 -6px 30px rgba(0,0,0,0.18); max-height:90vh; overflow:auto; padding:16px; }
+
+  /* Stack modal action buttons and make them full-width for touch */
+  .account-modal .save-question-btn, .account-modal .cancel-btn, .account-modal .add-btn { width:100%; display:block; }
+  .account-modal .form-row { flex-direction: column; }
+
+  /* Improve table container and choose-modal for small screens */
+  #chooseStudentModal .modal-content { padding:12px; }
+  #chooseStudentModal table { width:100%; border-collapse:collapse; }
+  #chooseStudentModal table thead th { font-size:0.95rem; }
+  #chooseStudentModal tbody td { font-size:0.95rem; }
+  #chooseStudentModal div[style*="overflow:auto"] { -webkit-overflow-scrolling: touch; }
+
+  /* Increase tap targets for icon buttons */
+  .icon-btn, .delete-btn, .add-btn { padding:12px; border-radius:10px; }
+
+  /* Reduce card footer density */
+  .card-footer { flex-direction: column; align-items:stretch; gap:10px; }
+  .card-footer .right { justify-content:flex-end; }
+}
+
+/* Small tweak for very narrow phones */
+@media (max-width:380px){
+  .account-modal .modal-content { padding:12px 10px; }
+  #toggleCreateSection i, #toggleImportBtn .chev { display:inline-block; }
+}
+
 /* Make Download Template button match site's maroon theme */
 #downloadTemplateBtn {
   background: #7e142a !important;     /* primary maroon used across the UI */
@@ -837,10 +881,17 @@ rtdb.ref('SectionList').on('value', snap => {
 
 /* Update Student Count */
 async function updateStudentCount(sectionId, cardEl){
-  const snap = await rtdb.ref('StudentAccount').orderByChild('sectionId').equalTo(sectionId).once('value');
-  const count = snap.exists()? Object.keys(snap.val()).length : 0;
-  const sc = cardEl.querySelector('.student-count');
-  if(sc) sc.textContent=`${count} Students`;
+  // Count students from SectionList/{sectionId}/students which is the authoritative list
+  try{
+    const snap = await rtdb.ref(`SectionList/${sectionId}/students`).once('value');
+    const count = snap.exists() ? Object.keys(snap.val()).length : 0;
+    const sc = cardEl.querySelector('.student-count');
+    if(sc) sc.textContent = `${count} ${count === 1 ? 'Student' : 'Students'}`;
+  }catch(err){
+    console.error('updateStudentCount error', err);
+    const sc = cardEl.querySelector('.student-count');
+    if(sc) sc.textContent = `0 Students`;
+  }
 }
 
 /* Account Modal */
@@ -886,7 +937,10 @@ studentModalForm.addEventListener('submit', async e=>{
   // use canonical 'pass' key to match existing DB usage and avoid duplication
   const middleInitialVal = (document.getElementById('modalMiddleInitial').value||'').trim();
   // save account record (StudentAccount used as canonical store). include sectionId so counts and queries work.
-  await rtdb.ref(`StudentAccount/${newId}`).set({ firstName: firstname, lastName: lastname, pass, middleInitial: middleInitialVal, contactNumber, address, username, email, sectionId: activeSectionId, createdAt: Date.now(), status: 'active' });
+  // Per new rule: StudentAccount stores only lowercase 'firstname','lastname','pass'. Other fields (address, contactNumber, email, middleInitial, sectionId) stay in Cridentials.
+  await rtdb.ref(`StudentAccount/${newId}`).set({ firstname: firstname, lastname: lastname, pass });
+  // save legacy/auxiliary info in Cridentials
+  await rtdb.ref(`Cridentials/${newId}`).set({ firstname: firstname, lastname: lastname, middleInitial: middleInitialVal, contactNumber, address, username, email, sectionId: activeSectionId, createdAt: Date.now(), status: 'active' });
   // Add student to section's students node
   await rtdb.ref(`SectionList/${activeSectionId}/students/${newId}`).set(true);
 
@@ -987,8 +1041,10 @@ batchUploadBtn.addEventListener('click', async () => {
 
         try{
           const newId = await generateUniqueId();
-          // write to StudentAccount as canonical store; studentNumber is not used
-          await rtdb.ref(`StudentAccount/${newId}`).set({ firstName: firstname, lastName: lastname, pass, middleInitial: middleInitialVal, contactNumber, address, username, email, sectionId, createdAt: Date.now(), status: 'active' });
+          // StudentAccount: only minimal canonical fields
+          await rtdb.ref(`StudentAccount/${newId}`).set({ firstname: firstname, lastname: lastname, pass });
+          // Cridentials: keep auxiliary fields and section membership
+          await rtdb.ref(`Cridentials/${newId}`).set({ firstname: firstname, lastname: lastname, middleInitial: middleInitialVal, contactNumber, address, username, email, sectionId, createdAt: Date.now(), status: 'active' });
           await rtdb.ref(`SectionList/${sectionId}/students/${newId}`).set(true);
           success++;
           batchStatus.textContent = `Uploading... ${i+1}/${rows.length} (success ${success})`;
@@ -1037,7 +1093,7 @@ batchUploadBtn.addEventListener('click', async () => {
   btn.addEventListener('click', () => {
     // header + two sample rows
     const ws_data = [
-      ["firstName","lastName","pass","contactNumber","address","username","email","middleInitial","sectionId"],
+      ["firstname","lastname","pass","contactNumber","address","username","email","middleInitial","sectionId"],
       ["Juan","Dela Cruz","secret123","09171234567","123 Main St","juan.dc","juan@example.com","A",""],
       ["Maria","Santos","password!","09179876543","45 Side St","maria.s","maria@example.com","B",""]
     ];
@@ -1145,13 +1201,24 @@ batchUploadBtn.addEventListener('click', async () => {
 
       // build merged map where each key is the studentId (account id like '0404')
       // include ids present in either Cridentials or StudentAccount (union)
+      // Prefer Cridentials for auxiliary fields (address, contactNumber, email, middleInitial, sectionId)
       const students = {};
       const allIds = new Set([...(Object.keys(creds)||[]), ...(Object.keys(accts)||[])]);
       allIds.forEach(id => {
         const c = creds[id] || {};
         const a = accts[id] || {};
-        // merge records; studentNumber is intentionally ignored (we use account id as canonical)
-        const merged = Object.assign({}, c, a);
+        // merged: keep minimal canonical from StudentAccount (firstname, lastname, pass) but prefer Cridentials for others
+        const merged = Object.assign({}, a);
+        // if Cridentials has firstname/lastname prefer that (they may be lowercase)
+        merged.firstname = (c.firstname || c.firstName || a.firstname || a.firstName || '');
+        merged.lastname = (c.lastname || c.lastName || a.lastname || a.lastName || '');
+        merged.middleInitial = c.middleInitial || c.middleinitial || a.middleInitial || '';
+        merged.contactNumber = c.contactNumber || c.contactnumber || a.contactNumber || '';
+        merged.address = c.address || a.address || '';
+        merged.username = c.username || a.username || '';
+        merged.email = c.email || a.email || '';
+        merged.sectionId = c.sectionId || a.sectionId || '';
+        merged.pass = a.pass || c.pass || '';
         merged.studentId = id;
         students[id] = merged;
       });
@@ -1225,7 +1292,24 @@ batchUploadBtn.addEventListener('click', async () => {
           // read current StudentAccount to find old section
           const cSnap = await rtdbRef.ref('StudentAccount/' + studentId).once('value');
           const c = cSnap.val() || {};
-          const oldSection = c.sectionId || null;
+          let oldSection = c.sectionId || null;
+
+          // If StudentAccount doesn't have sectionId, prefer Cridentials' sectionId
+          if(!oldSection){
+            const credSnap = await rtdbRef.ref('Cridentials/' + studentId).once('value');
+            const cred = credSnap.val() || {};
+            if(cred.sectionId) oldSection = cred.sectionId;
+          }
+
+          // Fallback: if StudentAccount doesn't have sectionId (legacy/missing), search SectionList for membership
+          if(!oldSection){
+            const sectionsSnap = await rtdbRef.ref('SectionList').once('value');
+            const sections = sectionsSnap.val() || {};
+            for(const sid of Object.keys(sections)){
+              const sec = sections[sid];
+              if(sec && sec.students && sec.students[studentId]){ oldSection = sid; break; }
+            }
+          }
 
           // if already in that section: ask for confirmation and allow proceeding
           if(oldSection === targetSection){
@@ -1233,9 +1317,10 @@ batchUploadBtn.addEventListener('click', async () => {
             if(!confirmed){ return; }
           }
 
-          // perform updates: update cridentials, remove from old section (only if different), add to new section
+          // perform updates: update Cridentials.sectionId (auxiliary store), remove from old section (only if different and known), add to new section
           const updates = {};
-          updates['StudentAccount/' + studentId + '/sectionId'] = targetSection;
+          updates['Cridentials/' + studentId + '/sectionId'] = targetSection;
+          // also keep StudentAccount minimal (no sectionId) — do not write sectionId into StudentAccount
           if(oldSection && oldSection !== targetSection) updates['SectionList/' + oldSection + '/students/' + studentId] = null;
           updates['SectionList/' + targetSection + '/students/' + studentId] = true;
 
