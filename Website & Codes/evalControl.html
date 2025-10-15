@@ -370,59 +370,84 @@ function subscribeStudentProgress(ch){
   container.innerHTML="<p>Loading...</p>";
 
   rtdb.ref().on("value", async snapshot=>{
-    let html="<table class='progress-table'><tr><th>Student</th><th>Score</th><th>Date</th><th>Time Spent</th><th>Attempts</th></tr>";
-    const allData = snapshot.val();
+    const allData = snapshot.val() || {};
     const quizResults = allData.QuizResults || {};
     const studentsProgress = allData.StudentsProgress || {};
 
-    let rows = [];
+    // Collect attempts per student: { sid: [ {score, date, timeSpent, source, attemptIndex}, ... ] }
+    const attemptsByStudent = {};
 
-    // QuizResults
+    // Helper to push attempt
+    function pushAttempt(sid, attempt){
+      if(!attemptsByStudent[sid]) attemptsByStudent[sid] = [];
+      attemptsByStudent[sid].push(attempt);
+    }
+
+    // QuizResults (structure: QuizResults[sid][chapter][attemptId] = {score,date,timeSpent})
     for(const sid in quizResults){
-      const studentName = await getStudentName(sid);
-      if(quizResults[sid][ch]){
-        let attempts = Object.keys(quizResults[sid][ch]).length;
-        for(const key in quizResults[sid][ch]){
-          const res = quizResults[sid][ch][key];
-          rows.push({
-            student: studentName,
-            score: res.score||0,
-            date: res.date||"",
-            timeSpent: res.timeSpent||0,
-            attempts: attempts
-          });
-        }
-      }
+      if(!quizResults[sid] || !quizResults[sid][ch]) continue;
+      const chapterEntries = quizResults[sid][ch];
+      const keys = Object.keys(chapterEntries).sort();
+      keys.forEach((key, idx) => {
+        const res = chapterEntries[key] || {};
+        pushAttempt(sid, { score: res.score || 0, date: res.date || '', timeSpent: res.timeSpent || 0, source: 'QuizResults', attemptIndex: idx+1 });
+      });
     }
 
-    // StudentsProgress
+    // StudentsProgress (structure: StudentsProgress[sid][chapter][attemptId] = {keysFound,date,timeSpent})
     for(const sid in studentsProgress){
-      const studentName = await getStudentName(sid);
-      if(studentsProgress[sid][ch]){
-        let attempts = Object.keys(studentsProgress[sid][ch]).length;
-        for(const key in studentsProgress[sid][ch]){
-          const res = studentsProgress[sid][ch][key];
-          rows.push({
-            student: studentName,
-            score: res.keysFound||0,
-            date: res.date||"",
-            timeSpent: res.timeSpent||0,
-            attempts: attempts
-          });
-        }
-      }
+      if(!studentsProgress[sid] || !studentsProgress[sid][ch]) continue;
+      const chapterEntries = studentsProgress[sid][ch];
+      const keys = Object.keys(chapterEntries).sort();
+      keys.forEach((key, idx) => {
+        const res = chapterEntries[key] || {};
+        pushAttempt(sid, { score: res.keysFound || 0, date: res.date || '', timeSpent: res.timeSpent || 0, source: 'StudentsProgress', attemptIndex: idx+1 });
+      });
     }
 
-    // Sort alphabetically by student name
-    rows.sort((a,b)=>a.student.localeCompare(b.student));
+    // Build HTML: per-student collapsible card with attempts table
+    let html = '';
+    const sids = Object.keys(attemptsByStudent).sort();
+    for(const sid of sids){
+      const studentName = await getStudentName(sid);
+      const attempts = attemptsByStudent[sid] || [];
+      // sort attempts by attemptIndex (already ordered) or date
+      attempts.sort((a,b)=> (a.attemptIndex||0) - (b.attemptIndex||0));
 
-    // Build table rows
-    rows.forEach(r=>{
-      html+=`<tr><td>${r.student}</td><td>${r.score}</td><td>${r.date}</td><td>${r.timeSpent} mins</td><td>${r.attempts}</td></tr>`;
+      // build attempts table rows
+      let attemptsRows = '';
+      attempts.forEach(a => {
+        attemptsRows += `<tr><td>${a.attemptIndex}</td><td>${a.score}</td><td>${a.date}</td><td>${a.timeSpent} mins</td><td>${a.source}</td></tr>`;
+      });
+
+      html += `
+        <div class="data-header progress-header" data-sid="${sid}" style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;">
+          <div><strong>${studentName}</strong> <span style="color:#666;margin-left:8px;">(${sid})</span></div>
+          <div style="color:#666">Attempts: ${attempts.length}</div>
+        </div>
+        <div class="chapter-body attempts-body" style="display:none; padding:10px 14px; margin-bottom:12px;">
+          <table class='progress-table'>
+            <thead><tr><th>Attempt #</th><th>Score</th><th>Date</th><th>Time Spent</th><th>Source</th></tr></thead>
+            <tbody>
+              ${attemptsRows}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    if(!sids.length) html = '<p>No attempts found.</p>';
+    container.innerHTML = html;
+
+    // Attach click handlers to toggle attempts
+    document.querySelectorAll('.progress-header').forEach(h => {
+      h.addEventListener('click', ()=>{
+        const next = h.nextElementSibling;
+        if(!next) return;
+        const isOpen = next.style.display && next.style.display !== 'none';
+        next.style.display = isOpen ? 'none' : 'block';
+      });
     });
-
-    html+="</table>";
-    container.innerHTML=html;
   });
 }
 
