@@ -280,50 +280,6 @@
   .icon-btn, .delete-btn { padding: 8px; }
 }
 
-/* Extra responsive improvements for small screens */
-@media (max-width:600px) {
-  /* Make section grid single-column and remove side paddings */
-  .section-container { grid-template-columns: 1fr !important; gap:12px; }
-  .sections-box { padding: 10px; max-height: none; }
-
-  /* Cards should expand naturally and allow content to wrap */
-  .section-card { padding: 12px; min-height: auto; }
-  .card-top { flex-direction: column; align-items: flex-start; gap:8px; }
-  .card-actions { flex-direction: row; gap:8px; align-items:center; width:100%; justify-content:space-between; }
-
-  /* Make header action buttons wrap and be easy to tap */
-  .section-container > .card:first-child { flex-direction: column; align-items:stretch; gap:8px; }
-  #toggleCreateSection, #toggleImportBtn, #downloadTemplateBtn { width:100%; justify-content:center; }
-
-  /* Modals: use bottom sheet style on phones for better UX */
-  .account-modal { align-items: flex-end; padding:0; }
-  .account-modal .modal-content { width:100%; max-width:100%; border-radius:12px 12px 0 0; margin:0; box-shadow: 0 -6px 30px rgba(0,0,0,0.18); max-height:90vh; overflow:auto; padding:16px; }
-
-  /* Stack modal action buttons and make them full-width for touch */
-  .account-modal .save-question-btn, .account-modal .cancel-btn, .account-modal .add-btn { width:100%; display:block; }
-  .account-modal .form-row { flex-direction: column; }
-
-  /* Improve table container and choose-modal for small screens */
-  #chooseStudentModal .modal-content { padding:12px; }
-  #chooseStudentModal table { width:100%; border-collapse:collapse; }
-  #chooseStudentModal table thead th { font-size:0.95rem; }
-  #chooseStudentModal tbody td { font-size:0.95rem; }
-  #chooseStudentModal div[style*="overflow:auto"] { -webkit-overflow-scrolling: touch; }
-
-  /* Increase tap targets for icon buttons */
-  .icon-btn, .delete-btn, .add-btn { padding:12px; border-radius:10px; }
-
-  /* Reduce card footer density */
-  .card-footer { flex-direction: column; align-items:stretch; gap:10px; }
-  .card-footer .right { justify-content:flex-end; }
-}
-
-/* Small tweak for very narrow phones */
-@media (max-width:380px){
-  .account-modal .modal-content { padding:12px 10px; }
-  #toggleCreateSection i, #toggleImportBtn .chev { display:inline-block; }
-}
-
 /* Make Download Template button match site's maroon theme */
 #downloadTemplateBtn {
   background: #7e142a !important;     /* primary maroon used across the UI */
