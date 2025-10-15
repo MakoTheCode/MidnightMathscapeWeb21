@@ -280,6 +280,50 @@
   .icon-btn, .delete-btn { padding: 8px; }
 }
 
+/* Extra responsive improvements for small screens */
+@media (max-width:600px) {
+  /* Make section grid single-column and remove side paddings */
+  .section-container { grid-template-columns: 1fr !important; gap:12px; }
+  .sections-box { padding: 10px; max-height: none; }
+
+  /* Cards should expand naturally and allow content to wrap */
+  .section-card { padding: 12px; min-height: auto; }
+  .card-top { flex-direction: column; align-items: flex-start; gap:8px; }
+  .card-actions { flex-direction: row; gap:8px; align-items:center; width:100%; justify-content:space-between; }
+
+  /* Make header action buttons wrap and be easy to tap */
+  .section-container > .card:first-child { flex-direction: column; align-items:stretch; gap:8px; }
+  #toggleCreateSection, #toggleImportBtn, #downloadTemplateBtn { width:100%; justify-content:center; }
+
+  /* Modals: use bottom sheet style on phones for better UX */
+  .account-modal { align-items: flex-end; padding:0; }
+  .account-modal .modal-content { width:100%; max-width:100%; border-radius:12px 12px 0 0; margin:0; box-shadow: 0 -6px 30px rgba(0,0,0,0.18); max-height:90vh; overflow:auto; padding:16px; }
+
+  /* Stack modal action buttons and make them full-width for touch */
+  .account-modal .save-question-btn, .account-modal .cancel-btn, .account-modal .add-btn { width:100%; display:block; }
+  .account-modal .form-row { flex-direction: column; }
+
+  /* Improve table container and choose-modal for small screens */
+  #chooseStudentModal .modal-content { padding:12px; }
+  #chooseStudentModal table { width:100%; border-collapse:collapse; }
+  #chooseStudentModal table thead th { font-size:0.95rem; }
+  #chooseStudentModal tbody td { font-size:0.95rem; }
+  #chooseStudentModal div[style*="overflow:auto"] { -webkit-overflow-scrolling: touch; }
+
+  /* Increase tap targets for icon buttons */
+  .icon-btn, .delete-btn, .add-btn { padding:12px; border-radius:10px; }
+
+  /* Reduce card footer density */
+  .card-footer { flex-direction: column; align-items:stretch; gap:10px; }
+  .card-footer .right { justify-content:flex-end; }
+}
+
+/* Small tweak for very narrow phones */
+@media (max-width:380px){
+  .account-modal .modal-content { padding:12px 10px; }
+  #toggleCreateSection i, #toggleImportBtn .chev { display:inline-block; }
+}
+
 /* Make Download Template button match site's maroon theme */
 #downloadTemplateBtn {
   background: #7e142a !important;     /* primary maroon used across the UI */
@@ -499,10 +543,6 @@
 
     <form id="studentModalForm">
       <div class="form-row">
-        <div class="form-group">
-          <label>Student Number</label>
-          <input type="text" id="modalStudentNumber" class="form-input" required>
-        </div>
         <div class="form-group">
           <label>Contact Number</label>
           <input type="tel" id="modalContactNumber" class="form-input" required>
@@ -841,7 +881,7 @@ rtdb.ref('SectionList').on('value', snap => {
 
 /* Update Student Count */
 async function updateStudentCount(sectionId, cardEl){
-  const snap = await rtdb.ref('Cridentials').orderByChild('sectionId').equalTo(sectionId).once('value');
+  const snap = await rtdb.ref('StudentAccount').orderByChild('sectionId').equalTo(sectionId).once('value');
   const count = snap.exists()? Object.keys(snap.val()).length : 0;
   const sc = cardEl.querySelector('.student-count');
   if(sc) sc.textContent=`${count} Students`;
@@ -878,7 +918,6 @@ studentModalForm.addEventListener('submit', async e=>{
   const firstname=document.getElementById('modalFirstname').value.trim();
   const lastname=document.getElementById('modalLastname').value.trim();
   const pass=document.getElementById('modalPassword').value;
-  const studentNumber=document.getElementById('modalStudentNumber').value.trim();
   const contactNumber=document.getElementById('modalContactNumber').value.trim();
   const address=document.getElementById('modalAddress').value.trim();
   const username=document.getElementById('modalUsername').value.trim();
@@ -890,8 +929,8 @@ studentModalForm.addEventListener('submit', async e=>{
 
   // use canonical 'pass' key to match existing DB usage and avoid duplication
   const middleInitialVal = (document.getElementById('modalMiddleInitial').value||'').trim();
-  await rtdb.ref(`StudentAccount/${newId}`).set({ firstName: firstname, lastName: lastname, pass, middleInitial: middleInitialVal });
-  await rtdb.ref(`Cridentials/${newId}`).set({ studentNumber,contactNumber,address,username,email,sectionId:activeSectionId,createdAt:Date.now(),status:"active", middleInitial: middleInitialVal });
+  // save account record (StudentAccount used as canonical store). include sectionId so counts and queries work.
+  await rtdb.ref(`StudentAccount/${newId}`).set({ firstName: firstname, lastName: lastname, pass, middleInitial: middleInitialVal, contactNumber, address, username, email, sectionId: activeSectionId, createdAt: Date.now(), status: 'active' });
   // Add student to section's students node
   await rtdb.ref(`SectionList/${activeSectionId}/students/${newId}`).set(true);
 
@@ -963,7 +1002,7 @@ batchUploadBtn.addEventListener('click', async () => {
       const rows = XLSX.utils.sheet_to_json(worksheet, {defval: ''});
       if(!rows || rows.length === 0) { batchStatus.textContent = 'No rows found.'; return; }
 
-      // Expected column names (case-insensitive): firstName, lastName, pass, studentNumber, contactNumber, address, username, email, middleInitial
+  // Expected column names (case-insensitive): firstName, lastName, pass, contactNumber, address, username, email, middleInitial
       batchStatus.textContent = `Found ${rows.length} rows — uploading...`;
       let success = 0, skipped = 0, failed = 0;
 
@@ -976,7 +1015,8 @@ batchUploadBtn.addEventListener('click', async () => {
         const firstname = (norm.firstname || norm.first_name || norm['first name'] || '').toString().trim();
         const lastname = (norm.lastname || norm.last_name || norm['last name'] || '').toString().trim();
         const pass = (norm.pass || norm.password || norm.pwd || '').toString();
-        const studentNumber = (norm.studentnumber || norm['student number'] || norm.studnum || '').toString();
+  // studentNumber intentionally ignored (we use StudentAccount key as canonical id)
+  const studentNumber = '';
         const contactNumber = (norm.contactnumber || norm['contact number'] || norm.contact || '').toString();
         const address = (norm.address || '').toString();
         const username = (norm.username || '').toString().trim();
@@ -991,12 +1031,8 @@ batchUploadBtn.addEventListener('click', async () => {
 
         try{
           const newId = await generateUniqueId();
-          // write records similar to single add flow
-          await rtdb.ref(`StudentAccount/${newId}`).set({ firstName: firstname, lastName: lastname, pass, middleInitial: middleInitialVal });
-          await rtdb.ref(`Cridentials/${newId}`).set({
-            studentNumber, contactNumber, address, username, email,
-            sectionId, createdAt: Date.now(), status: "active", middleInitial: middleInitialVal
-          });
+          // write to StudentAccount as canonical store; studentNumber is not used
+          await rtdb.ref(`StudentAccount/${newId}`).set({ firstName: firstname, lastName: lastname, pass, middleInitial: middleInitialVal, contactNumber, address, username, email, sectionId, createdAt: Date.now(), status: 'active' });
           await rtdb.ref(`SectionList/${sectionId}/students/${newId}`).set(true);
           success++;
           batchStatus.textContent = `Uploading... ${i+1}/${rows.length} (success ${success})`;
@@ -1045,9 +1081,9 @@ batchUploadBtn.addEventListener('click', async () => {
   btn.addEventListener('click', () => {
     // header + two sample rows
     const ws_data = [
-      ["firstName","lastName","pass","studentNumber","contactNumber","address","username","email","middleInitial","sectionId"],
-      ["Juan","Dela Cruz","secret123","2023001","09171234567","123 Main St","juan.dc","juan@example.com","A",""],
-      ["Maria","Santos","password!","2023002","09179876543","45 Side St","maria.s","maria@example.com","B",""]
+      ["firstName","lastName","pass","contactNumber","address","username","email","middleInitial","sectionId"],
+      ["Juan","Dela Cruz","secret123","09171234567","123 Main St","juan.dc","juan@example.com","A",""],
+      ["Maria","Santos","password!","09179876543","45 Side St","maria.s","maria@example.com","B",""]
     ];
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.aoa_to_sheet(ws_data);
@@ -1059,5 +1095,208 @@ batchUploadBtn.addEventListener('click', async () => {
 
 
 </script>
+<!-- Choose Existing Student Modal -->
+<div id="chooseStudentModal" class="account-modal" style="display:none; align-items:center;">
+  <div class="modal-content" style="max-width:800px; width:95%;">
+    <div class="modal-header" style="margin-bottom:6px; align-items:center;">
+      <h3 style="margin:0">Choose existing student to transfer</h3>
+      <span id="closeChooseStudentModal" class="close" style="cursor:pointer">&times;</span>
+    </div>
+    <div style="margin-top:12px;">
+      <input id="chooseStudentSearch" placeholder="Search by name, ID, username, or email..." style="width:100%; padding:8px; box-sizing:border-box;" />
+    </div>
+    <div style="margin-top:12px; max-height:300px; overflow:auto; border:1px solid #eee;">
+      <table style="width:100%; border-collapse:collapse;">
+        <thead style="position:sticky; top:0; background:#fafafa;">
+          <tr>
+            <th style="text-align:left; padding:8px; border-bottom:1px solid #ddd;">Select</th>
+            <th style="text-align:left; padding:8px; border-bottom:1px solid #ddd;">Student</th>
+            <th style="text-align:left; padding:8px; border-bottom:1px solid #ddd;">Current Section</th>
+          </tr>
+        </thead>
+        <tbody id="chooseStudentTbody"></tbody>
+      </table>
+    </div>
+
+    <div style="margin-top:12px; display:flex; gap:8px; align-items:center;">
+      <label style="white-space:nowrap;">Transfer to:</label>
+      <select id="chooseTargetSection" style="flex:1; padding:8px;"></select>
+    </div>
+
+    <div style="margin-top:16px; display:flex; justify-content:flex-end; gap:8px;">
+      <button id="cancelChooseBtn" type="button" class="cancel-btn">Cancel</button>
+      <button id="okChooseBtn" type="button" class="save-question-btn">OK</button>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* highlight selected table row */
+  #chooseStudentTbody tr.selected { background:#e6f7ff; }
+  #chooseStudentTbody tr { cursor:pointer; }
+</style>
+
+<script>
+  // Choose-existing-student modal + transfer logic
+  (function(){
+    const rtdbRef = firebase && firebase.database ? firebase.database() : null;
+    if(!rtdbRef) return;
+
+    // create Choose Existing button next to cancel button in student modal
+    document.addEventListener('DOMContentLoaded', ()=>{
+      const cancelBtn = document.getElementById('cancelModalBtn');
+      if(cancelBtn && !document.getElementById('chooseExistingBtn')){
+        const chooseBtn = document.createElement('button');
+        chooseBtn.id = 'chooseExistingBtn';
+        chooseBtn.type = 'button';
+        chooseBtn.className = cancelBtn.className || 'btn-secondary';
+        chooseBtn.textContent = 'Choose existing students';
+        chooseBtn.style.marginLeft = '8px';
+        chooseBtn.addEventListener('click', openChooseStudentModal);
+        cancelBtn.parentNode.insertBefore(chooseBtn, cancelBtn.nextSibling);
+      }
+    });
+
+    // open modal and load students + sections
+    async function openChooseStudentModal(){
+      const modal = document.getElementById('chooseStudentModal');
+      const tbody = document.getElementById('chooseStudentTbody');
+      const search = document.getElementById('chooseStudentSearch');
+      const sectionSelect = document.getElementById('chooseTargetSection');
+  tbody.innerHTML = '<tr><td colspan="3" style="padding:12px">Loading...</td></tr>';
+      sectionSelect.innerHTML = '<option>Loading...</option>';
+      modal.style.display = 'flex';
+
+      // load sections
+      const sectionsSnap = await rtdbRef.ref('SectionList').once('value');
+      const sections = sectionsSnap.val() || {};
+      const sectionMap = {};
+      sectionSelect.innerHTML = '';
+      Object.keys(sections).forEach(sid => {
+        const s = sections[sid];
+        const opt = document.createElement('option');
+        opt.value = sid;
+        opt.textContent = s.name || s.sectionName || sid;
+        sectionSelect.appendChild(opt);
+        sectionMap[sid] = opt.textContent;
+      });
+
+      // load students: merge StudentAccount and Cridentials so we can render names and other data
+      const credsSnap = await rtdbRef.ref('Cridentials').once('value');
+      const acctSnap = await rtdbRef.ref('StudentAccount').once('value');
+      const creds = credsSnap.val() || {};
+      const accts = acctSnap.val() || {};
+
+      // build merged map where each key is the studentId (account id like '0404')
+      // include ids present in either Cridentials or StudentAccount (union)
+      const students = {};
+      const allIds = new Set([...(Object.keys(creds)||[]), ...(Object.keys(accts)||[])]);
+      allIds.forEach(id => {
+        const c = creds[id] || {};
+        const a = accts[id] || {};
+        // merge records; studentNumber is intentionally ignored (we use account id as canonical)
+        const merged = Object.assign({}, c, a);
+        merged.studentId = id;
+        students[id] = merged;
+      });
+
+      renderStudentRows(students, sectionMap);
+
+  // search handler (matches id, name, username, email)
+      search.oninput = () => {
+        const q = search.value.trim().toLowerCase();
+        const filtered = Object.keys(students).filter(id => {
+          const s = students[id] || {};
+          const name = ((s.firstName||s.firstname||'') + ' ' + (s.lastName||s.lastname||'')).toLowerCase();
+    const num = '';
+          const sid = String(id).toLowerCase();
+          return sid.includes(q) || name.includes(q) || num.includes(q) || (s.username||'').toLowerCase().includes(q) || (s.email||'').toLowerCase().includes(q);
+        }).reduce((acc,id)=>{ acc[id]=students[id]; return acc; }, {});
+        renderStudentRows(filtered, sectionMap);
+      };
+    }
+
+    function renderStudentRows(studentsObj, sectionMap){
+      const tbody = document.getElementById('chooseStudentTbody');
+      tbody.innerHTML = '';
+      if(!studentsObj || Object.keys(studentsObj).length === 0){
+        tbody.innerHTML = '<tr><td colspan="3" style="padding:12px">No students found.</td></tr>';
+        return;
+      }
+      Object.keys(studentsObj).forEach(id => {
+        const s = studentsObj[id] || {};
+        const tr = document.createElement('tr');
+        tr.dataset.studentId = id;
+        const name = (s.firstName || s.firstname || '') + (s.lastName || s.lastname ? (' ' + (s.lastName || s.lastname)) : '');
+        tr.innerHTML = `
+          <td style="padding:8px; border-bottom:1px solid #eee;"><input type="radio" name="chooseStudentRadio" value="${id}"></td>
+          <td style="padding:8px; border-bottom:1px solid #eee;"><strong>${name || (s.username||s.email||'Unnamed')}</strong><div style="font-size:0.85rem;color:#666">ID: ${id}</div></td>
+          <td style="padding:8px; border-bottom:1px solid #eee;">${sectionMap[(s.sectionId||'')]|| (s.sectionId||'')}</td>
+        `;
+        tr.addEventListener('click', (e)=>{
+          // toggle radio and highlight
+          const radio = tr.querySelector('input[type=radio]');
+          if(radio) radio.checked = true;
+          // remove selected from others
+          Array.from(tbody.querySelectorAll('tr')).forEach(r=>r.classList.remove('selected'));
+          tr.classList.add('selected');
+        });
+        tbody.appendChild(tr);
+      });
+    }
+
+    // close handlers
+    document.addEventListener('click', (e)=>{
+      if(e.target && e.target.id === 'closeChooseStudentModal') closeChooseStudentModal();
+      if(e.target && e.target.id === 'cancelChooseBtn') closeChooseStudentModal();
+    });
+
+    function closeChooseStudentModal(){
+      const modal = document.getElementById('chooseStudentModal');
+      if(modal) modal.style.display = 'none';
+    }
+
+    // OK -> transfer
+    document.addEventListener('click', async (e)=>{
+      if(e.target && e.target.id === 'okChooseBtn'){
+        const tbody = document.getElementById('chooseStudentTbody');
+        const checked = tbody.querySelector('input[type=radio]:checked');
+        if(!checked){ alert('Please select a student to transfer.'); return; }
+        const studentId = checked.value;
+        const targetSection = document.getElementById('chooseTargetSection').value;
+        if(!targetSection){ alert('Please choose a target section.'); return; }
+        try{
+          // read current StudentAccount to find old section
+          const cSnap = await rtdbRef.ref('StudentAccount/' + studentId).once('value');
+          const c = cSnap.val() || {};
+          const oldSection = c.sectionId || null;
+
+          // if already in that section: ask for confirmation and allow proceeding
+          if(oldSection === targetSection){
+            const confirmed = confirm('Are you sure do you want to transfer this student to other section?');
+            if(!confirmed){ return; }
+          }
+
+          // perform updates: update cridentials, remove from old section (only if different), add to new section
+          const updates = {};
+          updates['StudentAccount/' + studentId + '/sectionId'] = targetSection;
+          if(oldSection && oldSection !== targetSection) updates['SectionList/' + oldSection + '/students/' + studentId] = null;
+          updates['SectionList/' + targetSection + '/students/' + studentId] = true;
+
+          await rtdbRef.ref().update(updates);
+
+          // show success (reuse successToast if exists)
+          const toast = document.getElementById('successToast');
+          if(toast){ toast.style.display = 'block'; setTimeout(()=>{ toast.style.display='none'; }, 2000); }
+          closeChooseStudentModal();
+        }catch(err){
+          console.error('Transfer error', err);
+          alert('Failed to transfer student: ' + (err.message || err));
+        }
+      }
+    });
+  })();
+</script>
+
 </body>
 </html>
