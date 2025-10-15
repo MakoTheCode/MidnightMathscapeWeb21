@@ -242,7 +242,8 @@
             }
           }
 
-          currentStudents.push({ id, studentId: c?.studentNumber||'N/A', lastName: s.lastName||s.lastname||'', firstName: s.firstName||s.firstname||'', middleInitial: s.middleInitial||s.middleinitial||'', progress: mergedProgress });
+          // Use the StudentAccount key as canonical studentId (preserves leading zeros like '0404')
+          currentStudents.push({ id, studentId: id, lastName: s.lastName||s.lastname||'', firstName: s.firstName||s.firstname||'', middleInitial: s.middleInitial||s.middleinitial||'', progress: mergedProgress });
          }
        }
  
