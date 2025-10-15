@@ -307,17 +307,18 @@
           const cred = credData[studId];
           // include record if cred exists and section matches; OR if there is no cred but we still want to list them for this section (you used logic earlier: include if (!cred && sectionId))
           if ((cred && cred.sectionId === sectionId) || (!cred && sectionId)) {
-            currentStudents.push({
-              id: studId,
-              studentId: cred?.studentNumber || 'N/A',
-              lastName: readLastName(stud),
-              firstName: readFirstName(stud),
-              pass: readPassword(stud),
-              middleInitial: (stud && (stud.middleInitial || stud.middleinitial || '')) || '',
-              status: cred?.status || 'N/A',
-              hasCred: !!cred
-            });
-          }
+              currentStudents.push({
+                id: studId,
+                // Use the StudentAccount key as the canonical Student ID (preserves leading zeros like '0404')
+                studentId: studId,
+                lastName: readLastName(stud),
+                firstName: readFirstName(stud),
+                pass: readPassword(stud),
+                middleInitial: (stud && (stud.middleInitial || stud.middleinitial || '')) || '',
+                status: cred?.status || 'N/A',
+                hasCred: !!cred
+              });
+            }
         }
 
         // sort alphabetical by last then first
