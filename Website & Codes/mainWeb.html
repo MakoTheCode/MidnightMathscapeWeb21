@@ -57,12 +57,15 @@
     <!-- Disabled Account Overlay -->
     <div class="disabled-overlay" id="disabledOverlay">
         <div class="disabled-message">
-            <h2><i class="fas fa-user-slash"></i> Account Disabled</h2>
-            <p>This account has been disabled by the administrator.</p>
-            <p>Please contact your system administrator to regain access.</p>
-            <button onclick="location.reload()">Try Again</button>
-        </div>
+                <h2><i class="fas fa-user-slash"></i> Account Disabled</h2>
+                <p id="disabledOverlayReason">This account has been disabled by the administrator.</p>
+                <p>Please contact your system administrator to regain access.</p>
+                <button onclick="location.reload()">Try Again</button>
+            </div>
     </div>
+
+    <!-- Hidden debug output for disabled-account checks (only visible during local testing) -->
+    <pre id="disabledDebug" style="display:none;position:fixed;bottom:10px;left:10px;right:10px;max-height:40vh;overflow:auto;background:#111;color:#0f0;padding:10px;border-radius:6px;z-index:10001;font-size:12px;"></pre>
 
     <div class="container-wrap">
         <div class="-main">
@@ -106,6 +109,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
     <script>
   // helper: sha256 -> hex (same as settingsPage)
     async function sha256hex(text) {
@@ -131,34 +135,194 @@
     const app = firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
+    const rdb = firebase.database();
+
+    // List of special emails that are allowed to override disabled flags.
+    // Only add a very small set of trusted addresses here. Admins in general are NOT allowed to bypass.
+    const SPECIAL_OVERRIDE_EMAILS = [
+        'admin@stmichael.com',
+        'admin@stmichael.com.ph'
+        
+    ];
+    // When true, any DB/query error during disabled checks will block login (fail-closed).
+    // When false (default) DB/query errors will be ignored and login continues (fail-open).
+    const FAIL_CLOSED_ON_ERROR = false;
 
     // Function to check if account is disabled
-    async function isAccountDisabled(uid) {
-        try {
-            // Check disabledAccounts collection first
-            const disabledDoc = await db.collection('disabledAccounts').doc(uid).get();
-            if (disabledDoc.exists) {
-                return true;
-            }
-            
-            // Check users collection disabled flag
-            const userDoc = await db.collection('users').doc(uid).get();
-            if (userDoc.exists && userDoc.data().disabled === true) {
-                return true;
-            }
-            
+    // Check whether an account is disabled. Accepts auth UID and optional email.
+    // If a disabled marker is found, this function will also set the disabled overlay reason text.
+    async function isAccountDisabled(uid, email=null) {
+        const diagnostics = [];
+        let sawError = null;
+        const lower = email ? String(email).toLowerCase() : null;
+
+        // Allow explicit special override emails to bypass the disabled checks
+        if (lower && SPECIAL_OVERRIDE_EMAILS.includes(lower)) {
+            diagnostics.push({check: 'special_override', email: lower});
+            console.warn('isAccountDisabled: special override email, allowing login', lower);
             return false;
+        }
+
+        try {
+            // 1) Check disabledAccounts collection by uid (doc id)
+            if (uid) {
+                try {
+                    const disabledDoc = await db.collection('disabledAccounts').doc(uid).get();
+                    diagnostics.push({check: 'disabledAccounts.doc(uid)', uid, exists: disabledDoc.exists});
+                    if (disabledDoc.exists) {
+                        const reasonEl = document.getElementById('disabledOverlayReason');
+                        if (reasonEl) reasonEl.textContent = 'This account is totally disabled. (disabledAccounts by uid)';
+                        console.warn('isAccountDisabled: disabledAccounts doc found for uid', uid, disabledDoc.data());
+                        return true;
+                    }
+                } catch (e) {
+                    diagnostics.push({check: 'disabledAccounts.doc(uid).error', error: String(e)});
+                    sawError = e;
+                }
+            }
+
+            // 2) Check users collection document by uid
+            if (uid) {
+                try {
+                    const userDoc = await db.collection('users').doc(uid).get();
+                    diagnostics.push({check: 'users.doc(uid)', uid, exists: userDoc.exists});
+                    if (userDoc.exists && userDoc.data().disabled === true) {
+                        const reasonEl = document.getElementById('disabledOverlayReason');
+                        if (reasonEl) reasonEl.textContent = 'This account is totally disabled. (users doc by uid)';
+                        console.warn('isAccountDisabled: users doc for uid marked disabled', uid, userDoc.data());
+                        return true;
+                    }
+                } catch (e) {
+                    diagnostics.push({check: 'users.doc(uid).error', error: String(e)});
+                    sawError = e;
+                }
+            }
+
+            // 3) Additional checks by email
+            if (email) {
+                // a) Check disabledAccounts collection for a document with id == email or id == lower
+                try {
+                    const docByEmail = await db.collection('disabledAccounts').doc(lower).get();
+                    diagnostics.push({check: 'disabledAccounts.doc(lower)', id: lower, exists: docByEmail.exists});
+                    if (docByEmail.exists) {
+                        const reasonEl = document.getElementById('disabledOverlayReason');
+                        if (reasonEl) reasonEl.textContent = 'This account is totally disabled. (disabledAccounts by email id)';
+                        console.warn('isAccountDisabled: disabledAccounts doc found by email id', lower, docByEmail.data());
+                        return true;
+                    }
+                } catch (e) { diagnostics.push({check: 'disabledAccounts.doc(lower).error', error: String(e)}); sawError = e; }
+
+                try {
+                    const docByEmailOrig = await db.collection('disabledAccounts').doc(email).get();
+                    diagnostics.push({check: 'disabledAccounts.doc(email)', id: email, exists: docByEmailOrig.exists});
+                    if (docByEmailOrig.exists) {
+                        const reasonEl = document.getElementById('disabledOverlayReason');
+                        if (reasonEl) reasonEl.textContent = 'This account is totally disabled. (disabledAccounts by email id)';
+                        console.warn('isAccountDisabled: disabledAccounts doc found by email id', email, docByEmailOrig.data());
+                        return true;
+                    }
+                } catch (e) { diagnostics.push({check: 'disabledAccounts.doc(email).error', error: String(e)}); sawError = e; }
+
+                // b) Check disabledAccounts collection where email field equals lower
+                try {
+                    const daQ = await db.collection('disabledAccounts').where('email', '==', lower).limit(1).get();
+                    diagnostics.push({check: 'disabledAccounts.where(email==lower)', lower, count: daQ.size});
+                    if (!daQ.empty) {
+                        const reasonEl = document.getElementById('disabledOverlayReason');
+                        if (reasonEl) reasonEl.textContent = 'This account is totally disabled. (disabledAccounts by email field)';
+                        console.warn('isAccountDisabled: disabledAccounts entry found for email', lower, daQ.docs.map(d=>d.id));
+                        return true;
+                    }
+                } catch (e) { diagnostics.push({check: 'disabledAccounts.where.email.error', error: String(e)}); sawError = e; }
+
+                // c) Check Firestore users by email (try lower and original)
+                try {
+                    let q = await db.collection('users').where('email', '==', lower).limit(10).get();
+                    diagnostics.push({check: 'users.where(email==lower)', lower, count: q.size});
+                    if (q.empty) {
+                        q = await db.collection('users').where('email', '==', String(email)).limit(10).get();
+                        diagnostics.push({check: 'users.where(email==orig)', email, count: q.size});
+                    }
+                    if (!q.empty) {
+                        for (const doc of q.docs) {
+                            const d = doc.data() || {};
+                            const docEmail = (d.email || '').toString().toLowerCase();
+                            diagnostics.push({check: 'users.doc.check', id: doc.id, email: d.email, disabled: d.disabled});
+                            if (docEmail === lower && d.disabled === true) {
+                                const reasonEl = document.getElementById('disabledOverlayReason');
+                                if (reasonEl) reasonEl.textContent = 'This account is totally disabled. (users by email)';
+                                console.warn('isAccountDisabled: users doc for email marked disabled', doc.id, d);
+                                return true;
+                            }
+                        }
+                    }
+                } catch (e) { diagnostics.push({check: 'users.where.email.error', error: String(e)}); sawError = e; }
+
+                // d) As a last resort, check Realtime Database paths if configured
+                try {
+                    if (rdb) {
+                        try {
+                            const r1 = await rdb.ref('disabledAccounts/' + (uid || lower || '')).get();
+                            diagnostics.push({check: 'rtdb.disabledAccounts.byUidOrLower', path: 'disabledAccounts/' + (uid || lower || ''), exists: r1.exists()});
+                            if (r1.exists()) {
+                                const reasonEl = document.getElementById('disabledOverlayReason');
+                                if (reasonEl) reasonEl.textContent = 'This account is totally disabled. (rtdb disabledAccounts)';
+                                console.warn('isAccountDisabled: RTDB disabledAccounts entry', r1.val());
+                                return true;
+                            }
+                        } catch (e) { diagnostics.push({check: 'rtdb.disabledAccounts.error', error: String(e)}); sawError = e; }
+
+                        try {
+                            // scan a small prefix for email match (costly for large DBs; limited to debug)
+                            const snap = await rdb.ref('disabledAccounts').orderByChild('email').equalTo(lower).limitToFirst(1).get();
+                            diagnostics.push({check: 'rtdb.disabledAccounts.where.email', lower, exists: snap.exists()});
+                            if (snap.exists()) {
+                                const reasonEl = document.getElementById('disabledOverlayReason');
+                                if (reasonEl) reasonEl.textContent = 'This account is totally disabled. (rtdb disabledAccounts by email)';
+                                console.warn('isAccountDisabled: RTDB disabledAccounts entry for email', lower, snap.val());
+                                return true;
+                            }
+                        } catch (e) { diagnostics.push({check: 'rtdb.disabledAccounts.where.error', error: String(e)}); sawError = e; }
+                    }
+                } catch (e) { diagnostics.push({check: 'rtdb.top.error', error: String(e)}); sawError = e; }
+            }
+
+            // If we had any Firestore/RTDB errors, decide based on FAIL_CLOSED_ON_ERROR
+            if (sawError) {
+                console.warn('isAccountDisabled: encountered errors during checks', sawError, diagnostics);
+                const dbg = document.getElementById('disabledDebug');
+                if (dbg) dbg.textContent = JSON.stringify(diagnostics, null, 2);
+                if (FAIL_CLOSED_ON_ERROR) {
+                    const reasonEl = document.getElementById('disabledOverlayReason');
+                    if (reasonEl) reasonEl.textContent = 'Unable to verify account status; login blocked for safety.';
+                    return true; // fail-closed
+                }
+                // fail-open: allow login when checks had errors
+                return false;
+            }
+
+            // No disabled markers found and no errors
+            const dbg = document.getElementById('disabledDebug');
+            if (dbg) dbg.textContent = JSON.stringify(diagnostics, null, 2);
+            console.debug('isAccountDisabled diagnostics:', diagnostics);
+            return false;
+
         } catch (error) {
-            console.warn('Error checking disabled status:', error);
-            return false; // Default to enabled if we can't check
+            console.warn('Error checking disabled status (outer):', error);
+            const dbg = document.getElementById('disabledDebug');
+            if (dbg) dbg.textContent = 'outer_error: ' + String(error);
+            // By default we allow login on unexpected outer errors (fail-open)
+            return false;
         }
     }
 
     // Function to redirect to appropriate page after successful validation
     async function redirectAfterValidation(user, normalizedEmail) {
         // Check if account is disabled BEFORE redirecting
-        const isDisabled = await isAccountDisabled(user.uid);
+    const isDisabled = await isAccountDisabled(user.uid, normalizedEmail);
         if (isDisabled) {
+            const reasonEl = document.getElementById('disabledOverlayReason');
+            if(reasonEl) reasonEl.textContent = 'This account is totally disabled.';
             document.getElementById('disabledOverlay').style.display = 'flex';
             await auth.signOut();
             localStorage.removeItem('fsmUser');
@@ -167,10 +331,9 @@
 
         const idTokenResult = await user.getIdTokenResult();
         const isAdminClaim = !!(idTokenResult && idTokenResult.claims && idTokenResult.claims.admin === true);
-        const isException = (normalizedEmail === 'admin@stmichael.com' || normalizedEmail === 'admin@stmichael.edu.ph');
 
-        // If auth indicates admin (or known-exception email) -> treat as admin
-        if (isAdminClaim || isException) {
+        // If auth indicates admin -> treat as admin. Note: admin accounts are still subject to disabled checks.
+        if (isAdminClaim) {
             let name = user.displayName || '';
             let role = 'admin';
             try {
@@ -227,11 +390,36 @@
             document.getElementById('loginPasswordError').textContent = '';
 
             try {
+                // Pre-check Firestore / disabledAccounts by email to block login early
+                try {
+                    const preDisabled = await isAccountDisabled(null, normalizedEmail);
+                    if (preDisabled) {
+                        document.getElementById('disabledOverlay').style.display = 'flex';
+                        return;
+                    }
+                } catch(errPre){
+                    console.warn('Pre-check for disabled user failed', errPre);
+                }
+
                 // Try Firebase Authentication sign-in first (admins stored in Auth)
                 try {
                     const userCredential = await auth.signInWithEmailAndPassword(email, password);
                     const authUser = userCredential.user;
-                    
+
+                    // Post-auth check: immediately verify Firestore disabled status for this uid/email.
+                    // This prevents cases where Auth sign-in succeeds but Firestore marks the account disabled.
+                    try {
+                        const postDisabled = await isAccountDisabled(authUser.uid, normalizedEmail);
+                        if (postDisabled) {
+                            document.getElementById('disabledOverlay').style.display = 'flex';
+                            // Ensure auth session is ended
+                            await auth.signOut();
+                            return;
+                        }
+                    } catch (e) {
+                        console.warn('Post-auth disabled check failed', e);
+                    }
+
                     // Use the validation and redirect function
                     await redirectAfterValidation(authUser, normalizedEmail);
 
@@ -248,8 +436,10 @@
                         const user = doc.data();
                         
                         // Check if Firestore-only account is disabled
-                        const isDisabled = await isAccountDisabled(doc.id);
+                        const isDisabled = await isAccountDisabled(doc.id, normalizedEmail);
                         if (isDisabled) {
+                            const reasonEl = document.getElementById('disabledOverlayReason');
+                            if(reasonEl) reasonEl.textContent = 'This account is totally disabled.';
                             document.getElementById('disabledOverlay').style.display = 'flex';
                             return;
                         }
@@ -282,6 +472,8 @@
                     
                     // Handle Firebase Auth disabled account error
                     if (authErr && authErr.code === 'auth/user-disabled') {
+                        const reasonEl = document.getElementById('disabledOverlayReason');
+                        if(reasonEl) reasonEl.textContent = 'This account is totally disabled.';
                         document.getElementById('disabledOverlay').style.display = 'flex';
                         return;
                     }

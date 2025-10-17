@@ -395,6 +395,8 @@
         const app = firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
+    // Define root admin emails (cannot be deleted/disabled by other admins)
+    const ROOT_ADMIN_EMAILS = ['admin@stmichael.com', 'admin@stmichael.edu.ph'];
 
         // Helper: call Cloud Function with current user's idToken (throws on network failure)
         async function callApi(path, body = {}) {
@@ -590,6 +592,9 @@
  
                  tr.querySelector('.btn-delete').addEventListener('click', async (ev) => {
                      const uid = ev.currentTarget.dataset.uid;
+                     const email = (u.email||'').toString().toLowerCase();
+                     // Prevent deletion of root admin by email
+                     if (email && ROOT_ADMIN_EMAILS.includes(email)) { alert('Cannot delete the main admin account for security reasons.'); return; }
                      if (!confirm('Delete this Authentication user? This permanently removes the account.')) return;
                      try { const res = await callApi('/admin/users/delete',{uid}); if(res.ok){ alert('User deleted.'); tr.remove(); } else alert('Delete failed: '+(res.error||'unknown')); } catch(err){ alert('Error: '+(err.message||err)); }
                  });
@@ -687,6 +692,15 @@
                                         alert('Account re-enabled.');
                                     } else {
                                         // Disable user
+                                        // Check root admin protection
+                                        try {
+                                            const doc = await db.collection('users').doc(uid).get();
+                                            const data = doc.exists ? doc.data() : {};
+                                            const lowEmail = (data && data.email) ? String(data.email).toLowerCase() : (email||'').toLowerCase();
+                                            if (ROOT_ADMIN_EMAILS.includes(lowEmail) || data?.isRoot === true) {
+                                                return alert('Cannot disable the main admin account for security reasons.');
+                                            }
+                                        } catch (e) { console.warn('Failed to read user for root check', e); }
                                         if (!confirm(`Disable account ${email || uid}? This prevents the user from signing in.`)) return;
                                         // Try Cloud Functions first
                                         try {
@@ -713,6 +727,17 @@
 
                             tr.querySelector('.btn-delete').addEventListener('click', async (ev) => {
                                 const uid = ev.currentTarget.dataset.uid;
+                                if (!uid) return alert('Missing uid');
+                                // Check for root admin protection
+                                try {
+                                    const doc = await db.collection('users').doc(uid).get();
+                                    const data = doc.exists ? doc.data() : {};
+                                    const lowEmail = (data && data.email) ? String(data.email).toLowerCase() : '';
+                                    if (ROOT_ADMIN_EMAILS.includes(lowEmail) || data?.isRoot === true) {
+                                        return alert('Cannot delete the main admin account for security reasons.');
+                                    }
+                                } catch (e) { console.warn('Failed to read user for delete root check', e); }
+
                                 if (!confirm('Delete this account record from Firestore? This will NOT delete Authentication user.')) return;
                                 try { await db.collection('users').doc(uid).delete(); alert('Record deleted from Firestore.'); } catch(err){ alert('Delete failed: '+(err.message||err)); }
                             });
@@ -771,7 +796,10 @@
                             name,
                             role,
                             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                            authCreated: true
+                            authCreated: true,
+                            // record who created this account and allow overrides when created by an existing admin
+                            createdBy: auth.currentUser ? auth.currentUser.uid : null,
+                            overrideAllowed: true
                         });
                         alert('Account created in Firebase Authentication and saved to Firestore.');
                         this.reset();
@@ -798,7 +826,9 @@
                                 name,
                                 role,
                                 createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                                authCreated: false // marker to indicate Auth account not created yet
+                                authCreated: false, // marker to indicate Auth account not created yet
+                                createdBy: auth.currentUser ? auth.currentUser.uid : null,
+                                overrideAllowed: true
                             });
                             alert('Account record created in Firestore. Authentication user NOT created. Deploy Cloud Function or create in Firebase Console to make real Auth account.');
                             this.reset();
