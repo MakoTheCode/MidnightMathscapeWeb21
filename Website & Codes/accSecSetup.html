@@ -917,37 +917,83 @@ async function generateUniqueId(){
   return id;
 }
 
-/* Submit Student Form */
+/* Submit Student Form with duplication protection */
+let savingStudent = false;
 studentModalForm.addEventListener('submit', async e=>{
   e.preventDefault();
   if(!activeSectionId) return alert('No section selected');
 
-  const firstname=document.getElementById('modalFirstname').value.trim();
-  const lastname=document.getElementById('modalLastname').value.trim();
-  const pass=document.getElementById('modalPassword').value;
-  const contactNumber=document.getElementById('modalContactNumber').value.trim();
-  const address=document.getElementById('modalAddress').value.trim();
-  const username=document.getElementById('modalUsername').value.trim();
-  const email=document.getElementById('modalEmail').value.trim();
+  if(savingStudent) return; // already in progress
+  savingStudent = true;
+  const submitBtn = studentModalForm.querySelector('button[type="submit"]');
+  if(submitBtn) submitBtn.disabled = true;
 
-  if(!firstname||!lastname||!pass||!username||!email) return alert('Fill required fields');
+  try{
+    const firstname=document.getElementById('modalFirstname').value.trim();
+    const lastname=document.getElementById('modalLastname').value.trim();
+    const pass=document.getElementById('modalPassword').value;
+    const contactNumber=document.getElementById('modalContactNumber').value.trim();
+    const address=document.getElementById('modalAddress').value.trim();
+    const username=document.getElementById('modalUsername').value.trim();
+    const email=document.getElementById('modalEmail').value.trim();
 
-  const newId=await generateUniqueId();
+    if(!firstname||!lastname||!pass||!username||!email) {
+      alert('Fill required fields');
+      return;
+    }
 
-  // use canonical 'pass' key to match existing DB usage and avoid duplication
-  const middleInitialVal = (document.getElementById('modalMiddleInitial').value||'').trim();
-  // save account record (StudentAccount used as canonical store). include sectionId so counts and queries work.
-  // Per new rule: StudentAccount stores only lowercase 'firstname','lastname','pass'. Other fields (address, contactNumber, email, middleInitial, sectionId) stay in Cridentials.
-  await rtdb.ref(`StudentAccount/${newId}`).set({ firstname: firstname, lastname: lastname, pass });
-  // save legacy/auxiliary info in Cridentials
-  await rtdb.ref(`Cridentials/${newId}`).set({ firstname: firstname, lastname: lastname, middleInitial: middleInitialVal, contactNumber, address, username, email, sectionId: activeSectionId, createdAt: Date.now(), status: 'active' });
-  // Add student to section's students node
-  await rtdb.ref(`SectionList/${activeSectionId}/students/${newId}`).set(true);
+    const lowerEmail = email.toLowerCase();
+    const lowerUsername = username.toLowerCase();
 
-  document.getElementById('successToast').style.display='block';
-  setTimeout(()=>document.getElementById('successToast').style.display='none',2500);
+    // Check for existing email in Cridentials (avoid duplicates)
+    try{
+      const emailSnap = await rtdb.ref('Cridentials').orderByChild('email').equalTo(lowerEmail).once('value');
+      if(emailSnap.exists()){
+        const foundIds = Object.keys(emailSnap.val() || {});
+        alert('A student with this email already exists. ID: ' + (foundIds[0] || 'unknown'));
+        return;
+      }
+    }catch(err){
+      console.warn('Email uniqueness check failed', err);
+      // proceed — client-side check failed (server-side enforcement recommended)
+    }
 
-  accountModal.style.display='none';
+    // Check for existing username in Cridentials
+    try{
+      const userSnap = await rtdb.ref('Cridentials').orderByChild('username').equalTo(lowerUsername).once('value');
+      if(userSnap.exists()){
+        const foundIds = Object.keys(userSnap.val() || {});
+        alert('Username already taken. ID: ' + (foundIds[0] || 'unknown'));
+        return;
+      }
+    }catch(err){
+      console.warn('Username uniqueness check failed', err);
+    }
+
+    // Passed duplication checks — create new student id and write atomically
+    const newId = await generateUniqueId();
+    const middleInitialVal = (document.getElementById('modalMiddleInitial').value||'').trim();
+
+    // Use multi-path update to reduce inconsistent state window
+    const updates = {};
+    updates[`StudentAccount/${newId}`] = { firstname: firstname, lastname: lastname, pass };
+    updates[`Cridentials/${newId}`] = { firstname: firstname, lastname: lastname, middleInitial: middleInitialVal, contactNumber, address, username, email: lowerEmail, sectionId: activeSectionId, createdAt: Date.now(), status: 'active' };
+    updates[`SectionList/${activeSectionId}/students/${newId}`] = true;
+
+    await rtdb.ref().update(updates);
+
+    document.getElementById('successToast').style.display='block';
+    setTimeout(()=>document.getElementById('successToast').style.display='none',2500);
+
+    accountModal.style.display='none';
+
+  }catch(err){
+    console.error('Save student error', err);
+    alert('Failed to save student: ' + (err.message || err));
+  } finally {
+    savingStudent = false;
+    if(submitBtn) submitBtn.disabled = false;
+  }
 });
 
 /* ------------------ Batch upload (Excel -> students) ------------------ */

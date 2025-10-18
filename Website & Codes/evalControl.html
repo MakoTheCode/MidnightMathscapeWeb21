@@ -40,6 +40,16 @@ body { font-family:'Inter', sans-serif; background:#f8f9fa; margin:0; }
 .progress-table th, .progress-table td { border:1px solid #ddd; padding:8px; text-align:left; }
 .progress-table th { background:#f2f2f2; font-weight:bold; }
 
+.question-result.correct { border-left:6px solid #2b8a3e; padding-left:8px; }
+.question-result.wrong { border-left:6px solid #d33; padding-left:8px; background:#fff6f6; }
+
+.choice { padding:8px 10px; border-radius:6px; border:1px solid #e7e7e7; margin-top:6px; display:flex; justify-content:space-between; align-items:center; }
+.choice.correct-choice { background: rgba(43,138,62,0.06); border-color:#2b8a3e; }
+.choice.student-choice { box-shadow: inset 0 0 0 2px rgba(0,0,0,0.04); }
+.choice .tag { font-size:12px; padding:4px 6px; border-radius:6px; }
+.choice .tag.correct { background:#2b8a3e;color:#fff; }
+.choice .tag.selected { background:#d33;color:#fff; }
+
 .add-question-btn { background: linear-gradient(180deg,#a72344,#7a1024); color:#fff; padding:10px 16px; border-radius:10px; font-weight:700; border:none; cursor:pointer; margin-bottom:12px; transition:0.2s; }
 .add-question-btn:hover { transform:scale(1.03); }
 
@@ -119,6 +129,9 @@ body { font-family:'Inter', sans-serif; background:#f8f9fa; margin:0; }
       <div class="header-title"><h1>Evaluation & Control</h1></div>
       <div class="data-container">
         <p>Total Students: <span id="totalStudents">Loading...</span></p>
+        <div style="margin-top:8px;margin-bottom:10px;">
+          <button id="testModalBtn" class="save-question-btn" style="padding:8px 12px; font-size:14px;">Test Modal</button>
+        </div>
         <div class="chapters-scroll">
           <div id="chaptersContainer"></div>
         </div>
@@ -185,6 +198,17 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const rtdb = firebase.database();
+
+// Safe HTML escape helper
+function escapeHtml(str){
+  if(str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
 
 // Count students from StudentAccount in realtime
 const totalStudentsEl = document.getElementById('totalStudents');
@@ -352,6 +376,37 @@ function shuffle(array){
   return array;
 }
 
+// Robust extractor: get student response for a question key/index from various attempt shapes
+function extractStudentResponse(attemptObj, qk, qIndex){
+  if(!attemptObj) return undefined;
+  // common shapes
+  if(attemptObj.answers && attemptObj.answers[qk] !== undefined) return attemptObj.answers[qk];
+  if(attemptObj.answers && attemptObj.answers['q'+qk] !== undefined) return attemptObj.answers['q'+qk];
+  if(attemptObj.answers && attemptObj.answers['Q'+qk] !== undefined) return attemptObj.answers['Q'+qk];
+  if(attemptObj.answers && attemptObj.answers[qIndex] !== undefined) return attemptObj.answers[qIndex];
+  if(attemptObj.answers && attemptObj.answers['q'+qIndex] !== undefined) return attemptObj.answers['q'+qIndex];
+  if(attemptObj.answers && attemptObj.answers['Q'+qIndex] !== undefined) return attemptObj.answers['Q'+qIndex];
+  if(attemptObj.responses && attemptObj.responses[qk] !== undefined) return attemptObj.responses[qk];
+  if(Array.isArray(attemptObj.responses) && attemptObj.responses.length >= qIndex) return attemptObj.responses[qIndex-1];
+  if(attemptObj.responsesArray && Array.isArray(attemptObj.responsesArray) && attemptObj.responsesArray.length >= qIndex) return attemptObj.responsesArray[qIndex-1];
+  if(attemptObj[qk] !== undefined) return attemptObj[qk];
+  if(attemptObj['q'+qk] !== undefined) return attemptObj['q'+qk];
+  if(attemptObj['Q'+qk] !== undefined) return attemptObj['Q'+qk];
+  if(attemptObj['q'+qk] !== undefined) return attemptObj['q'+qk];
+  if(attemptObj[String(qk)] !== undefined) return attemptObj[String(qk)];
+  // some QuizResults store answers under a top-level 'answers' object with numeric keys as strings
+  if(attemptObj.answers && typeof attemptObj.answers === 'object'){
+    if(attemptObj.answers[String(qIndex)] !== undefined) return attemptObj.answers[String(qIndex)];
+    // try to find keys like 'Q1', 'q1', or any key whose numeric part equals qIndex (robust matching)
+    for(const k of Object.keys(attemptObj.answers)){
+      if(!k) continue;
+      const num = k.replace(/\D/g,'');
+      if(num === String(qIndex)) return attemptObj.answers[k];
+    }
+  }
+  return undefined;
+}
+
 // Fetch student name
 async function getStudentName(sid){
   const snap = await rtdb.ref("StudentAccount/"+sid).get();
@@ -417,7 +472,7 @@ function subscribeStudentProgress(ch){
       // build attempts table rows
       let attemptsRows = '';
       attempts.forEach(a => {
-        attemptsRows += `<tr><td>${a.attemptIndex}</td><td>${a.score}</td><td>${a.date}</td><td>${a.timeSpent} mins</td><td>${a.source}</td></tr>`;
+          attemptsRows += `<tr><td>${a.attemptIndex}</td><td>${a.score}</td><td>${a.date}</td><td>${a.timeSpent} mins</td><td>${a.source}</td><td><button class="btn btn-sm btn-primary" data-view-attempt="${sid}|${ch}|${a.attemptIndex}">View</button> <button class="btn btn-sm btn-outline-success" data-inline-answers="${sid}|${ch}|${a.attemptIndex}">Answers</button></td></tr>`;
       });
 
       html += `
@@ -449,6 +504,324 @@ function subscribeStudentProgress(ch){
       });
     });
   });
+}
+
+// View attempt details handler (delegated)
+document.addEventListener('click', async (e)=>{
+  const btn = e.target.closest && e.target.closest('[data-view-attempt]');
+  if(!btn) return;
+  const val = btn.getAttribute('data-view-attempt'); // sid|chapter|attemptIndex
+  const [sid, ch, attemptIndex] = val.split('|');
+  // fetch attempt object from StudentsProgress or QuizResults
+  try{
+    // First try StudentsProgress node
+    const spSnap = await rtdb.ref(`StudentsProgress/${sid}/${ch}/${attemptIndex}`).get();
+    let attemptObj = spSnap.exists() ? spSnap.val() : null;
+    let source = 'StudentsProgress';
+    if(!attemptObj){
+      const qrSnap = await rtdb.ref(`QuizResults/${sid}/${ch}/${attemptIndex}`).get();
+      attemptObj = qrSnap.exists() ? qrSnap.val() : null;
+      source = qrSnap.exists() ? 'QuizResults' : source;
+    }
+    if(!attemptObj){
+      // fallback: try to search StudentsProgress/[sid]/[ch] for any attempt matching attemptIndex by key
+      const altSnap = await rtdb.ref(`StudentsProgress/${sid}/${ch}`).get();
+      if(altSnap.exists()){
+        const altVal = altSnap.val();
+        if(altVal[attemptIndex]){ attemptObj = altVal[attemptIndex]; source='StudentsProgress'; }
+      }
+    }
+    // If still missing, try to read chapter-level data and use it as attempt object
+    if(!attemptObj){
+      // try QuizResults at chapter level
+      const chapterQrSnap = await rtdb.ref(`QuizResults/${sid}/${ch}`).get();
+      if(chapterQrSnap.exists()){
+        const chVal = chapterQrSnap.val();
+        // If chVal looks like a direct answers object (has answers/responses or non-numeric keys), use it
+        const chKeys = Object.keys(chVal || {});
+        if(chVal && (chVal.answers || chVal.responses || chKeys.some(k=>isNaN(Number(k))))) {
+          attemptObj = chVal; source = 'QuizResults(chapter)';
+        } else if(chKeys.length){
+          // otherwise pick the first child (older structures may nest by attempt id)
+          attemptObj = chVal[chKeys[0]]; source = `QuizResults(chapter:${chKeys[0]})`; 
+        }
+      }
+      // if still not found, try StudentsProgress at chapter level
+      if(!attemptObj){
+        const chapterSpSnap = await rtdb.ref(`StudentsProgress/${sid}/${ch}`).get();
+        if(chapterSpSnap.exists()){
+          const spVal = chapterSpSnap.val();
+          const spKeys = Object.keys(spVal || {});
+          if(spVal && (spVal.answers || spVal.responses || spKeys.some(k=>isNaN(Number(k))))) {
+            attemptObj = spVal; source = 'StudentsProgress(chapter)';
+          } else if(spKeys.length){
+            attemptObj = spVal[spKeys[0]]; source = `StudentsProgress(chapter:${spKeys[0]})`;
+          }
+        }
+      }
+    }
+    // If still missing, show a friendly modal indicating no stored answers were found (instead of an alert)
+    if(!attemptObj){
+      const fallbackHtml = `<div style="max-height:60vh;overflow:auto"><h3>No stored answers found</h3><p>There is no per-attempt record for this attempt and no chapter-level answers were found in the database for this student/chapter.</p><p>Check that the student's attempts were saved under <code>QuizResults/${sid}/${ch}</code> or <code>StudentsProgress/${sid}/${ch}</code>.</p></div>`;
+      showAttemptModal(fallbackHtml);
+      return;
+    }
+
+    // Load chapter quiz questions to compare answers
+    const quizSnap = await rtdb.ref(`quizzes/${ch}/questions`).get();
+    const questions = quizSnap.exists() ? quizSnap.val() : {};
+
+    // Build modal content: iterate questions in numeric order by questionIndex
+    const qKeys = Object.keys(questions || {}).sort((a,b)=> Number(a) - Number(b));
+    let html = `<div style="max-height:60vh;overflow:auto">`;
+    html += `<h3>Attempt ${escapeHtml(attemptIndex)} — Student ${escapeHtml(sid)} — Source: ${escapeHtml(source)}</h3>`;
+
+    if(qKeys.length===0){ html += `<p>No question definitions found for this chapter.</p>`; }
+    else {
+      qKeys.forEach(qk => {
+        const q = questions[qk];
+        // Determine student's response for this question from attemptObj
+        // Attempt shapes vary: could be {answers: {qIndex: value}} or {responses: [...] } or flat fields. We'll try several heuristics.
+  // extract student response using helper (qk is key, qIndex = numeric index)
+  const qIndex = Number(qk);
+  let studentResp = extractStudentResponse(attemptObj, qk, qIndex);
+
+        // evaluate correctness using evaluateAnswer
+        const correct = evaluateAnswer(q, studentResp);
+
+        const cls = correct ? 'question-result correct' : 'question-result wrong';
+        html += `<div class="${cls}" style="padding:10px;border-bottom:1px solid #eee;margin-bottom:8px;">
+          <div style="display:flex;justify-content:space-between;align-items:center"><div style="font-weight:700;color:#501121">Q${escapeHtml(q.questionIndex || qk)}: ${escapeHtml(q.question||'')}</div><div style="font-size:12px;color:#666">${escapeHtml(q.type||'')}</div></div>`;
+
+        if(q.type === 'multiple_choice'){
+          // render choices and highlight correct and student selection
+          const choices = Array.isArray(q.choices) ? q.choices : (q.choices ? Object.values(q.choices) : []);
+          html += `<div style="margin-top:8px;display:flex;flex-direction:column;">`;
+          choices.forEach((opt, idx)=>{
+            // isCorrect by value
+            const isCorrect = (Array.isArray(q.answer) ? q.answer.indexOf(opt) !== -1 : q.answer === opt);
+            // determine if student selected this option: handle text or numeric index
+            let isSelected = false;
+            if(Array.isArray(studentResp)){
+              isSelected = studentResp.indexOf(opt) !== -1 || studentResp.indexOf(String(idx)) !== -1 || studentResp.indexOf(idx) !== -1;
+            } else {
+              isSelected = studentResp === opt || studentResp === String(opt) || studentResp === idx || studentResp === String(idx) || studentResp === (idx+1) || studentResp === String(idx+1);
+            }
+            // if attempt stored numeric index (0-based or 1-based), map to choice text for display later
+            let displayStudent = studentResp;
+            if(!Array.isArray(studentResp) && (typeof studentResp === 'number' || (!isNaN(Number(studentResp)) && String(studentResp).trim() !== ''))){
+              const num = Number(studentResp);
+              const mapIdx = (num === 0 || num === idx) ? num : (num-1);
+              if(choices[mapIdx] !== undefined) displayStudent = choices[mapIdx];
+            }
+            // if array of numeric indices, map them
+            let displayStudentForOpt = displayStudent;
+            if(Array.isArray(studentResp)){
+              const mapped = studentResp.map(x=>{ const n=Number(x); return (Number.isFinite(n) && choices[n]!==undefined) ? choices[n] : x; });
+              displayStudentForOpt = mapped.join(', ');
+            }
+            const chCls = `choice ${isCorrect ? 'correct-choice':''} ${isSelected ? 'student-choice':''}`;
+            const tag = isCorrect ? '<span class="tag correct">Correct</span>' : (isSelected ? '<span class="tag selected">Selected</span>' : '');
+            html += `<div class="${chCls}"><div>${escapeHtml(opt)}</div><div>${tag}</div></div>`;
+          });
+          html += `</div>`;
+          html += `<div style="margin-top:8px;">Result: <span style="font-weight:700;color:${correct? '#2b8a3e':'#d33'}">${correct? 'Correct' : 'Incorrect'}</span></div>`;
+        } else {
+          html += `<div style="margin-top:6px;">Expected: <span style='font-weight:600'>${escapeHtml(String(q.answer===undefined?JSON.stringify(q.choices||''): q.answer))}</span></div>`;
+          html += `<div style="margin-top:6px;">Student answer: <span style='font-weight:600'>${escapeHtml(String(studentResp===undefined?'(no response)': studentResp))}</span></div>`;
+          html += `<div style="margin-top:6px;color:${correct? '#2b8a3e':'#d33'};font-weight:700">${correct? 'Correct' : 'Incorrect'}</div>`;
+        }
+        html += `</div>`;
+      });
+    }
+    html += `</div>`;
+
+    // show custom modal (reuse simple modal pattern)
+    showAttemptModal(html);
+  }catch(err){ console.error(err); alert('Error loading attempt details: '+ (err && err.message ? err.message : err)); }
+});
+
+// Helper: fetch an attempt object with fallbacks (per-attempt nodes, chapter-level nodes)
+async function fetchAttemptObject(sid, ch, attemptIndex){
+  console.debug('fetchAttemptObject()', { sid, ch, attemptIndex });
+  // try StudentsProgress per-attempt
+  const spPath = `StudentsProgress/${sid}/${ch}/${attemptIndex}`;
+  const spSnap = await rtdb.ref(spPath).get();
+  console.debug('checked', spPath, 'exists=', spSnap.exists());
+  if(spSnap.exists()) return { obj: spSnap.val(), source: spPath };
+  const qrPath = `QuizResults/${sid}/${ch}/${attemptIndex}`;
+  const qrSnap = await rtdb.ref(qrPath).get();
+  console.debug('checked', qrPath, 'exists=', qrSnap.exists());
+  if(qrSnap.exists()) return { obj: qrSnap.val(), source: qrPath };
+
+  // try chapter-level QuizResults
+  const chapterQrPath = `QuizResults/${sid}/${ch}`;
+  const chapterQrSnap = await rtdb.ref(chapterQrPath).get();
+  console.debug('checked', chapterQrPath, 'exists=', chapterQrSnap.exists());
+  if(chapterQrSnap.exists()){
+    const chVal = chapterQrSnap.val();
+    const chKeys = Object.keys(chVal||{});
+    console.debug('chapterQr keys sample=', chKeys.slice(0,5));
+    if(chVal && (chVal.answers || chVal.responses || chKeys.some(k=>isNaN(Number(k))))) return { obj: chVal, source: chapterQrPath };
+    if(chKeys.length) return { obj: chVal[chKeys[0]], source: `${chapterQrPath}:${chKeys[0]}` };
+  }
+
+  // try chapter-level StudentsProgress
+  const chapterSpPath = `StudentsProgress/${sid}/${ch}`;
+  const chapterSpSnap = await rtdb.ref(chapterSpPath).get();
+  console.debug('checked', chapterSpPath, 'exists=', chapterSpSnap.exists());
+  if(chapterSpSnap.exists()){
+    const spVal = chapterSpSnap.val(); const spKeys = Object.keys(spVal||{});
+    console.debug('chapterSp keys sample=', spKeys.slice(0,5));
+    if(spVal && (spVal.answers || spVal.responses || spKeys.some(k=>isNaN(Number(k))))) return { obj: spVal, source: chapterSpPath };
+    if(spKeys.length) return { obj: spVal[spKeys[0]], source: `${chapterSpPath}:${spKeys[0]}` };
+  }
+  return null;
+}
+
+// Delegated handler for inline answers button
+document.addEventListener('click', async (e)=>{
+  const btn = e.target.closest && e.target.closest('[data-inline-answers]');
+  if(!btn) return;
+  try{
+    const val = btn.getAttribute('data-inline-answers'); // sid|chapter|attemptIndex
+    const parts = val ? val.split('|') : [];
+    const sid = parts[0], ch = parts[1], attemptIndex = parts[2];
+    console.debug('Answers clicked', { val, sid, ch, attemptIndex });
+    const tr = btn.closest('tr');
+    if(!tr) console.debug('Answers handler: no enclosing <tr> found for button, continuing anyway');
+
+    // fetch attempt object with logging
+    let fetched = null;
+    console.debug('Answers handler: calling fetchAttemptObject', { sid, ch, attemptIndex });
+    try{
+      fetched = await fetchAttemptObject(sid, ch, attemptIndex);
+      console.debug('fetchAttemptObject returned', { fetchedSummary: fetched ? { source: fetched.source, sampleKeys: fetched.obj ? Object.keys(fetched.obj).slice(0,5) : null } : null });
+    }catch(err){
+      console.error('fetchAttemptObject threw', err);
+      showAttemptModal(`<div style="padding:12px"><h3>Error fetching attempt</h3><pre>${escapeHtml(err && err.message ? err.message : String(err))}</pre></div>`);
+      return;
+    }
+
+    if(!fetched || !fetched.obj){
+      console.debug('No fetched attempt object, showing fallback modal', { fetched });
+      const fallbackHtml = `<div style="max-height:60vh;overflow:auto;padding:12px"><h3>No stored answers found</h3><p>There is no stored answers for this attempt.</p><pre>Request: ${escapeHtml(val)}</pre></div>`;
+      try{ showAttemptModal(fallbackHtml); } catch(showErr){ console.error('showAttemptModal failed', showErr); alert('No stored answers and failed to open modal. See console.'); }
+      return;
+    }
+
+    const attemptObj = fetched.obj; const source = fetched.source;
+    // load question definitions
+    const quizSnap = await rtdb.ref(`quizzes/${ch}/questions`).get();
+    const questions = quizSnap.exists() ? quizSnap.val() : {};
+    const qKeys = Object.keys(questions||{}).sort((a,b)=>Number(a)-Number(b));
+
+    // build inner content
+    let inner = `<div style="padding:8px;">`;
+    inner += `<div style="font-weight:700;margin-bottom:8px">Answers (source: ${escapeHtml(source)})</div>`;
+    if(qKeys.length===0) inner += `<div>No question definitions found for this chapter.</div>`;
+    else {
+      qKeys.forEach(qk=>{
+        const q = questions[qk]; const qIndex = Number(qk);
+        const studentResp = extractStudentResponse(attemptObj, qk, qIndex);
+        const correct = evaluateAnswer(q, studentResp);
+        const cls = correct ? 'question-result correct' : 'question-result wrong';
+        inner += `<div class="${cls}" style="padding:8px;margin-bottom:6px;border:1px solid #eee;border-radius:6px;">`;
+        inner += `<div style="font-weight:700;color:#501121">Q${escapeHtml(q.questionIndex||qk)}: ${escapeHtml(q.question||'')}</div>`;
+        if(q.type === 'multiple_choice'){
+          const choices = Array.isArray(q.choices)? q.choices : (q.choices? Object.values(q.choices):[]);
+          inner += `<div style="margin-top:6px;display:flex;flex-direction:column">`;
+          choices.forEach((opt, idx)=>{
+            const isCorrect = (Array.isArray(q.answer)? q.answer.indexOf(opt)!==-1 : q.answer===opt);
+            let isSelected = false;
+            if(Array.isArray(studentResp)) isSelected = studentResp.indexOf(opt)!==-1 || studentResp.indexOf(String(idx))!==-1 || studentResp.indexOf(idx)!==-1;
+            else isSelected = studentResp===opt || studentResp===String(opt) || studentResp===idx || studentResp===String(idx) || studentResp===(idx+1) || studentResp===String(idx+1);
+            const chCls = `choice ${isCorrect? 'correct-choice':''} ${isSelected? 'student-choice':''}`;
+            const tag = isCorrect? '<span class="tag correct">Correct</span>' : (isSelected? '<span class="tag selected">Selected</span>' : '');
+            inner += `<div class="${chCls}"><div>${escapeHtml(opt)}</div><div>${tag}</div></div>`;
+          });
+          inner += `</div>`;
+        } else {
+          inner += `<div style="margin-top:6px;">Expected: <span style='font-weight:600'>${escapeHtml(String(q.answer===undefined?JSON.stringify(q.choices||''): q.answer))}</span></div>`;
+          inner += `<div style="margin-top:6px;">Student answer: <span style='font-weight:600'>${escapeHtml(String(studentResp===undefined?'(no response)': studentResp))}</span></div>`;
+        }
+        inner += `<div style="margin-top:6px;color:${correct? '#2b8a3e':'#d33'};font-weight:700">${correct? 'Correct' : 'Incorrect'}</div>`;
+        inner += `</div>`;
+      });
+    }
+    inner += `</div>`;
+
+    // show modal with answers instead of inline row
+    try{ console.debug('Showing modal with answers'); showAttemptModal(inner); }catch(err){ console.error('showAttemptModal failed', err); showAttemptModal(`<div style="padding:12px"><h3>Modal failed</h3><pre>${escapeHtml(err && err.message ? err.message : String(err))}</pre></div>`); }
+  }catch(err){ console.error('Unhandled error in Answers handler', err); showAttemptModal(`<div style="padding:12px"><h3>Unhandled error</h3><pre>${escapeHtml(err && err.message ? err.message : String(err))}</pre></div>`); }
+});
+
+// Simple attempt modal implementation
+function showAttemptModal(innerHtml){
+  console.debug('showAttemptModal called, innerHtml length=', innerHtml ? innerHtml.length : 0);
+  let modal = document.getElementById('attemptDetailsModal');
+  if(!modal){
+    modal = document.createElement('div'); modal.id='attemptDetailsModal'; modal.className='modal';
+  const content = document.createElement('div'); content.className='modal-content'; content.style.maxWidth='900px';
+  // limit modal height and keep its content scrollable when large
+  content.style.maxHeight = '80vh';
+  content.style.overflow = 'hidden';
+    content.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div style="display:flex;flex-direction:column;">
+          <div style="display:flex;align-items:center;gap:12px"><h3 id="attemptModalTitle">Attempt Details</h3><span id="wrongSummary" style="color:#d33;font-weight:700"></span></div>
+          <div style="font-size:13px;color:#666" id="attemptModalSub"></div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button id="filterWrongBtn" class="btn" style="background:#fff;border:1px solid #ccc;padding:6px 10px;border-radius:6px;">Show Wrong Only</button>
+          <button style="background:#fff;border:1px solid #ccc;padding:6px 10px;border-radius:6px;" id="closeAttemptModal">Close</button>
+        </div>
+      </div>
+      <div id="attemptDetailsContent"></div>`;
+    modal.appendChild(content); document.body.appendChild(modal);
+    // Attach handlers after appending
+    try{ document.getElementById('closeAttemptModal').addEventListener('click', ()=>{ modal.style.display='none'; }); }catch(e){ console.error('attach closeAttemptModal failed', e); }
+    try{ document.getElementById('filterWrongBtn').addEventListener('click', ()=>{
+      const btn = document.getElementById('filterWrongBtn'); const showing = btn.dataset.showing === '1';
+      btn.dataset.showing = showing ? '0' : '1'; btn.textContent = showing ? 'Show Wrong Only' : 'Show All';
+      document.querySelectorAll('#attemptDetailsContent .question-result').forEach(el=>{
+        if(showing){ el.style.display='block'; } else { if(el.classList.contains('wrong')) el.style.display='block'; else el.style.display='none'; }
+      });
+    }); }catch(e){ console.error('attach filterWrongBtn failed', e); }
+  }
+  // ensure modal is attached to body and visible with inline styles in case external CSS hides it
+  if(!modal.parentNode || modal.parentNode !== document.body) document.body.appendChild(modal);
+  // Force important inline styles to override page CSS
+  modal.style.setProperty('position','fixed','important');
+  modal.style.setProperty('left','0','important'); modal.style.setProperty('top','0','important'); modal.style.setProperty('width','100%','important'); modal.style.setProperty('height','100%','important');
+  modal.style.setProperty('display','flex','important'); modal.style.setProperty('align-items','center','important'); modal.style.setProperty('justify-content','center','important');
+  modal.style.setProperty('z-index','2147483647','important');
+  modal.style.setProperty('background','rgba(0,0,0,0.65)','important');
+  // ensure content container exists and make it scrollable (so long answers don't expand modal)
+  let contentEl = modal.querySelector('#attemptDetailsContent');
+  if(!contentEl){
+    const cont = document.createElement('div'); cont.id='attemptDetailsContent';
+    const wrapper = modal.querySelector('.modal-content') || modal.firstChild;
+    if(wrapper) wrapper.appendChild(cont); contentEl = cont;
+  }
+  // set scrollable area inside modal
+  contentEl.style.maxHeight = 'calc(80vh - 120px)';
+  contentEl.style.overflowY = 'auto';
+  contentEl.style.padding = contentEl.style.padding || '8px';
+  try{
+    contentEl.innerHTML = innerHtml;
+  }catch(e){ console.error('Failed to set attemptDetailsContent.innerHTML', e); }
+  // update wrong count and default state
+  const modalEl = document.getElementById('attemptDetailsModal');
+  const wrongEls = modalEl ? modalEl.querySelectorAll('.question-result.wrong') : [];
+  const wrongSummary = document.getElementById('wrongSummary');
+  wrongSummary.textContent = wrongEls.length ? `Wrong: ${wrongEls.length}` : '';
+  // reset filter button
+  const filterBtn = document.getElementById('filterWrongBtn'); if(filterBtn){ filterBtn.dataset.showing='0'; filterBtn.textContent='Show Wrong Only'; }
+  // focus for accessibility after a tiny delay
+  setTimeout(()=>{
+    try{ const first = modal.querySelector('.modal-content'); if(first) first.focus(); }catch(e){}
+  },50);
 }
 
 // Modal helpers
@@ -536,6 +909,18 @@ async function deleteQuestion(ch,id){
     loadChapterQuestions(ch);
   }
 }
+
+// Wire test modal button after DOM ready
+document.addEventListener('DOMContentLoaded', ()=>{
+  try{
+    const tb = document.getElementById('testModalBtn');
+    if(tb){ tb.addEventListener('click', ()=>{
+      console.debug('Test Modal clicked');
+      const sample = `<div style="max-height:60vh;overflow:auto;padding:12px;"><h3>Debug Modal</h3><p>If you see this, the modal rendering path is working. Next: test the Answers button to confirm data flow.</p></div>`;
+      try{ showAttemptModal(sample); }catch(e){ console.error('showAttemptModal threw', e); alert('Modal test failed; see console.'); }
+    }); }
+  }catch(e){ console.error('Failed to attach Test Modal handler', e); }
+});
 
 
 

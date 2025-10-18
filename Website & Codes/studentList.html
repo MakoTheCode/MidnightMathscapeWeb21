@@ -236,11 +236,11 @@
     function readLastName(stud)  { return (stud && (stud.lastName || stud.lastname || '')) || ''; }
   function readPassword(stud)  { return (stud && (stud.pass || stud.password || stud.pwd || '')) || ''; }
 
-    // When saving, write only the canonical camelCase keys to avoid duplication in DB
+    // When saving, write only the canonical lowercase keys expected by the game
     function buildStudentUpdate(firstName, lastName, passVal, middleInitial) {
       const out = {
-        firstName: firstName,
-        lastName: lastName,
+        firstname: firstName,
+        lastname: lastName,
         pass: passVal
       };
       if (middleInitial) out.middleInitial = middleInitial;
@@ -311,8 +311,8 @@
                 id: studId,
                 // Use the StudentAccount key as the canonical Student ID (preserves leading zeros like '0404')
                 studentId: studId,
-                lastName: readLastName(stud),
-                firstName: readFirstName(stud),
+                lastname: readLastName(stud),
+                firstname: readFirstName(stud),
                 pass: readPassword(stud),
                 middleInitial: (stud && (stud.middleInitial || stud.middleinitial || '')) || '',
                 status: cred?.status || 'N/A',
@@ -323,11 +323,11 @@
 
         // sort alphabetical by last then first
         currentStudents.sort((a,b)=>{
-          const la = (a.lastName||'').toLowerCase();
-          const lb = (b.lastName||'').toLowerCase();
+          const la = (a.lastname||'').toLowerCase();
+          const lb = (b.lastname||'').toLowerCase();
           if (la < lb) return -1; if (la > lb) return 1;
-          const fa = (a.firstName||'').toLowerCase();
-          const fb = (b.firstName||'').toLowerCase();
+          const fa = (a.firstname||'').toLowerCase();
+          const fb = (b.firstname||'').toLowerCase();
           if (fa < fb) return -1; if (fa > fb) return 1;
           return 0;
         });
@@ -361,8 +361,8 @@
         header.innerHTML = `
           <div class="inner-grid">
             <div style="font-weight:700">${escapeHtml(s.studentId)}</div>
-            <div>${escapeHtml(s.lastName)}</div>
-            <div>${escapeHtml(s.firstName)}</div>
+            <div>${escapeHtml(s.lastname)}</div>
+            <div>${escapeHtml(s.firstname)}</div>
             <div>${escapeHtml(formatMiddleInitial(s.middleInitial))}</div>
             <div class="${statusClass}">${escapeHtml(s.status)}</div>
           </div>
@@ -402,8 +402,8 @@
       if (!term) { renderStudents(currentStudents); document.getElementById('totalStudents').textContent = `Total Students: ${currentStudents.length}`; return; }
       const filtered = currentStudents.filter(s =>
         (s.studentId||'').toLowerCase().includes(term) ||
-        (s.lastName||'').toLowerCase().includes(term) ||
-        (s.firstName||'').toLowerCase().includes(term)
+        (s.lastname||'').toLowerCase().includes(term) ||
+        (s.firstname||'').toLowerCase().includes(term)
       );
       renderStudents(filtered);
       document.getElementById('totalStudents').textContent = `Total Students: ${filtered.length}`;
@@ -415,8 +415,8 @@
       if (!student) return;
       editingStudent = student;
       document.getElementById('editStudentId').value = student.id;
-  document.getElementById('editFirstName').value = student.firstName || '';
-  document.getElementById('editLastName').value = student.lastName || '';
+  document.getElementById('editFirstName').value = student.firstname || '';
+  document.getElementById('editLastName').value = student.lastname || '';
   document.getElementById('editMiddleInitial').value = student.middleInitial || '';
   document.getElementById('editPassword').value = student.pass || '';
       document.getElementById('togglePassword').checked = false;

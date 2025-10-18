@@ -243,12 +243,13 @@
           }
 
           // Use the StudentAccount key as canonical studentId (preserves leading zeros like '0404')
-          currentStudents.push({ id, studentId: id, lastName: s.lastName||s.lastname||'', firstName: s.firstName||s.firstname||'', middleInitial: s.middleInitial||s.middleinitial||'', progress: mergedProgress });
+          // normalize to lowercase keys (firstname, lastname, middleinitial) while remaining tolerant of legacy camelCase in DB
+          currentStudents.push({ id, studentId: id, lastname: s.lastname || s.lastName || '', firstname: s.firstname || s.firstName || '', middleinitial: s.middleinitial || s.middleInitial || '', progress: mergedProgress });
          }
        }
  
-       currentStudents.sort((a,b)=> (a.lastName||'').localeCompare(b.lastName||''));
-       renderStudents(currentStudents);
+  currentStudents.sort((a,b)=> (a.lastname||'').localeCompare(b.lastname||''));
+   renderStudents(currentStudents);
      }
 
     function renderStudents(students){
@@ -262,9 +263,9 @@
         header.innerHTML = `
           <div class="inner-grid">
             <div style="font-weight:700">${escapeHtml(s.studentId)}</div>
-            <div>${escapeHtml(s.lastName)}</div>
-            <div>${escapeHtml(s.firstName)}</div>
-            <div>${escapeHtml(formatMiddleInitial(s.middleInitial))}</div>
+            <div>${escapeHtml(s.lastname)}</div>
+            <div>${escapeHtml(s.firstname)}</div>
+            <div>${escapeHtml(formatMiddleInitial(s.middleinitial))}</div>
             <div style="width:180px;">
               <div id="header-pct-${s.id}" style="font-weight:700;text-align:right">${initialOverall}%</div>
               <div class="progress" style="height:8px"><div id="header-bar-${s.id}" class="progress-bar bg-info" role="progressbar" style="width:${initialOverall}%"></div></div>
@@ -334,7 +335,7 @@
       activeStudentId = studentId;
       const stud = currentStudents.find(s=>s.id===studentId);
       if(!stud) return;
-      document.getElementById('progressStudentInfo').textContent = `${stud.studentId} — ${stud.lastName}, ${stud.firstName} ${formatMiddleInitial(stud.middleInitial)}`;
+      document.getElementById('progressStudentInfo').textContent = `${stud.studentId} — ${stud.lastname}, ${stud.firstname} ${formatMiddleInitial(stud.middleinitial)}`;
       const cont = document.getElementById('chaptersContainer'); cont.innerHTML='';
       const prog = stud.progress || {};
       for(let i=1;i<=12;i++){
