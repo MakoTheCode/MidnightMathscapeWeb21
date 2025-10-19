@@ -140,9 +140,7 @@ body { font-family:'Inter', sans-serif; background:#f8f9fa; margin:0; }
       <div class="header-title"><h1>Evaluation & Control</h1></div>
       <div class="data-container">
         <p>Total Students: <span id="totalStudents">Loading...</span></p>
-        <div style="margin-top:8px;margin-bottom:10px;">
-          <button id="testModalBtn" class="save-question-btn" style="padding:8px 12px; font-size:14px;">Test Modal</button>
-        </div>
+        <div style="margin-top:8px;margin-bottom:10px;"></div>
         <div class="chapters-scroll">
           <div id="chaptersContainer"></div>
         </div>
@@ -1119,12 +1117,7 @@ async function deleteQuestion(ch,id){
 // Wire test modal button after DOM ready
 document.addEventListener('DOMContentLoaded', ()=>{
   try{
-    const tb = document.getElementById('testModalBtn');
-    if(tb){ tb.addEventListener('click', ()=>{
-      console.debug('Test Modal clicked');
-      const sample = `<div style="max-height:60vh;overflow:auto;padding:12px;"><h3>Debug Modal</h3><p>If you see this, the modal rendering path is working. Next: test the Answers button to confirm data flow.</p></div>`;
-      try{ showAttemptModal(sample); }catch(e){ console.error('showAttemptModal threw', e); alert('Modal test failed; see console.'); }
-    }); }
+    // testModalBtn removed - no-op
   }catch(e){ console.error('Failed to attach Test Modal handler', e); }
 });
 
