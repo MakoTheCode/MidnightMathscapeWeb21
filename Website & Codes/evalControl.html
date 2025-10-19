@@ -71,9 +71,12 @@ body { font-family:'Inter', sans-serif; background:#f8f9fa; margin:0; }
 }
 .view-btn { background: linear-gradient(180deg,#501121,#501121); color:#fff; }
 .view-btn:hover { transform:translateY(-1px); box-shadow:0 6px 14px rgba(42,166,200,0.12); }
-.answers-btn { background: linear-gradient(180deg,#fff,#f7f7f7); color:#333; border:1px solid #ddd; }
-.answers-btn:hover { transform:translateY(-1px); box-shadow:0 6px 14px rgba(0,0,0,0.06); }
+.answers-btn { background: transparent; color:#501121; border:1px solid #501121; }
+.answers-btn:hover { transform:translateY(-1px); box-shadow:0 6px 14px rgba(80,17,33,0.12); background:#fff; }
 .view-btn .ico, .answers-btn .ico { width:14px; height:14px; display:inline-block; }
+
+/* make sure FontAwesome icons inherit the button color */
+.answers-btn .ico i, .view-btn .ico i { color: inherit; }
 
 
 .modal { display:none; position:fixed; z-index:3000; left:0; top:0; width:100%; height:100%; background: rgba(0,0,0,0.45); align-items:center; justify-content:center; padding:20px; }
@@ -199,10 +202,10 @@ body { font-family:'Inter', sans-serif; background:#f8f9fa; margin:0; }
         <label><input type="radio" name="trueFalseAnswer" value="True"> True</label>
         <label><input type="radio" name="trueFalseAnswer" value="False"> False</label>
       </div>
-      <div style="text-align:right; margin-top:12px;">
-        <button class="save-question-btn" onclick="saveQuestion()">Save</button>
-        <button class="cancel-btn" onclick="closeQuestionModal()">Cancel</button>
-      </div>
+        <div style="text-align:right; margin-top:12px;">
+          <button class="save-question-btn" onclick="saveQuestion()">Save</button>
+          <button class="cancel-btn" onclick="closeQuestionModal()">Close</button>
+        </div>
     </div>
   </div>
 
@@ -217,7 +220,7 @@ body { font-family:'Inter', sans-serif; background:#f8f9fa; margin:0; }
             <p>Loading sections...</p>
           </div>
           <div style="text-align:right; margin-top:8px;">
-            <button class="cancel-btn" id="closeSectionsModalBtn">Close</button>
+          <button class="cancel-btn" id="closeSectionsModalBtn">Close</button>
           </div>
         </div>
       </div>
@@ -497,7 +500,7 @@ document.addEventListener('click', async (e)=>{
       if(['pass','password','sessionToken'].includes(k)) continue;
       html += `<tr><td style=\"padding:6px;border:1px solid #eee;width:30%;font-weight:600;\">${escapeHtml(k)}</td><td style=\"padding:6px;border:1px solid #eee;\">${escapeHtml(String(fields[k]===undefined? '': fields[k]))}</td></tr>`;
     }
-    html += `</table><div style=\"margin-top:12px;text-align:right;\"><button class=\"cancel-btn\" onclick=\"closeSectionsModal()\">Done</button></div></div>`;
+  html += `</table></div>`;
     content.innerHTML = html;
   }catch(err){ console.error('failed loading student', err); content.innerHTML = '<pre>'+escapeHtml(err && err.message?err.message:String(err))+'</pre>'; }
 });
