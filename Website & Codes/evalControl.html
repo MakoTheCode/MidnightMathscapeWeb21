@@ -558,11 +558,14 @@ document.addEventListener('click', e=>{
 
 // Get next sequential question index
 async function getNextQuestionIndex(ch){
-  const snap = await rtdb.ref(`quizzes/${ch}/questions`).get();
-  if(!snap.exists()) return 1;
-  const indexes = [];
-  snap.forEach(child=>indexes.push(parseInt(child.key)));
-  return Math.max(...indexes)+1;
+  try{
+    const qFound = await findQuizQuestions(ch);
+    if(!qFound || !qFound.snap || !qFound.snap.exists()) return 1;
+    const snap = qFound.snap;
+    const indexes = [];
+    snap.forEach(child=>indexes.push(parseInt(child.key)));
+    return Math.max(...indexes)+1;
+  }catch(e){ console.debug('getNextQuestionIndex failed', e); return 1; }
 }
 
 // Load questions
@@ -571,10 +574,11 @@ async function loadChapterQuestions(ch){
   const container = document.getElementById(`questions-tab-${ch}`);
   container.innerHTML = `<button class="add-question-btn" onclick="openQuestionModal('${ch}')"><i class="fas fa-plus"></i> Add Question</button><div id="questions-list-${ch}">Loading...</div>`;
   const list = document.getElementById(`questions-list-${ch}`);
-  const snap = await rtdb.ref(`quizzes/${ch}/questions`).get();
-  if(!snap.exists()){ list.innerHTML="<p>No questions yet</p>"; return; }
+  // try to load questions from any variant of the chapter key
+  const qFound = await findQuizQuestions(ch);
+  if(!qFound || !qFound.snap || !qFound.snap.exists()){ list.innerHTML="<p>No questions yet</p>"; return; }
   list.innerHTML = "";
-    snap.forEach(child=>{
+    qFound.snap.forEach(child=>{
     const q = child.val(), id = child.key;
     let optionsHtml="";
     if(q.type==="multiple_choice"){
@@ -900,9 +904,13 @@ document.addEventListener('click', async (e)=>{
       return;
     }
 
-    // Load chapter quiz questions to compare answers
-    const quizSnap = await rtdb.ref(`quizzes/${ch}/questions`).get();
-    const questions = quizSnap.exists() ? quizSnap.val() : {};
+    // Load chapter quiz questions to compare answers (try variants)
+    let questions = {};
+    try{
+      const qFound = await findQuizQuestions(ch);
+      if(qFound && qFound.snap && qFound.snap.exists()){ questions = qFound.snap.val(); console.debug('Loaded questions from', qFound.path); }
+      else { const fallbackSnap = await rtdb.ref(`quizzes/${ch}/questions`).get(); if(fallbackSnap && fallbackSnap.exists()) questions = fallbackSnap.val(); }
+    }catch(e){ console.debug('Failed to load questions for', ch, e); }
 
     // Build modal content: iterate questions in numeric order by questionIndex
     const qKeys = Object.keys(questions || {}).sort((a,b)=> Number(a) - Number(b));
@@ -1017,43 +1025,114 @@ async function fetchAttemptObject(sid, ch, attemptIndex){
   const spSnapExact = await rtdb.ref(spPathExact).get();
   console.debug('checked exact', spPathExact, 'exists=', spSnapExact.exists());
   if(spSnapExact.exists()) return { obj: spSnapExact.val(), source: spPathExact };
-  const qrPathExact = `QuizResults/${sid}/${ch}/${attemptIndex}`;
-  const qrSnapExact = await rtdb.ref(qrPathExact).get();
-  console.debug('checked exact', qrPathExact, 'exists=', qrSnapExact.exists());
-  if(qrSnapExact.exists()) return { obj: qrSnapExact.val(), source: qrPathExact };
+  // try QuizResults exact paths, but be resilient to chapter key variants
+  const qrExactFound = await findFirstChapterSnapshot('QuizResults', sid, ch);
+  if(qrExactFound){
+    const qrSnapExact = await rtdb.ref(`${qrExactFound.path}/${attemptIndex}`).get();
+    console.debug('checked exact (variant)', `${qrExactFound.path}/${attemptIndex}`, 'exists=', qrSnapExact.exists());
+    if(qrSnapExact.exists()) return { obj: qrSnapExact.val(), source: `${qrExactFound.path}/${attemptIndex}` };
+  }
 
   // If not found by exact key, fall back to previous numeric-index logic (attemptIndex may be numeric)
   // try StudentsProgress per-attempt (numeric)
-  const spPath = `StudentsProgress/${sid}/${ch}/${attemptIndex}`;
-  const spSnap = await rtdb.ref(spPath).get();
-  console.debug('checked numeric', spPath, 'exists=', spSnap.exists());
-  if(spSnap.exists()) return { obj: spSnap.val(), source: spPath };
-  const qrPath = `QuizResults/${sid}/${ch}/${attemptIndex}`;
-  const qrSnap = await rtdb.ref(qrPath).get();
-  console.debug('checked numeric', qrPath, 'exists=', qrSnap.exists());
-  if(qrSnap.exists()) return { obj: qrSnap.val(), source: qrPath };
+  // try numeric-index paths using chapter variants
+  const spVariant = await findFirstChapterSnapshot('StudentsProgress', sid, ch);
+  if(spVariant){
+    const spSnap = await rtdb.ref(`${spVariant.path}/${attemptIndex}`).get();
+    console.debug('checked numeric (variant)', `${spVariant.path}/${attemptIndex}`, 'exists=', spSnap.exists());
+    if(spSnap.exists()) return { obj: spSnap.val(), source: `${spVariant.path}/${attemptIndex}` };
+  }
+  const qrVariant = await findFirstChapterSnapshot('QuizResults', sid, ch);
+  if(qrVariant){
+    const qrSnap = await rtdb.ref(`${qrVariant.path}/${attemptIndex}`).get();
+    console.debug('checked numeric (variant)', `${qrVariant.path}/${attemptIndex}`, 'exists=', qrSnap.exists());
+    if(qrSnap.exists()) return { obj: qrSnap.val(), source: `${qrVariant.path}/${attemptIndex}` };
+  }
 
   // try chapter-level QuizResults
-  const chapterQrPath = `QuizResults/${sid}/${ch}`;
-  const chapterQrSnap = await rtdb.ref(chapterQrPath).get();
-  console.debug('checked', chapterQrPath, 'exists=', chapterQrSnap.exists());
-  if(chapterQrSnap.exists()){
+  // try chapter-level QuizResults (with chapter variants)
+  const chapterQrFound = await findFirstChapterSnapshot('QuizResults', sid, ch);
+  if(chapterQrFound){
+    const chapterQrSnap = chapterQrFound.snap;
+    const chapterQrPath = chapterQrFound.path;
     const chVal = chapterQrSnap.val();
     const chKeys = Object.keys(chVal||{});
-    console.debug('chapterQr keys sample=', chKeys.slice(0,5));
+    console.debug('checked', chapterQrPath, 'exists=', chapterQrSnap.exists(), 'keys=', chKeys.slice(0,5));
     if(chVal && (chVal.answers || chVal.responses || chKeys.some(k=>isNaN(Number(k))))) return { obj: chVal, source: chapterQrPath };
     if(chKeys.length) return { obj: chVal[chKeys[0]], source: `${chapterQrPath}:${chKeys[0]}` };
   }
 
   // try chapter-level StudentsProgress
-  const chapterSpPath = `StudentsProgress/${sid}/${ch}`;
-  const chapterSpSnap = await rtdb.ref(chapterSpPath).get();
-  console.debug('checked', chapterSpPath, 'exists=', chapterSpSnap.exists());
-  if(chapterSpSnap.exists()){
+  // try chapter-level StudentsProgress (with variants)
+  const chapterSpFound = await findFirstChapterSnapshot('StudentsProgress', sid, ch);
+  if(chapterSpFound){
+    const chapterSpSnap = chapterSpFound.snap;
+    const chapterSpPath = chapterSpFound.path;
     const spVal = chapterSpSnap.val(); const spKeys = Object.keys(spVal||{});
-    console.debug('chapterSp keys sample=', spKeys.slice(0,5));
+    console.debug('checked', chapterSpPath, 'exists=', chapterSpSnap.exists(), 'keys=', spKeys.slice(0,5));
     if(spVal && (spVal.answers || spVal.responses || spKeys.some(k=>isNaN(Number(k))))) return { obj: spVal, source: chapterSpPath };
     if(spKeys.length) return { obj: spVal[spKeys[0]], source: `${chapterSpPath}:${spKeys[0]}` };
+  }
+  return null;
+}
+
+// Helper: generate likely chapter key variants to tolerate DB naming differences
+function chapterVariants(ch){
+  const out = new Set();
+  if(!ch) return [];
+  const raw = String(ch).trim();
+  out.add(raw);
+  out.add(raw.toLowerCase());
+  out.add(raw.replace(/\s+/g, ''));
+  // split alpha+digits like 'chapter1' -> 'chapter 1'
+  const m = raw.match(/^([a-zA-Z]+)(\d+)$/);
+  if(m){ out.add(`${m[1]} ${m[2]}`); out.add(`${m[1].toLowerCase()} ${m[2]}`); out.add(`${m[1].charAt(0).toUpperCase() + m[1].slice(1).toLowerCase()} ${m[2]}`); }
+  // if it's like 'chapter 1', also add no-space variant
+  const m2 = raw.match(/^([a-zA-Z]+)\s+(\d+)$/);
+  if(m2){ out.add(`${m2[1]}${m2[2]}`); out.add(`${m2[1].toLowerCase()}${m2[2]}`); }
+  // explicit chapter forms for numeric chapters
+  const digits = raw.match(/(\d+)/);
+  if(digits){ const d = digits[0]; out.add(`chapter${d}`); out.add(`chapter ${d}`); out.add(`Chapter ${d}`); out.add(`Chapter${d}`); out.add(d); }
+  return Array.from(out);
+}
+
+// Helper: find the first existing RTDB snapshot for a root path that includes student id and chapter variant
+async function findFirstChapterSnapshot(root, sid, ch){
+  const variants = chapterVariants(ch);
+  for(const v of variants){
+    const path = `${root}/${sid}/${v}`;
+    try{
+      const snap = await rtdb.ref(path).get();
+      if(snap && snap.exists()) return { snap, path, variant: v };
+    }catch(e){ console.debug('findFirstChapterSnapshot read failed for', path, e); }
+  }
+  return null;
+}
+
+// Helper: find quiz questions node for any chapter variant
+async function findQuizQuestions(ch){
+  const variants = chapterVariants(ch);
+  for(const v of variants){
+    const path = `quizzes/${v}/questions`;
+    try{
+      const snap = await rtdb.ref(path).get();
+      if(snap && snap.exists()) return { snap, path, variant: v };
+    }catch(e){ console.debug('findQuizQuestions read failed for', path, e); }
+  }
+  return null;
+}
+
+// Helper: find a key in an in-memory map object that matches any chapter variant
+function findVariantKeyInMap(obj, ch){
+  if(!obj || !ch) return null;
+  const variants = chapterVariants(ch) || [];
+  // direct check first
+  for(const v of variants){ if(Object.prototype.hasOwnProperty.call(obj, v)) return v; }
+  // normalized fallback: compare keys after lowercasing and removing spaces
+  const normVariants = new Set(variants.map(v=>String(v).trim().toLowerCase().replace(/\s+/g,'')));
+  for(const k of Object.keys(obj||{})){
+    const nk = String(k).trim().toLowerCase().replace(/\s+/g,'');
+    if(normVariants.has(nk)) return k;
   }
   return null;
 }
@@ -1062,26 +1141,27 @@ async function fetchAttemptObject(sid, ch, attemptIndex){
 async function getAttemptList(sid, ch){
   const list = [];
   try{
-    const qrSnap = await rtdb.ref(`QuizResults/${sid}/${ch}`).get();
-    if(qrSnap.exists()){
-      const val = qrSnap.val();
+    // try QuizResults with chapter key variants
+    const qrFound = await findFirstChapterSnapshot('QuizResults', sid, ch);
+    if(qrFound && qrFound.snap && qrFound.snap.exists()){
+      const val = qrFound.snap.val();
       Object.keys(val||{}).forEach(k=>{
         const item = val[k] || {};
         const label = item.date ? `${item.date} (${k.substr(0,6)})` : `${k}`;
-        list.push({ key: k, source: 'QuizResults', date: item.date || '', score: item.score || null, label });
+        list.push({ key: k, source: `QuizResults (${qrFound.variant})`, date: item.date || '', score: item.score || null, label });
       });
     }
   }catch(e){ console.debug('getAttemptList QuizResults read failed', e); }
   try{
-    const spSnap = await rtdb.ref(`StudentsProgress/${sid}/${ch}`).get();
-    if(spSnap.exists()){
-      const val = spSnap.val();
+    // try StudentsProgress with chapter key variants
+    const spFound = await findFirstChapterSnapshot('StudentsProgress', sid, ch);
+    if(spFound && spFound.snap && spFound.snap.exists()){
+      const val = spFound.snap.val();
       Object.keys(val||{}).forEach(k=>{
-        // only add if not already present (prefer QuizResults)
-        if(list.some(x=>x.key === k)) return;
+        if(list.some(x=>x.key === k)) return; // prefer QuizResults entries
         const item = val[k] || {};
         const label = item.date ? `${item.date} (${k.substr(0,6)})` : `${k}`;
-        list.push({ key: k, source: 'StudentsProgress', date: item.date || '', score: item.keysFound || null, label });
+        list.push({ key: k, source: `StudentsProgress (${spFound.variant})`, date: item.date || '', score: item.keysFound || null, label });
       });
     }
   }catch(e){ console.debug('getAttemptList StudentsProgress read failed', e); }
@@ -1183,7 +1263,7 @@ document.addEventListener('click', async (e)=>{
     const tr = btn.closest('tr');
     if(!tr) console.debug('Answers handler: no enclosing <tr> found for button, continuing anyway');
 
-    // fetch attempt object with logging
+    // fetch attempt object with logging (uses chapter-variant lookups internally)
     let fetched = null;
     console.debug('Answers handler: calling fetchAttemptObject', { sid, ch, attemptKey });
     try{
@@ -1203,8 +1283,18 @@ document.addEventListener('click', async (e)=>{
     }
 
     // We will show a modal that contains a dropdown of attempts so the instructor can select any attempt (by key)
-    const quizSnap = await rtdb.ref(`quizzes/${ch}/questions`).get();
-    const questions = quizSnap.exists() ? quizSnap.val() : {};
+    // load quiz questions, trying chapter variants if necessary
+    let questions = {};
+    try{
+      const qFound = await findQuizQuestions(ch);
+      if(qFound && qFound.snap && qFound.snap.exists()){
+        questions = qFound.snap.val();
+        console.debug('Loaded questions from', qFound.path);
+      } else {
+        const fallbackSnap = await rtdb.ref(`quizzes/${ch}/questions`).get();
+        if(fallbackSnap && fallbackSnap.exists()){ questions = fallbackSnap.val(); console.debug('Loaded questions from fallback quizzes/${ch}/questions'); }
+      }
+    }catch(e){ console.debug('Failed to load quiz questions for chapter', ch, e); }
     const attempts = await getAttemptList(sid, ch);
     if(attempts.length === 0){ showAttemptModal(`<div style="padding:12px"><h3>No attempts found</h3><p>There are no attempts in QuizResults or StudentsProgress for this student/chapter.</p></div>`); return; }
     // build modal content with select
@@ -1346,16 +1436,19 @@ async function saveQuestion(){
     payload.answer=checked.value; payload.type="true_false";
   }
 
-  const ref=rtdb.ref(`quizzes/${currentChapter}/questions`);
-  if(editingQuestionId){
-    await ref.child(editingQuestionId).set(payload);
-    alert("Question updated!");
-  } else {
-    const nextIndex = await getNextQuestionIndex(currentChapter);
-    payload.questionIndex = nextIndex;
-    await ref.child(nextIndex.toString()).set(payload);
-    alert("Question added!");
-  }
+  // Save to whichever quiz questions path exists for the chapter, or default to canonical path
+  try{
+    const qFound = await findQuizQuestions(currentChapter);
+    if(qFound && qFound.snap && qFound.snap.exists()){
+      const base = qFound.path;
+      if(editingQuestionId){ await rtdb.ref(`${base}/${editingQuestionId}`).set(payload); alert('Question updated!'); }
+      else { const nextIndex = await getNextQuestionIndex(currentChapter); payload.questionIndex = nextIndex; await rtdb.ref(`${base}/${nextIndex}`).set(payload); alert('Question added!'); }
+    } else {
+      const base = `quizzes/${currentChapter}/questions`;
+      if(editingQuestionId){ await rtdb.ref(`${base}/${editingQuestionId}`).set(payload); alert('Question updated!'); }
+      else { const nextIndex = await getNextQuestionIndex(currentChapter); payload.questionIndex = nextIndex; await rtdb.ref(`${base}/${nextIndex}`).set(payload); alert('Question added!'); }
+    }
+  }catch(e){ console.error('Failed saving question', e); alert('Failed to save question: '+ (e && e.message? e.message : String(e))); }
   closeQuestionModal();
   loadChapterQuestions(currentChapter);
 }
@@ -1363,9 +1456,17 @@ async function saveQuestion(){
 // Edit
 async function openEditModal(ch,id){
   currentChapter=ch; editingQuestionId=id; resetModal();
-  const snap=await rtdb.ref(`quizzes/${ch}/questions/${id}`).get();
-  if(!snap.exists()){alert("Missing"); return;}
-  const q = snap.val();
+  // try to locate the question across chapter variants
+  const qFound = await findQuizQuestions(ch);
+  let q = null;
+  if(qFound && qFound.snap && qFound.snap.exists()){
+    const childSnap = qFound.snap.child(id);
+    if(childSnap && childSnap.exists()) q = childSnap.val();
+  }
+  if(!q){
+    const snap = await rtdb.ref(`quizzes/${ch}/questions/${id}`).get();
+    if(!snap.exists()){alert("Missing"); return;} q = snap.val();
+  }
   document.getElementById('modalTitle').innerText="Edit Question";
   document.getElementById('questionText').value=q.question;
   document.getElementById('questionType').value=q.type==="multiple_choice"?"multipleChoice":q.type;
@@ -1383,8 +1484,14 @@ async function openEditModal(ch,id){
 
 // Delete
 async function deleteQuestion(ch,id){
-  if(confirm("Delete this question?")){
-    await rtdb.ref(`quizzes/${ch}/questions/${id}`).remove();
+    if(confirm("Delete this question?")){
+    // try to delete from the variant path if found, else fallback to the canonical path
+    const qFound = await findQuizQuestions(ch);
+    if(qFound && qFound.snap && qFound.snap.exists() && qFound.snap.child(id).exists()){
+      await rtdb.ref(`${qFound.path}/${id}`).remove();
+    } else {
+      await rtdb.ref(`quizzes/${ch}/questions/${id}`).remove();
+    }
     loadChapterQuestions(ch);
   }
 }
