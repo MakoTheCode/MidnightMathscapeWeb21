@@ -311,7 +311,7 @@ async function exportStudentsCsv(){
   const data = snap.val();
   const rows = [];
   // header: include section and score summaries
-  rows.push(['uid','firstname','lastname','section','totalAttempts','avgScore','lastScore','lastDate']);
+  rows.push(['uid','firstname','lastname','section','totalAttempts','avgScore','lastScore','lastDate','exportedAt']);
   // fetch QuizResults to compute simple score summaries per student
   const qrSnap = await rtdb.ref('QuizResults').get();
   const quizResults = qrSnap.exists() ? qrSnap.val() : {};
@@ -417,6 +417,7 @@ async function exportStudentsCsv(){
     const sectionId = s.sectionId || s.section || s.sectionName || s.section_id || '';
   // prefer uid->section mapping (transfers), then sectionMap lookup, else raw id
   const sectionName = uidToSection[uid] || ((sectionId && sectionMap && sectionMap[sectionId]) ? (sectionMap[sectionId].title || sectionMap[sectionId].name || sectionMap[sectionId].sectionName || String(sectionMap[sectionId])) : (sectionId || ''));
+    const exportedAt = new Date().toISOString();
     rows.push([
       uid,
       firstname,
@@ -426,6 +427,7 @@ async function exportStudentsCsv(){
       (avgScore === '' ? '' : Math.round(Number(avgScore) * 100)/100),
       lastScore,
       lastDate
+      , exportedAt
     ]);
   }
   // convert to CSV string
@@ -1412,7 +1414,8 @@ async function exportSectionAnswersCSV(sectionId, ch){
   const cards = Array.from(content.querySelectorAll('.student-card'));
   if(cards.length===0){ alert('No student data to export. Load the section answers first.'); return; }
   // CSV header
-  const headers = ['uid','name','attempts','latest','best','avg','date'];
+  const exportedAt = new Date().toISOString();
+  const headers = ['uid','name','attempts','latest','best','avg','date','exportedAt'];
   qKeys.forEach(qk => headers.push('Q'+qk));
   const rows = [headers];
   for(const card of cards){
@@ -1437,11 +1440,12 @@ async function exportSectionAnswersCSV(sectionId, ch){
     const row = [uid, name, attemptsCount, latestScore, best, avg, date];
     // per-question values
     for(const qk of qKeys){ const q = questions[qk]; let studentResp = undefined; if(attemptObj) studentResp = extractStudentResponse(attemptObj, qk, Number(qk)); const norm = normalizeStudentResponse(q, studentResp); const out = (norm === undefined || norm === null) ? '' : (Array.isArray(norm) ? norm.join(' | ') : String(norm)); row.push(out); }
+    row.push(exportedAt);
     rows.push(row);
   }
   // convert to CSV
   const csv = rows.map(r => r.map(c => '"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\n');
-  downloadTextFile(csv, `section_${sectionId}_${ch}_answers.csv`);
+  downloadTextFile(csv, `section_${sectionId}_${ch}_answers_${exportedAt.replace(/[:\.]/g,'-')}.csv`);
 }
 
 function downloadTextFile(text, filename){
