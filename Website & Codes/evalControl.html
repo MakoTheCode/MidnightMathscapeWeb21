@@ -50,6 +50,15 @@ body { font-family:'Inter', sans-serif; background:#f8f9fa; margin:0; }
 .choice .tag.correct { background:#2b8a3e;color:#fff; }
 .choice .tag.selected { background:#d33;color:#fff; }
 
+/* Additional evaluation-specific styles (ensure clear instructor highlights) */
+.choice.correct-choice { background: rgba(75, 181, 112, 0.08); border-color: #2b8a3e; }
+.choice.student-choice { box-shadow: inset 0 0 0 2px rgba(0,0,0,0.04); }
+.choice .tag.correct { background: #2b8a3e; color: #fff; }
+.choice .tag.selected { background: #a72344; color: #fff; }
+.question-result.correct { background: rgba(43,138,62,0.04); border-left:6px solid #2b8a3e; }
+.question-result.wrong { background: rgba(211,51,51,0.04); border-left:6px solid #d33; }
+.question-result { transition: background .12s ease, border-color .12s ease; }
+
 .add-question-btn { background: linear-gradient(180deg,#a72344,#7a1024); color:#fff; padding:10px 16px; border-radius:10px; font-weight:700; border:none; cursor:pointer; margin-bottom:12px; transition:0.2s; }
 .add-question-btn:hover { transform:scale(1.03); }
 
@@ -270,6 +279,8 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const rtdb = firebase.database();
+// Toggle to show per-question normalization/debug info in attempt modal
+let EVAL_DEBUG = false;
 
 // Safe HTML escape helper
 function escapeHtml(str){
@@ -663,7 +674,7 @@ document.addEventListener('click', e=>{
 // Get next sequential question index
 async function getNextQuestionIndex(ch){
   try{
-    const qFound = await findQuizQuestions(ch);
+  let qFound = await findQuizQuestions(ch);
     if(!qFound || !qFound.snap || !qFound.snap.exists()) return 1;
     const snap = qFound.snap;
     const indexes = [];
@@ -679,7 +690,7 @@ async function loadChapterQuestions(ch){
   container.innerHTML = `<button class="add-question-btn" onclick="openQuestionModal('${ch}')"><i class="fas fa-plus"></i> Add Question</button><div id="questions-list-${ch}">Loading...</div>`;
   const list = document.getElementById(`questions-list-${ch}`);
   // try to load questions from any variant of the chapter key
-  const qFound = await findQuizQuestions(ch);
+  let qFound = await findQuizQuestions(ch);
   if(!qFound || !qFound.snap || !qFound.snap.exists()){ 
     const tried = (qFound && qFound.triedPaths) ? qFound.triedPaths.join(', ') : 'unknown paths';
     list.innerHTML = `<p>No questions yet. Tried: ${escapeHtml(tried)}</p>`; return; }
@@ -692,9 +703,13 @@ async function loadChapterQuestions(ch){
       const choices = Array.isArray(q.choices) ? q.choices.slice() : [];
       let displayChoices = choices.slice();
       if(q.randomizeOptions){ displayChoices = shuffle(displayChoices); }
+      // determine canonical correct options and mark accordingly
+      const correctOptionsText = getCanonicalAnswers(q);
+      const normCanonical = (correctOptionsText||[]).map(x=> typeof x === 'string' ? (q.caseSensitive ? String(x).trim() : String(x).toLowerCase().trim()) : String(x));
       displayChoices.forEach(opt=>{
-        const correct = (q.orderMatters) ? (q.answer===opt) : (q.answer===opt);
-        optionsHtml += `<div class="question-option ${correct?'correct-answer':''}">${opt}</div>`;
+        const normOpt = normalizeForCompare(q, opt);
+        const correct = normOpt !== null && normCanonical.some(co => co === normOpt);
+        optionsHtml += `<div class="question-option ${correct? 'correct-answer':''}">${escapeHtml(opt)}</div>`;
       });
       optionsHtml += `<p style="font-size:12px;color:#666;margin-top:6px">Case sensitive: ${q.caseSensitive? 'Yes':'No'} &nbsp; | &nbsp; Order matters: ${q.orderMatters? 'Yes':'No'} &nbsp; | &nbsp; Randomize: ${q.randomizeOptions? 'Yes':'No'}</p>`;
     } else {
@@ -834,12 +849,19 @@ function normalizeStudentResponse(q, studentResp){
     if(s === '') return undefined;
     const low = s.toLowerCase();
     if(['-','null','n/a','no response','none','na','invalid choice','.','invalid','(no response)'].indexOf(low) !== -1) return undefined;
-    // try direct match / letter / number
-    const m = findChoiceMatch(s);
-    if(m) return m;
-    // strip common prefixes and try again
-    const stripped = s.replace(/^[A-Za-z]\s*[\.\)]\s*/,'').replace(/^\d+\.\s*/,'').trim();
-    if(stripped && stripped !== s){ const m2 = findChoiceMatch(stripped); if(m2) return m2; }
+  // try direct match / letter / number
+  const m = findChoiceMatch(s);
+  if(m) return m;
+  // strip common single-letter prefixes only when they look like choice markers
+  // e.g. 'D. √(-9)', 'D) √(-9)', or 'D √(-9)' where the char after space is non-alphanumeric
+  let stripped = s;
+  // case 1: letter followed by '.' or ')' then space
+  stripped = stripped.replace(/^[A-Za-z][\.\)]\s+/, '');
+  // case 2: letter followed by space then a non-alphanumeric (e.g., 'D √...')
+  stripped = stripped.replace(/^[A-Za-z]\s+(?=[^A-Za-z0-9\s])/, '');
+  // case 3: numeric list prefix like '1. '
+  stripped = stripped.replace(/^\d+\.\s*/, '').trim();
+  if(stripped && stripped !== s){ const m2 = findChoiceMatch(stripped); if(m2) return m2; }
     return stripped || s;
   };
 
@@ -882,6 +904,26 @@ function getCanonicalAnswers(q){
   }catch(e){ console.debug('getCanonicalAnswers failed', e); return []; }
 }
 
+// Helper: normalize a value into a comparable string (or array of strings) for comparisons
+// Returns either a single normalized string, an array of normalized strings, or null
+function normalizeForCompare(q, val){
+  if(val === undefined || val === null) return null;
+  try{
+    if(q && q.type === 'multiple_choice'){
+      // normalizeStudentResponse maps indices/letters/encoded arrays to canonical choice text(s)
+      const mapped = normalizeStudentResponse(q, val);
+      const caseSensitive = !!q.caseSensitive;
+      const norm = v => caseSensitive ? String(v).trim() : String(v).toLowerCase().trim();
+      if(mapped === undefined || mapped === null) return null;
+      if(Array.isArray(mapped)) return mapped.map(x=> norm(x)).filter(x=> x !== undefined && x !== null && String(x)!=='');
+      return norm(mapped);
+    }
+    // fallback for non-multiple choice
+    const caseSensitive = q && q.caseSensitive;
+    return caseSensitive ? String(val).trim() : String(val).toLowerCase().trim();
+  }catch(e){ console.debug('normalizeForCompare failed', e); return null; }
+}
+
 // Robust extractor: get student response for a question key/index from various attempt shapes
 function extractStudentResponse(attemptObj, qk, qIndex){
   if(!attemptObj) return undefined;
@@ -908,6 +950,14 @@ function extractStudentResponse(attemptObj, qk, qIndex){
       if(!k) continue;
       const num = k.replace(/\D/g,'');
       if(num === String(qIndex)) return attemptObj.answers[k];
+    }
+    // tolerant matching: some exports store question numbers 1-based while our questions map may be 0-based (or vice versa).
+    // Try matching numeric part equal to qIndex+1 or qIndex-1 as fallback.
+    for(const k of Object.keys(attemptObj.answers)){
+      if(!k) continue;
+      const num = k.replace(/\D/g,'');
+      if(num === String(qIndex+1)) return attemptObj.answers[k];
+      if(qIndex>0 && num === String(qIndex-1)) return attemptObj.answers[k];
     }
   }
   return undefined;
@@ -1027,7 +1077,7 @@ document.addEventListener('click', async (e)=>{
     // Load chapter quiz questions to compare answers (try variants)
     let questions = {};
     try{
-      const qFound = await findQuizQuestions(ch);
+  let qFound = await findQuizQuestions(ch);
       if(qFound && qFound.snap && qFound.snap.exists()){ questions = normalizeQuestionsMap(qFound.snap.val()); console.debug('Loaded questions from', qFound.path); }
       else {
         const tried = (qFound && qFound.triedPaths) ? qFound.triedPaths.join(', ') : 'unknown paths';
@@ -1080,20 +1130,25 @@ document.addEventListener('click', async (e)=>{
           if(Array.isArray(normResp)) studentSelections = normResp.slice();
           else if(normResp !== undefined && normResp !== null && String(normResp).trim() !== '') studentSelections = [String(normResp)];
 
-          // comparison helper honoring case sensitivity
-          const cmp = (a,b) => {
-            if(a === undefined || b === undefined) return false;
-            if(q.caseSensitive) return String(a).trim() === String(b).trim();
-            return String(a).toLowerCase().trim() === String(b).toLowerCase().trim();
-          };
-
           html += `<div style="margin-top:8px;display:flex;flex-direction:column;">`;
           let anySelected = false;
+          // precompute normalized canonical answers and student selections
+          const normCanonical = (correctOptionsText||[]).map(x=> typeof x === 'string' ? (q.caseSensitive ? String(x).trim() : String(x).toLowerCase().trim()) : String(x));
+          const normStudentSel = studentSelections.map(s => (normalizeForCompare(q, s))).filter(x=> x!==null && x!==undefined);
           choices.forEach((opt, idx)=>{
-            // is this option one of the correct options by value
-            const isCorrectOpt = correctOptionsText.some(co => cmp(opt, co));
-            // determine if student selected this option
-            const isSelected = studentSelections.some(sel => cmp(sel, opt) || cmp(sel, String(idx)) || cmp(sel, String(idx+1)));
+            const normOpt = normalizeForCompare(q, opt);
+            // is this option one of the correct options by value (compare normalized strings)
+            const isCorrectOpt = normOpt !== null && normCanonical.some(co => co === normOpt);
+            // determine if student selected this option; allow selections that map to indices as well
+            const selMatchesOpt = normStudentSel.some(sel => {
+              if(sel === null || sel === undefined) return false;
+              if(Array.isArray(sel)) return sel.some(s=> s === normOpt);
+              if(normOpt !== null && sel === normOpt) return true;
+              // allow numeric index comparisons (0-based and 1-based)
+              if(String(sel) === String(idx) || String(sel) === String(idx+1)) return true;
+              return false;
+            });
+            const isSelected = selMatchesOpt;
             if(isSelected) anySelected = true;
             const chCls = `choice ${isCorrectOpt ? 'correct-choice':''} ${isSelected ? 'student-choice':''}`;
             const tags = [];
@@ -1257,17 +1312,72 @@ function normalizeQuestionsMap(raw){
       const key = String(idx);
       out[key] = item;
     }
+    // If the questions map uses 0-based numeric keys (0..n-1), shift all keys to 1-based so they align with common 'Q1' answer keys
+    try{
+      const numericKeys = Object.keys(out).map(k=>{ const n = Number(k); return isNaN(n)?null:n; }).filter(x=>x!==null);
+      if(numericKeys.length && Math.min(...numericKeys) === 0){
+        const shifted = {};
+        Object.keys(out).forEach(k => {
+          const n = Number(k);
+          const newKey = String(isNaN(n) ? k : (n + 1));
+          const item = out[k];
+          try{ if(item && (item.questionIndex !== undefined && item.questionIndex !== null)) item.questionIndex = Number(item.questionIndex) + 1; }catch(e){}
+          shifted[newKey] = item;
+        });
+        return shifted;
+      }
+    }catch(e){}
     return out;
   }
   // if it's an object, try to map numeric-like keys to numeric-string keys
   if(typeof raw === 'object'){
     const out = {};
+    // track used numeric keys to assign fallbacks
+    const used = new Set();
+    let nextFallback = 1;
+    // iterate keys in insertion order but prefer explicit questionIndex inside items
     Object.keys(raw).forEach(k => {
       const v = raw[k];
-      // preserve numeric keys as-is, but strip leading non-digits like 'Q1' -> '1'
-      const m = k.match(/(\d+)$/);
-      const key = m ? m[1] : k;
-      out[String(key)] = v;
+      let idx = null;
+      try{
+        if(v && (v.questionIndex !== undefined && v.questionIndex !== null)) idx = Number(v.questionIndex);
+      }catch(e){}
+      if(idx === null){
+        const m = String(k).match(/(\d+)$/);
+        if(m) idx = Number(m[1]);
+      }
+      if(idx === null || isNaN(idx)){
+        // find next unused fallback numeric index
+        while(used.has(nextFallback)) nextFallback++;
+        idx = nextFallback;
+      }
+      used.add(idx);
+      // ensure questionIndex property exists on item for downstream code
+      try{ if(v && (v.questionIndex === undefined || v.questionIndex === null)) v.questionIndex = idx; }catch(e){}
+
+      // If choices is an object with numeric-like keys, convert to an array so ordering is stable
+      try{
+        if(v && v.choices && !Array.isArray(v.choices) && typeof v.choices === 'object'){
+          const ck = Object.keys(v.choices || {});
+          const allNumeric = ck.length>0 && ck.every(kc => /^\d+$/.test(kc));
+          if(allNumeric){
+            const numericKeys = ck.map(kc => Number(kc)).filter(n=>!isNaN(n));
+            const minKey = Math.min(...numericKeys);
+            const arr = [];
+            ck.forEach(kc => {
+              const pos = Number(kc);
+              if(isNaN(pos)) return;
+              // If keys start at 0 use 0-based; otherwise assume 1-based and shift to 0-based index
+              const targetIndex = (minKey === 0) ? pos : (pos - 1);
+              if(targetIndex >= 0) arr[targetIndex] = v.choices[kc];
+            });
+            // remove undefined holes but preserve order
+            v.choices = arr.filter(x => x !== undefined);
+          }
+        }
+      }catch(e){}
+
+      out[String(idx)] = v;
     });
     return out;
   }
@@ -1294,7 +1404,7 @@ async function exportSectionAnswersCSV(sectionId, ch){
   const modal = document.getElementById('sectionAnswersModal'); if(!modal) return;
   const content = document.getElementById('sectionAnswersContent'); if(!content) return;
   // gather questions
-  const qFound = await findQuizQuestions(ch);
+  let qFound = await findQuizQuestions(ch);
   const questionsRaw = (qFound && qFound.snap && qFound.snap.exists()) ? qFound.snap.val() : {};
   const questions = normalizeQuestionsMap(questionsRaw);
   const qKeys = Object.keys(questions||{}).sort((a,b)=>Number(a)-Number(b));
@@ -1375,49 +1485,75 @@ async function getAttemptList(sid, ch){
 
 // Render the questions block HTML for an attempt object
 function renderAttemptQuestionsHtml(attemptObj, source, questions, sourcePath){
+  // Build normalized, instructor-friendly HTML for a single attempt object.
   const qKeys = Object.keys(questions || {}).sort((a,b)=> Number(a) - Number(b));
   let html = `<div style="max-height:60vh;overflow:auto">`;
-  html += `<h3>Source: ${escapeHtml(source)}</h3>`;
+  html += `<h3>Source: ${escapeHtml(source || 'unknown')}</h3>`;
   if(sourcePath){ html += `<div style="font-size:12px;color:#666;margin-bottom:8px">Loaded questions path: <code>${escapeHtml(sourcePath)}</code></div>`; }
-  // If the attempt object looks like a direct answers map (keys like 'Q1', '1', etc), wrap it so extractor finds it
+
+  // Some attempt objects are raw maps (Q1/Q2/1/2) instead of {answers: {...}}
   let effectiveAttempt = attemptObj || {};
   try{
     if(!attemptObj) effectiveAttempt = {};
     else if(!attemptObj.answers){
       const keys = Object.keys(attemptObj||{});
-      const looksLikeAnswers = keys.length > 0 && keys.some(k => /^q?\d+$/i.test(k) || /^Q\d+$/i.test(k) || /^Q\d+$/.test(k));
+      const looksLikeAnswers = keys.length>0 && keys.some(k => /^q?\d+$/i.test(k) || /^Q\d+$/i.test(k));
       if(looksLikeAnswers){ effectiveAttempt = { answers: attemptObj }; }
     }
-  }catch(e){ effectiveAttempt = attemptObj; }
+  }catch(e){ effectiveAttempt = attemptObj || {}; }
+
   if(qKeys.length===0){ html += `<p>No question definitions found for this chapter.</p>`; }
   else {
+    const _mismatches = [];
     qKeys.forEach(qk => {
-      const q = questions[qk];
+      const q = questions[qk] || {};
       const qIndex = Number(qk);
-      const studentResp = extractStudentResponse(attemptObj, qk, qIndex);
-      const normResp = normalizeStudentResponse(q, studentResp);
+      // extract stored student response using robust helper
+      const rawResp = extractStudentResponse(effectiveAttempt, qk, qIndex);
+      const normResp = normalizeStudentResponse(q, rawResp);
       const correct = evaluateAnswer(q, normResp);
       const isNoResponse = (normResp === undefined || normResp === null || (Array.isArray(normResp) && normResp.length===0) || (typeof normResp === 'string' && String(normResp).trim()===''));
+
       let cls = 'question-result';
       let resultText = '';
       let resultColor = '#d33';
       if(isNoResponse){ resultText = 'No response'; cls = 'question-result'; resultColor = '#666'; }
       else if(correct){ resultText = 'Correct'; cls = 'question-result correct'; resultColor = '#2b8a3e'; }
       else { resultText = 'Incorrect'; cls = 'question-result wrong'; resultColor = '#d33'; }
+
       html += `<div class="${cls}" style="padding:10px;border-bottom:1px solid #eee;margin-bottom:8px;">`;
       html += `<div style="display:flex;justify-content:space-between;align-items:center"><div style="font-weight:700;color:#501121">Q${escapeHtml(q.questionIndex || qk)}: ${escapeHtml(q.question||'')}</div><div style="font-size:12px;color:#666">${escapeHtml(q.type||'')}</div></div>`;
-        if(q.type === 'multiple_choice'){
-        const choices = Array.isArray(q.choices) ? q.choices : (q.choices ? Object.values(q.choices) : []);
-        const correctOptionsText = getCanonicalAnswers(q);
+
+      if(q.type === 'multiple_choice'){
+        const choices = Array.isArray(q.choices) ? q.choices.slice() : (q.choices ? Object.values(q.choices) : []);
+        // canonical correct options (display texts)
+        const canonical = getCanonicalAnswers(q) || [];
+        // normalized canonical for fast comparison
+  const normCanonical = canonical.map(x => normalizeForCompare(q, x)).filter(x=> x!==null && x!==undefined);
+
+        // student selections: produce array of normalized strings for comparison
         let studentSelections = [];
-        if(Array.isArray(normResp)) studentSelections = normResp.slice();
-        else if(normResp !== undefined && normResp !== null && String(normResp).trim() !== '') studentSelections = [String(normResp)];
-        const cmp = (a,b) => { if(a === undefined || b === undefined) return false; if(q.caseSensitive) return String(a).trim() === String(b).trim(); return String(a).toLowerCase().trim() === String(b).toLowerCase().trim(); };
+        if(Array.isArray(normResp)) studentSelections = normResp.map(x=> normalizeForCompare(q, x));
+        else if(normResp !== undefined && normResp !== null && String(normResp).trim() !== '') studentSelections = [ normalizeForCompare(q, normResp) ];
+        studentSelections = studentSelections.filter(x=> x!==null && x!==undefined);
+
         html += `<div style="margin-top:8px;display:flex;flex-direction:column;">`;
         let anySelected = false;
-        choices.forEach((opt, idx)=>{
-          const isCorrectOpt = correctOptionsText.some(co => cmp(opt, co));
-          const isSelected = studentSelections.some(sel => cmp(sel, opt) || cmp(sel, String(idx)) || cmp(sel, String(idx+1)));
+
+        // Precompute per-choice normalized values for debug
+        const perChoiceNorm = choices.map((opt, idx) => ({ idx, opt, norm: normalizeForCompare(q, opt) }));
+
+        choices.forEach((opt, idx) => {
+          const normOpt = normalizeForCompare(q, opt);
+          const isCorrectOpt = normOpt !== null && normCanonical.some(co => co === normOpt);
+          // allow student selection matching by normalized value or by index (0/1-based)
+          const isSelected = studentSelections.some(sel => {
+            if(sel === null || sel === undefined) return false;
+            if(Array.isArray(sel)) return sel.some(s=> s === normOpt);
+            if(normOpt !== null && sel === normOpt) return true;
+            if(String(sel) === String(idx) || String(sel) === String(idx+1)) return true;
+            return false;
+          });
           if(isSelected) anySelected = true;
           const chCls = `choice ${isCorrectOpt ? 'correct-choice':''} ${isSelected ? 'student-choice':''}`;
           const tags = [];
@@ -1425,23 +1561,53 @@ function renderAttemptQuestionsHtml(attemptObj, source, questions, sourcePath){
           if(isSelected) tags.push('<span class="tag selected">Selected</span>');
           html += `<div class="${chCls}"><div>${escapeHtml(opt)}</div><div>${tags.join(' ')}</div></div>`;
         });
+
         html += `</div>`;
-        if(!anySelected && studentSelections.length>0){ const rawDisplay = Array.isArray(studentResp) ? studentResp.join(', ') : String(studentResp); html += `<div style="margin-top:6px;color:#a23">Student answered (not in choices): <span style="font-weight:600">${escapeHtml(rawDisplay)}</span></div>`; }
+
+        if(!anySelected && Array.isArray(normResp) && normResp.length>0){ const rawDisplay = Array.isArray(rawResp) ? rawResp.join(', ') : String(rawResp); html += `<div style="margin-top:6px;color:#a23">Student answered (not in choices): <span style="font-weight:600">${escapeHtml(rawDisplay)}</span></div>`; }
+        if(!anySelected && isNoResponse){ html += `<div style="margin-top:6px;font-style:italic;color:#666">Student answer: <span style="font-weight:600">(no response)</span></div>`; }
+
         try{
-          const rawDisplay = (studentResp === undefined || studentResp === null || (Array.isArray(studentResp) && studentResp.length===0) || (typeof studentResp === 'string' && String(studentResp).trim()==='')) ? '(no response)' : (Array.isArray(studentResp) ? studentResp.join(', ') : String(studentResp));
+          const rawDisplay = (rawResp === undefined || rawResp === null || (Array.isArray(rawResp) && rawResp.length===0) || (typeof rawResp === 'string' && String(rawResp).trim()==='')) ? '(no response)' : (Array.isArray(rawResp) ? rawResp.join(', ') : String(rawResp));
           const normDisplay = (normResp === undefined || normResp === null || (Array.isArray(normResp) && normResp.length===0) || (typeof normResp === 'string' && String(normResp).trim()==='')) ? '(no response)' : (Array.isArray(normResp) ? normResp.join(', ') : String(normResp));
           html += `<div style="margin-top:6px;color:#444">Student response (raw): <span style="font-weight:600">${escapeHtml(rawDisplay)}</span></div>`;
           html += `<div style="margin-top:4px;color:#444">Normalized: <span style="font-weight:600">${escapeHtml(normDisplay)}</span></div>`;
         }catch(e){}
-  if(!correct && correctOptionsText.length && !isNoResponse){ const mappedCorrect = correctOptionsText.join(', '); html += `<div style="margin-top:8px;">Correct answer: <span style="font-weight:700">${escapeHtml(mappedCorrect)}</span></div>`; }
+
+        if(!correct && canonical.length && !isNoResponse){ const mappedCorrect = canonical.join(', '); html += `<div style="margin-top:8px;">Correct answer: <span style="font-weight:700">${escapeHtml(mappedCorrect)}</span></div>`; }
+        // Debug section: show normalized canonical and student selections and per-choice normalized values
+        if(EVAL_DEBUG){
+          try{
+            const dbgCanonical = normCanonical.join(' | ') || '(none)';
+            const dbgStudent = studentSelections.join(' | ') || '(none)';
+            const dbgPerChoice = perChoiceNorm.map(p=>`${p.idx}: ${p.norm === null ? '(null)' : p.norm}`).join(' | ');
+            html += `<div style="margin-top:8px;padding:8px;border:1px dashed #eee;background:#fafafa;font-size:12px;color:#333">`;
+            html += `<div style="font-weight:700;margin-bottom:6px">DEBUG</div>`;
+            html += `<div><b>Normalized canonical:</b> ${escapeHtml(dbgCanonical)}</div>`;
+            html += `<div><b>Normalized student selections:</b> ${escapeHtml(dbgStudent)}</div>`;
+            html += `<div style="margin-top:6px"><b>Per-choice normalized:</b> ${escapeHtml(dbgPerChoice)}</div>`;
+            html += `</div>`;
+          }catch(e){}
+        }
         html += `<div style="margin-top:8px;">Result: <span style="font-weight:700;color:${resultColor}">${escapeHtml(resultText)}</span></div>`;
+
       } else {
+        // identification / true_false fallback
         html += `<div style="margin-top:6px;">Expected: <span style='font-weight:600'>${escapeHtml(String(q.answer===undefined?JSON.stringify(q.choices||''): q.answer))}</span></div>`;
-        html += `<div style="margin-top:6px;">Student answer: <span style='font-weight:600'>${escapeHtml(String(studentResp===undefined?'(no response)': studentResp))}</span></div>`;
+        html += `<div style="margin-top:6px;">Student answer: <span style='font-weight:600'>${escapeHtml(String(rawResp===undefined?'(no response)': rawResp))}</span></div>`;
         html += `<div style="margin-top:6px;color:${resultColor};font-weight:700">${escapeHtml(resultText)}</div>`;
       }
+
       html += `</div>`;
+      // collect mismatch info for console debugging: student provided something but evaluated incorrect or no selection
+      try{
+        if(!isNoResponse && !correct){
+          _mismatches.push({ qk: qk, question: q.question||'', rawResp: rawResp, normResp: normResp, canonical: canonical, normCanonical: normCanonical, perChoiceNorm: (typeof perChoiceNorm !== 'undefined' ? perChoiceNorm : null) });
+        }
+      }catch(e){}
     });
+    // print concise mismatch summary to console to aid debugging
+    try{ if(_mismatches.length){ console.debug('Attempt render mismatches:', _mismatches.map(m => ({ q: m.qk, question: m.question, raw: m.rawResp, normalized: m.normResp, canonical: m.canonical, normCanonical: m.normCanonical })) ); } }catch(e){}
   }
   html += `</div>`;
   return html;
@@ -1481,8 +1647,9 @@ document.addEventListener('click', async (e)=>{
     // We will show a modal that contains a dropdown of attempts so the instructor can select any attempt (by key)
     // load quiz questions, trying chapter variants if necessary
     let questions = {};
+    let qFound = null;
     try{
-      const qFound = await findQuizQuestions(ch);
+      qFound = await findQuizQuestions(ch);
       if(qFound && qFound.snap && qFound.snap.exists()){
         questions = normalizeQuestionsMap(qFound.snap.val());
         console.debug('Loaded questions from', qFound.path);
@@ -1538,6 +1705,7 @@ function showAttemptModal(innerHtml){
           <div style="font-size:13px;color:#666" id="attemptModalSub"></div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;">
+          <button id="debugToggleBtn" class="btn" style="background:#fff;border:1px solid #ccc;padding:6px 10px;border-radius:6px;">Debug: Off</button>
           <button id="filterWrongBtn" class="btn" style="background:#fff;border:1px solid #ccc;padding:6px 10px;border-radius:6px;">Show Wrong Only</button>
           <button style="background:#fff;border:1px solid #ccc;padding:6px 10px;border-radius:6px;" id="closeAttemptModal">Close</button>
         </div>
@@ -1546,6 +1714,14 @@ function showAttemptModal(innerHtml){
     modal.appendChild(content); document.body.appendChild(modal);
     // Attach handlers after appending
     try{ document.getElementById('closeAttemptModal').addEventListener('click', ()=>{ modal.style.display='none'; }); }catch(e){ console.error('attach closeAttemptModal failed', e); }
+    try{ document.getElementById('debugToggleBtn').addEventListener('click', ()=>{
+      EVAL_DEBUG = !EVAL_DEBUG; const btn = document.getElementById('debugToggleBtn'); if(btn) btn.textContent = `Debug: ${EVAL_DEBUG ? 'On' : 'Off'}`;
+      // if content visible, re-render the attempt details (naive approach: find container and re-run existing innerHTML string if available)
+      const contentEl = document.getElementById('attemptDetailsContent'); if(contentEl){
+        // look for the currently displayed pickers/containers and trigger a change event to reload if present
+        const picker = document.getElementById('attemptPicker'); if(picker){ const ev = new Event('change'); picker.dispatchEvent(ev); }
+      }
+    }); }catch(e){ console.error('attach debugToggleBtn failed', e); }
     try{ document.getElementById('filterWrongBtn').addEventListener('click', ()=>{
       const btn = document.getElementById('filterWrongBtn'); const showing = btn.dataset.showing === '1';
       btn.dataset.showing = showing ? '0' : '1'; btn.textContent = showing ? 'Show Wrong Only' : 'Show All';
@@ -1634,7 +1810,7 @@ async function saveQuestion(){
 
   // Save to whichever quiz questions path exists for the chapter, or default to canonical path
   try{
-    const qFound = await findQuizQuestions(currentChapter);
+  let qFound = await findQuizQuestions(currentChapter);
     if(qFound && qFound.snap && qFound.snap.exists()){
       const base = qFound.path;
       if(editingQuestionId){ await rtdb.ref(`${base}/${editingQuestionId}`).set(payload); alert('Question updated!'); }
@@ -1653,7 +1829,7 @@ async function saveQuestion(){
 async function openEditModal(ch,id){
   currentChapter=ch; editingQuestionId=id; resetModal();
   // try to locate the question across chapter variants
-  const qFound = await findQuizQuestions(ch);
+  let qFound = await findQuizQuestions(ch);
   let q = null;
   if(qFound && qFound.snap && qFound.snap.exists()){
     const childSnap = qFound.snap.child(id);
@@ -1668,7 +1844,19 @@ async function openEditModal(ch,id){
   document.getElementById('questionType').value=q.type==="multiple_choice"?"multipleChoice":q.type;
   toggleQuestionType();
   if(q.type==="multiple_choice"){
-    q.choices.forEach((opt,i)=>{document.getElementById('optionText'+i).value=opt; if(opt===q.answer) document.querySelector(`input[name='correctOption'][value='${i}']`).checked=true;});
+    (Array.isArray(q.choices) ? q.choices : (q.choices ? Object.values(q.choices) : [])).forEach((opt,i)=>{
+      try{ document.getElementById('optionText'+i).value = opt; }catch(e){}
+      try{
+        const normOpt = normalizeForCompare(q, opt);
+        const normAns = normalizeForCompare(q, q.answer);
+        let match = false;
+        if(normOpt !== null && normAns !== null){
+          if(Array.isArray(normAns)) match = normAns.some(a=>a === normOpt);
+          else match = normAns === normOpt;
+        }
+        if(match){ const el = document.querySelector(`input[name='correctOption'][value='${i}']`); if(el) el.checked = true; }
+      }catch(e){}
+    });
     // populate extended settings
     document.getElementById('optCaseSensitive').checked = !!q.caseSensitive;
     document.getElementById('optOrderMatters').checked = !!q.orderMatters;
@@ -1682,7 +1870,7 @@ async function openEditModal(ch,id){
 async function deleteQuestion(ch,id){
     if(confirm("Delete this question?")){
     // try to delete from the variant path if found, else fallback to the canonical path
-    const qFound = await findQuizQuestions(ch);
+  let qFound = await findQuizQuestions(ch);
     if(qFound && qFound.snap && qFound.snap.exists() && qFound.snap.child(id).exists()){
       await rtdb.ref(`${qFound.path}/${id}`).remove();
     } else {
@@ -1776,13 +1964,14 @@ async function loadSectionAnswers(sectionId, ch){
       if(uids.length === 0){ content.innerHTML = `<p>No matching student accounts found for section (filtered ${beforeCount} -> 0)</p>`; return; }
     }catch(e){ console.debug('Failed to fetch StudentAccount/Cridentials for filtering', e); }
 
-    // load chapter questions (variant-aware)
-    const qFound = await findQuizQuestions(ch);
-    const questions = (qFound && qFound.snap && qFound.snap.exists()) ? qFound.snap.val() : {};
+    // load chapter questions (variant-aware) and normalize into numeric-keyed map
+    let qFound = await findQuizQuestions(ch);
+    const questionsRaw = (qFound && qFound.snap && qFound.snap.exists()) ? qFound.snap.val() : {};
     if(!(qFound && qFound.snap && qFound.snap.exists())){
       const tried = (qFound && qFound.triedPaths) ? qFound.triedPaths.join(', ') : 'unknown paths';
       content.innerHTML = `<p>No questions found for ${escapeHtml(ch)}. Tried: ${escapeHtml(tried)}</p>`; return;
     }
+    const questions = normalizeQuestionsMap(questionsRaw || {});
     const qKeys = Object.keys(questions||{}).sort((a,b)=>Number(a)-Number(b));
 
     const list = document.createElement('div'); list.className = 'section-answers-list';

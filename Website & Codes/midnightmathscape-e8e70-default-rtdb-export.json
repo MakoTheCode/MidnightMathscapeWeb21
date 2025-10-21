@@ -1,60 +1,6 @@
 {
   "Cridentials": {
-    "1489": {
-      "address": "STI CALOOCAN",
-      "contactNumber": "09507527135",
-      "createdAt": 1760763815293,
-      "email": "stical@gmail.com",
-      "firstname": "sti",
-      "lastname": "cal",
-      "middleInitial": "",
-      "sectionId": "-O_vixrPkwIInZkHie87",
-      "status": "active",
-      "username": "stical"
-    },
-    "7843": {
-      "address": "STI CALOOCAN",
-      "contactNumber": "09507527135",
-      "createdAt": 1760763822371,
-      "email": "stical@gmail.com",
-      "firstname": "sti",
-      "lastname": "cal",
-      "middleInitial": "",
-      "sectionId": "-O_vixrPkwIInZkHie87",
-      "status": "active",
-      "username": "stical"
-    },
-    "8064": {
-      "address": "STI CALOOCAN",
-      "contactNumber": "09507527135",
-      "createdAt": "1760763814338",
-      "email": "stical@gmail.com",
-      "firstname": "sti",
-      "lastname": "cal",
-      "middleInitial": "",
-      "sectionId": "-O_vixrPkwIInZkHie87",
-      "status": "active",
-      "username": "stical"
-    },
-    "8310": {
-      "address": "Valenzuela, Ugong, malabon",
-      "contactNumber": "09929001234",
-      "createdAt": 1760797283776,
-      "email": "12345@gmail.com",
-      "firstname": "sam",
-      "lastname": "sam",
-      "middleInitial": "",
-      "sectionId": "-ObamYzPun7NRZQ0ZoFq",
-      "status": "active",
-      "username": "SamSam"
-    },
-    "0404": {
-      "sectionId": "-ObamYzPun7NRZQ0ZoFq"
-    },
     "amdumalmarcel01": {
-      "sectionId": "-O_vixrPkwIInZkHie87"
-    },
-    "baldorain02": {
       "sectionId": "-O_vixrPkwIInZkHie87"
     },
     "barcelinoariel03": {
@@ -116,521 +62,6 @@
     }
   },
   "QuizResults": {
-    "1212": {
-      "chapter1": {
-        "-O_lTa7wNme-Zz9RCEBq": {
-          "answers": {
-            "Q1": "B. 84 cm²",
-            "Q2": "C. The difference of the two sets",
-            "Q3": "idk",
-            "Q4": "false"
-          },
-          "chapter": "chapter1",
-          "date": "2025-09-22",
-          "score": 1,
-          "timeSpent": "00:00:25"
-        },
-        "-O_lU2v-oM9mi6LD-XTI": {
-          "answers": {
-            "Q1": "A. {apple, banana, mango}",
-            "Q2": "B. The intersection of the two sets",
-            "Q3": "dfdf",
-            "Q4": "false"
-          },
-          "chapter": "chapter1",
-          "date": "2025-09-22",
-          "score": 2,
-          "timeSpent": "00:00:07"
-        },
-        "-ObIsadNfSkCFW02Trse": {
-          "answers": {
-            "Q1": "B. 84 cm²",
-            "Q2": "v",
-            "Q3": "false"
-          },
-          "chapter": "chapter1",
-          "date": "2025-10-11",
-          "score": 1,
-          "timeSpent": "00:00:13"
-        },
-        "-ObIsgk-HxG8kRVOsec7": {
-          "answers": {
-            "Q1": "A. 19 cm²",
-            "Q2": "v",
-            "Q3": "false"
-          },
-          "chapter": "chapter1",
-          "date": "2025-10-11",
-          "score": 0,
-          "timeSpent": "00:00:10"
-        },
-        "-ObPTxi8pef3oOc53yCe": {
-          "answers": {
-            "Q1": "D. 21 cm²",
-            "Q2": "i",
-            "Q3": "true"
-          },
-          "chapter": "chapter1",
-          "date": "2025-10-13",
-          "score": 1,
-          "timeSpent": "00:00:10"
-        },
-        "-ObPU3xTSVmOWWSP5fEj": {
-          "answers": {
-            "Q1": "Invalid Choice",
-            "Q2": "i",
-            "Q3": "true"
-          },
-          "chapter": "chapter1",
-          "date": "2025-10-13",
-          "score": 1,
-          "timeSpent": "00:00:11"
-        },
-        "-ObRnnPDatLLvpldfkzl": {
-          "answers": {
-            "Q1": "Invalid Choice",
-            "Q2": "",
-            "Q3": ""
-          },
-          "chapter": "chapter1",
-          "date": "2025-10-13",
-          "score": 0,
-          "timeSpent": "00:00:02"
-        }
-      },
-      "chapter10": {
-        "-ObH3rPsfgk4lJb49FO4": {
-          "answers": {
-            "Q1": "B. 8"
-          },
-          "chapter": "chapter10",
-          "date": "2025-10-11",
-          "score": 1,
-          "timeSpent": "00:00:16"
-        }
-      },
-      "chapter11": {
-        "-ObHAHYNOb-Ipy5UXgwT": {
-          "answers": {
-            "Q1": "B. 18"
-          },
-          "chapter": "chapter11",
-          "date": "2025-10-11",
-          "score": 0,
-          "timeSpent": "00:00:03"
-        }
-      },
-      "chapter2": {
-        "-O_lUBSsytoMy6-IPXaP": {
-          "answers": {
-            "Q1": "A. christine",
-            "Q2": "bvb"
-          },
-          "chapter": "chapter2",
-          "date": "2025-09-22",
-          "score": 1,
-          "timeSpent": "00:00:04"
-        }
-      },
-      "chapter3": {
-        "-O_lYVqBp-zHxskvoymb": {
-          "answers": {
-            "Q1": "A. 28"
-          },
-          "chapter": "chapter3",
-          "date": "2025-09-22",
-          "score": 0,
-          "timeSpent": "00:00:01"
-        }
-      },
-      "chapter4": {
-        "-O_lbIMnmQ_Ji5-5Va5U": {
-          "answers": {
-            "Q1": "B. 6°C",
-            "Q2": "."
-          },
-          "chapter": "chapter4",
-          "date": "2025-09-22",
-          "score": 1,
-          "timeSpent": "00:00:07"
-        }
-      },
-      "chapter5": {
-        "-O_vrNcOAZV7Clb_5OiS": {
-          "answers": {
-            "Q1": "C. 64"
-          },
-          "chapter": "chapter5",
-          "date": "2025-09-24",
-          "score": 0,
-          "timeSpent": "00:00:01"
-        }
-      },
-      "chapter6": {
-        "-ObDvkQp6EHc2YWT6lPN": {
-          "answers": {
-            "Q1": "B. pen"
-          },
-          "chapter": "chapter6",
-          "date": "2025-10-11",
-          "score": 1,
-          "timeSpent": "00:00:01"
-        }
-      },
-      "chapter7": {
-        "-ObGXYrFNktakYDVsnh6": {
-          "answers": {
-            "Q1": "A. 13 cm"
-          },
-          "chapter": "chapter7",
-          "date": "2025-10-11",
-          "score": 0,
-          "timeSpent": "00:00:03"
-        }
-      },
-      "chapter8": {
-        "-ObGk1tcwTLvRKWqkCtl": {
-          "answers": {
-            "Q1": "B. 17"
-          },
-          "chapter": "chapter8",
-          "date": "2025-10-11",
-          "score": 1,
-          "timeSpent": "00:00:02"
-        }
-      },
-      "chapter9": {
-        "-ObGvwN-gawP3DQNG-SO": {
-          "answers": {
-            "Q1": "B. 12"
-          },
-          "chapter": "chapter9",
-          "date": "2025-10-11",
-          "score": 1,
-          "timeSpent": "00:00:04"
-        }
-      }
-    },
-    "1414": {
-      "chapter1": {
-        "-Oa8azvkdwy3UlGZWSyT": {
-          "answers": {
-            "Q1": "B. 84 cm²",
-            "Q2": "C. The difference of the two sets",
-            "Q3": "df",
-            "Q4": "false"
-          },
-          "chapter": "chapter1",
-          "date": "2025-09-27",
-          "score": 1,
-          "timeSpent": "00:00:09"
-        }
-      }
-    },
-    "5050": {
-      "chapter1": {
-        "-O_ooPEHE4ltR7G2AgDj": {
-          "answers": {
-            "Q1": "B. 84 cm²",
-            "Q2": "B. The intersection of the two sets",
-            "Q3": ".",
-            "Q4": ""
-          },
-          "chapter": "chapter1",
-          "date": "2025-09-23",
-          "score": 2,
-          "timeSpent": "00:00:06"
-        }
-      },
-      "chapter10": {
-        "-ObXUxYAUHhcMwzG0C1I": {
-          "answers": {
-            "Q1": "B. 8"
-          },
-          "chapter": "chapter10",
-          "date": "2025-10-14",
-          "score": 1,
-          "timeSpent": "00:00:01"
-        }
-      },
-      "chapter11": {
-        "-ObXV-rRcCKQQlVVtqA-": {
-          "answers": {
-            "Q1": "B. 18"
-          },
-          "chapter": "chapter11",
-          "date": "2025-10-14",
-          "score": 0,
-          "timeSpent": "00:00:01"
-        },
-        "-ObXV2RnnqV3EGGgMdV1": {
-          "answers": {
-            "Q1": "A. 12"
-          },
-          "chapter": "chapter11",
-          "date": "2025-10-14",
-          "score": 1,
-          "timeSpent": "00:00:02"
-        }
-      },
-      "chapter2": {
-        "-O_jkpo5fSIvRN343trW": {
-          "answers": {
-            "Q1": "Invalid Choice",
-            "Q2": ""
-          },
-          "chapter": "chapter2",
-          "date": "2025-09-22",
-          "score": 0,
-          "timeSpent": "00:00:01"
-        }
-      },
-      "chapter3": {
-        "-O_ooSZRpPNzyDUiUnkL": {
-          "answers": {
-            "Q1": "A. 28"
-          },
-          "chapter": "chapter3",
-          "date": "2025-09-23",
-          "score": 0,
-          "timeSpent": "00:00:01"
-        }
-      },
-      "chapter4": {
-        "-O_ooWHohAt-6Rk5_s16": {
-          "answers": {
-            "Q1": "A. 24°C",
-            "Q2": "m"
-          },
-          "chapter": "chapter4",
-          "date": "2025-09-23",
-          "score": 0,
-          "timeSpent": "00:00:05"
-        }
-      },
-      "chapter5": {
-        "-ObXUiX5-NstR25W1CHZ": {
-          "answers": {
-            "Q1": "B. 56"
-          },
-          "chapter": "chapter5",
-          "date": "2025-10-14",
-          "score": 1,
-          "timeSpent": "00:00:02"
-        }
-      },
-      "chapter6": {
-        "-ObXUlWA9O-zI61VNXeI": {
-          "answers": {
-            "Q1": "A. paper"
-          },
-          "chapter": "chapter6",
-          "date": "2025-10-14",
-          "score": 0,
-          "timeSpent": "00:00:01"
-        }
-      },
-      "chapter7": {
-        "-ObXUnqDH9iKUJZMxEyc": {
-          "answers": {
-            "Q1": "A. 13 cm"
-          },
-          "chapter": "chapter7",
-          "date": "2025-10-14",
-          "score": 0,
-          "timeSpent": "00:00:01"
-        }
-      },
-      "chapter8": {
-        "-ObXUqXtjpIZAvN2nKCY": {
-          "answers": {
-            "Q1": "A. 9"
-          },
-          "chapter": "chapter8",
-          "date": "2025-10-14",
-          "score": 0,
-          "timeSpent": "00:00:01"
-        }
-      },
-      "chapter9": {
-        "-ObXUurkUaCUphKtNuZC": {
-          "answers": {
-            "Q1": "A. 6"
-          },
-          "chapter": "chapter9",
-          "date": "2025-10-14",
-          "score": 0,
-          "timeSpent": "00:00:02"
-        }
-      }
-    },
-    "8310": {
-      "chapter1": {
-        "-Oc-AhJqSELh5fkZfPca": {
-          "answers": {
-            "Q1": "B. 84 cm²",
-            "Q10": "rational number",
-            "Q2": "A. The union of the two setsThe union of the two sets",
-            "Q3": "intersection",
-            "Q4": "true",
-            "Q5": "true",
-            "Q6": "B. Elements that belong to both sets",
-            "Q7": "empty set",
-            "Q8": "D. √(-9)",
-            "Q9": "false"
-          },
-          "chapter": "chapter1",
-          "date": "2025-10-20",
-          "score": 8,
-          "timeSpent": "00:02:09"
-        }
-      }
-    },
-    "0404": {
-      "chapter1": {
-        "-OXD3AT7LMIfJWYOYmW5": {
-          "answers": {
-            "Q1": "D. CJ",
-            "Q2": "B. nothing",
-            "Q3": "s",
-            "Q4": ""
-          },
-          "chapter": "chapter1",
-          "date": "2025-08-09",
-          "score": 0,
-          "timeSpent": "00:00:11"
-        },
-        "-OXD3HYFrltQR42_i911": {
-          "answers": {
-            "Q1": "A. Christine",
-            "Q2": "C. nothing",
-            "Q3": "sd",
-            "Q4": ""
-          },
-          "chapter": "chapter1",
-          "date": "2025-08-09",
-          "score": 1,
-          "timeSpent": "00:00:13"
-        },
-        "-OXD5zOkRO7PXl5EkrOx": {
-          "answers": {
-            "Q1": "A. Christine",
-            "Q2": "A. CJ",
-            "Q3": "",
-            "Q4": "true"
-          },
-          "chapter": "chapter1",
-          "date": "2025-08-09",
-          "score": 3,
-          "timeSpent": "00:00:19"
-        },
-        "-OXN2mSVD2b1yc-YOBkL": {
-          "answers": {
-            "Q1": "Invalid Choice",
-            "Q2": "B. The intersection of the two sets",
-            "Q3": "",
-            "Q4": ""
-          },
-          "chapter": "chapter1",
-          "date": "2025-08-11",
-          "score": 1,
-          "timeSpent": "00:00:12"
-        },
-        "-OXNZSLNPArgY_Jpo3MF": {
-          "answers": {
-            "Q1": "A. {apple, banana, mango}",
-            "Q2": "C. The difference of the two sets",
-            "Q3": "",
-            "Q4": "false"
-          },
-          "chapter": "chapter1",
-          "date": "2025-08-11",
-          "score": 1,
-          "timeSpent": "00:00:09"
-        },
-        "-OXRenXPK7r36uy7evvq": {
-          "answers": {
-            "Q1": "Invalid Choice",
-            "Q2": "Invalid Choice",
-            "Q3": "ugjg",
-            "Q4": ""
-          },
-          "chapter": "chapter1",
-          "date": "2025-08-12",
-          "score": 0,
-          "timeSpent": "00:00:18"
-        },
-        "-O_jZr_bDhWX_wXjsh57": {
-          "answers": {
-            "Q1": "Invalid Choice",
-            "Q2": "Invalid Choice",
-            "Q3": "",
-            "Q4": ""
-          },
-          "chapter": "chapter1",
-          "date": "2025-09-22",
-          "score": 0,
-          "timeSpent": "00:01:10"
-        },
-        "-ObdsvLbhPmUpNJ79t5x": {
-          "answers": {
-            "Q1": "A. 19 cm²",
-            "Q2": "Union",
-            "Q3": "true"
-          },
-          "chapter": "chapter1",
-          "date": "2025-10-16",
-          "score": 1,
-          "timeSpent": "00:00:26"
-        }
-      },
-      "chapter2": {
-        "-O_j_5fuHSqZKkEyq_sy": {
-          "answers": {
-            "Q1": "B. -2",
-            "Q2": "idk"
-          },
-          "chapter": "chapter2",
-          "date": "2025-09-22",
-          "score": 0,
-          "timeSpent": "00:00:07"
-        }
-      },
-      "chapter3": {
-        "-O_lJ_kNnolSgqR8bpCh": {
-          "answers": {
-            "Q1": "A. 28"
-          },
-          "chapter": "chapter3",
-          "date": "2025-09-22",
-          "score": 0,
-          "timeSpent": "00:00:05"
-        }
-      },
-      "chapter4": {
-        "-O_lJjGkUgiQ3m7SdF_H": {
-          "answers": {
-            "Q1": "C. -6°C",
-            "Q2": "fgf"
-          },
-          "chapter": "chapter4",
-          "date": "2025-09-22",
-          "score": 0,
-          "timeSpent": "00:00:15"
-        }
-      },
-      "chapter5": {
-        "-O_lScMcoBn8EZX-E27d": {
-          "answers": {
-            "Q1": "A. 54"
-          },
-          "chapter": "chapter5",
-          "date": "2025-09-22",
-          "score": 0,
-          "timeSpent": "00:00:05"
-        }
-      }
-    },
     "Midnight14": {
       "chapter1": {
         "-ObkkjF-btrORCjw_DV9": {
@@ -1553,11 +984,7 @@
         }
       },
       "students": {
-        "1489": true,
-        "7843": true,
-        "8064": true,
         "amdumalmarcel01": true,
-        "baldorain02": true,
         "barcelinoariel03": true,
         "baylonkhen04": true,
         "bilmiagavin05": true,
@@ -1597,142 +1024,139 @@
           "minute": ""
         }
       },
-      "students": {
-        "8310": true,
-        "0404": true
-      },
       "updatedAt": 1760513639270
     }
   },
   "StudentAccount": {
-    "1489": {
-      "firstname": "sti",
-      "lastActive": "2025-10-18T05:06:14.0889240Z",
-      "lastname": "cal",
-      "pass": "123456",
-      "sessionToken": "f2a9a206-26a2-4733-b39e-643eaf6af7c7"
-    },
-    "7843": {
-      "firstname": "sti",
-      "lastname": "cal",
-      "pass": "123456"
-    },
-    "8064": {
-      "firstname": "sti",
-      "lastname": "caloocan",
-      "pass": "123456"
-    },
-    "8310": {
-      "firstname": "sam",
-      "lastActive": "2025-10-20T06:04:15.1812490Z",
-      "lastname": "sam",
-      "pass": "123456",
-      "sessionToken": "4aebb34a-b1be-4895-b716-129f58497a90"
-    },
     "amdumalmarcel01": {
-      "firstname": "Marcel mae",
+      "firstname": "Marcel",
       "lastActive": "2025-10-18T01:26:09.4566100Z",
       "lastname": "Amdumal",
+      "middleIn": "C",
       "pass": "marcelMathscape",
-      "sessionToken": "5a660aa6-3c0a-4798-838b-ca7fb7f40ca8"
-    },
-    "baldorain02": {
-      "firstname": "Rain",
-      "lastActive": "2025-10-18T05:06:35.5108310Z",
-      "lastname": "Baldo",
-      "pass": "rainMathscape",
+      "section": "",
       "sessionToken": "5a660aa6-3c0a-4798-838b-ca7fb7f40ca8"
     },
     "barcelinoariel03": {
       "firstname": "Ariel John",
       "lastActive": "2025-10-18T01:46:46.0639130Z",
       "lastname": "Barcelino",
+      "middleIn": "F",
       "pass": "arielMathscape",
+      "section": "",
       "sessionToken": "f2a9a206-26a2-4733-b39e-643eaf6af7c7"
     },
     "baylonkhen04": {
       "firstname": "Jhon khen mark",
       "lastActive": "2025-10-18T05:09:53.2113170Z",
       "lastname": "Baylon",
+      "middleIn": "H",
       "pass": "khenMathscape",
+      "section": "",
       "sessionToken": "f5fe2f99-e1c9-4a02-8f4e-d1119805779c"
     },
     "bilmiagavin05": {
       "firstname": "Gavin",
       "lastname": "Bilmia",
-      "pass": "gavinMathscape"
+      "middleIn": "E",
+      "pass": "gavinMathscape",
+      "section": ""
     },
     "cabaneromark06": {
       "firstname": "Mark james",
       "lastname": "Cabanero",
-      "pass": "markMathscape"
+      "middleIn": "C",
+      "pass": "markMathscape",
+      "section": ""
     },
     "callostrent07": {
       "firstname": "Trent Ordded",
       "lastname": "Callos",
-      "pass": "trentMathscape"
+      "middleIn": "A",
+      "pass": "trentMathscape",
+      "section": ""
     },
     "castorkeith08": {
       "firstname": "Keith Collene",
       "lastname": "Castor",
-      "pass": "keithMathscape"
+      "middleIn": "R",
+      "pass": "keithMathscape",
+      "section": ""
     },
     "feuntesconrad09": {
       "firstname": "Conrad",
       "lastname": "Fuentes",
-      "pass": "conradMathscape"
+      "middleIn": "S",
+      "pass": "conradMathscape",
+      "section": ""
     },
     "gayaielozoey10": {
       "firstname": "Zoey rae",
       "lastname": "Gayaielo",
-      "pass": "zoeyMathscape"
+      "middleIn": "K",
+      "pass": "zoeyMathscape",
+      "section": ""
     },
     "joyen11": {
       "firstname": "Yen",
       "lastname": "Jo",
-      "pass": "yenMathscape"
+      "middleIn": "F",
+      "pass": "yenMathscape",
+      "section": ""
     },
     "limmichael12": {
       "firstname": "Michael",
       "lastname": "Lim",
-      "pass": "michaelMathscape"
+      "middleIn": "T",
+      "pass": "michaelMathscape",
+      "section": ""
     },
     "lunamatthew13": {
       "firstname": "Matthew",
       "lastname": "Luna",
-      "pass": "matthewMathscape"
+      "middleIn": "O",
+      "pass": "matthewMathscape",
+      "section": ""
     },
     "managoaustin14": {
       "firstname": "Million austin moves",
       "lastname": "Manago",
-      "pass": "austinMathscape"
+      "middleIn": "U",
+      "pass": "austinMathscape",
+      "section": ""
     },
     "pinedazyrus15": {
       "firstname": "Zyrus",
       "lastname": "Pineda",
-      "pass": "zyrusMathscape"
+      "middleIn": "P",
+      "pass": "zyrusMathscape",
+      "section": ""
     },
     "piodenatomas16": {
       "firstname": "Tomas  sancho",
       "lastname": "Piodena",
-      "pass": "tomasMathscape"
+      "middleIn": "P",
+      "pass": "tomasMathscape",
+      "section": ""
     },
     "riveramariyah17": {
       "firstname": "Mariyah Clarisse",
       "lastname": "Rivera",
-      "pass": "mariyahMathscape"
+      "middleIn": "G",
+      "pass": "mariyahMathscape",
+      "section": ""
     },
     "studentM1": {
       "firstname": "Student",
-      "lastActive": "2025-10-19T02:04:53.2131020Z",
+      "lastActive": "2025-10-21T07:00:55.6734480Z",
       "lastname": "midnight1",
       "pass": "student1",
       "sectionId": "-O_vixrPkwIInZkHie87",
-      "sessionToken": "c317a3cc-5f00-413d-aa9e-caaeeecef1c0"
+      "sessionToken": "9b54e81f-f16f-4df4-b003-1eb9e4986e35"
     },
     "studentM2": {
       "firstname": "Student2",
-      "lastActive": "2025-10-20T08:08:38.7465960Z",
+      "lastActive": "2025-10-21T12:25:58.7655930Z",
       "lastname": "Midnight",
       "pass": "student2",
       "sectionId": "-O_vixrPkwIInZkHie87",
@@ -1746,1906 +1170,14 @@
     },
     "studentM4": {
       "firstname": "Student4",
-      "lastActive": "2025-10-18T00:35:41.9786450Z",
+      "lastActive": "2025-10-20T18:09:31.3523280Z",
       "lastname": "Midnight",
       "pass": "student4",
       "sectionId": "-O_vixrPkwIInZkHie87",
-      "sessionToken": "f2a9a206-26a2-4733-b39e-643eaf6af7c7"
+      "sessionToken": "9b54e81f-f16f-4df4-b003-1eb9e4986e35"
     }
   },
   "StudentsProgress": {
-    "1212": {
-      "Chapter 1": {
-        "attempt1": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "date": "2025-10-16 08:13:06",
-          "keysFound": 0,
-          "keysNeeded": 2,
-          "progress": 0,
-          "timeSpentSeconds": 79
-        }
-      },
-      "chapter 1": {
-        "attempt1": {
-          "IsCompleted": true,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "73721c34-170d-4012-b6c0-5ea5fa65a080",
-            "5d59fe2a-5a82-488a-8445-29a8e71d9854"
-          ],
-          "date": "2025-09-22 15:19:41",
-          "keysFound": 2,
-          "keysNeeded": 2,
-          "progress": 100,
-          "timeSpentSeconds": 81
-        },
-        "attempt10": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "73721c34-170d-4012-b6c0-5ea5fa65a080",
-            "5d59fe2a-5a82-488a-8445-29a8e71d9854"
-          ],
-          "date": "2025-10-11 23:12:13",
-          "keysFound": 2,
-          "keysNeeded": 2,
-          "progress": 100,
-          "timeSpentSeconds": 81
-        },
-        "attempt11": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "5d59fe2a-5a82-488a-8445-29a8e71d9854",
-            "73721c34-170d-4012-b6c0-5ea5fa65a080"
-          ],
-          "date": "2025-10-13 06:12:29",
-          "keysFound": 2,
-          "keysNeeded": 2,
-          "progress": 100,
-          "timeSpentSeconds": 1061
-        },
-        "attempt12": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "5d59fe2a-5a82-488a-8445-29a8e71d9854"
-          ],
-          "date": "2025-10-18 02:29:58",
-          "keysFound": 1,
-          "keysNeeded": 2,
-          "progress": 49,
-          "timeSpentSeconds": 652
-        },
-        "attempt2": {
-          "IsCompleted": true,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "73721c34-170d-4012-b6c0-5ea5fa65a080",
-            "5d59fe2a-5a82-488a-8445-29a8e71d9854"
-          ],
-          "date": "2025-09-23 12:50:30",
-          "keysFound": 2,
-          "keysNeeded": 2,
-          "progress": 100,
-          "timeSpentSeconds": 55
-        },
-        "attempt3": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "73721c34-170d-4012-b6c0-5ea5fa65a080",
-            "5d59fe2a-5a82-488a-8445-29a8e71d9854"
-          ],
-          "date": "2025-09-27 13:12:06",
-          "keysFound": 2,
-          "keysNeeded": 2,
-          "progress": 100,
-          "timeSpentSeconds": 129
-        },
-        "attempt4": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "73721c34-170d-4012-b6c0-5ea5fa65a080",
-            "5d59fe2a-5a82-488a-8445-29a8e71d9854"
-          ],
-          "date": "2025-09-27 19:17:45",
-          "keysFound": 2,
-          "keysNeeded": 2,
-          "progress": 100,
-          "timeSpentSeconds": 69
-        },
-        "attempt5": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "73721c34-170d-4012-b6c0-5ea5fa65a080",
-            "5d59fe2a-5a82-488a-8445-29a8e71d9854"
-          ],
-          "date": "2025-10-10 13:24:08",
-          "keysFound": 2,
-          "keysNeeded": 2,
-          "progress": 100,
-          "timeSpentSeconds": 83
-        },
-        "attempt6": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "5d59fe2a-5a82-488a-8445-29a8e71d9854",
-            "73721c34-170d-4012-b6c0-5ea5fa65a080"
-          ],
-          "date": "2025-10-11 22:51:11",
-          "keysFound": 2,
-          "keysNeeded": 2,
-          "progress": 100,
-          "timeSpentSeconds": 145
-        },
-        "attempt7": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "5d59fe2a-5a82-488a-8445-29a8e71d9854",
-            "73721c34-170d-4012-b6c0-5ea5fa65a080"
-          ],
-          "date": "2025-10-11 22:55:20",
-          "keysFound": 2,
-          "keysNeeded": 2,
-          "progress": 100,
-          "timeSpentSeconds": 112
-        },
-        "attempt8": {
-          "IsCompleted": true,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "5d59fe2a-5a82-488a-8445-29a8e71d9854",
-            "73721c34-170d-4012-b6c0-5ea5fa65a080"
-          ],
-          "date": "2025-10-11 22:57:46",
-          "keysFound": 2,
-          "keysNeeded": 2,
-          "progress": 100,
-          "timeSpentSeconds": 87
-        },
-        "attempt9": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "73721c34-170d-4012-b6c0-5ea5fa65a080",
-            "5d59fe2a-5a82-488a-8445-29a8e71d9854"
-          ],
-          "date": "2025-10-11 23:08:53",
-          "keysFound": 2,
-          "keysNeeded": 2,
-          "progress": 100,
-          "timeSpentSeconds": 69
-        }
-      },
-      "chapter 10": {
-        "attempt1": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "7e2f99e5-f2e8-4222-b82b-227d93321fe2",
-            "ff0abf00-3d48-409d-bb3e-2111f003b560",
-            "ca7d7d44-50ca-4289-a91f-44a4feac5d25",
-            "c9ae2e4e-433a-4efe-8470-e8c39c719d52",
-            "ad1acbd9-191a-4653-94bd-8f761293eb69",
-            "6df8ae87-c0a4-48e7-b1b0-b31c8a5add53",
-            "e3b9727d-3443-45ac-8ba4-8cb7b3d32583"
-          ],
-          "date": "2025-10-11 14:57:29",
-          "keysFound": 7,
-          "keysNeeded": 7,
-          "progress": 100,
-          "timeSpentSeconds": 900
-        },
-        "attempt2": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "date": "2025-10-11 20:54:05",
-          "keysFound": 0,
-          "keysNeeded": 7,
-          "progress": 0,
-          "timeSpentSeconds": 133
-        }
-      },
-      "chapter 11": {
-        "attempt1": {
-          "IsCompleted": true,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "91039484-1006-48d1-bf2f-9cf68f967a07",
-            "b0bf787f-07bd-4e10-a18a-28cf067a77e6",
-            "f665d738-0b14-466a-96de-a0db92937b69",
-            "e91e3343-e394-4cc9-b0d4-06ec353410d3",
-            "5af1cb95-5935-4992-94e8-869033131e4a",
-            "75b2c41f-de1d-41f0-836b-f6ad7874fcfa",
-            "c3893585-da4c-499b-a525-a96f28b1dab7"
-          ],
-          "date": "2025-10-11 15:24:37",
-          "keysFound": 7,
-          "keysNeeded": 7,
-          "progress": 100,
-          "timeSpentSeconds": 606
-        },
-        "attempt2": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "date": "2025-10-11 21:00:07",
-          "keysFound": 0,
-          "keysNeeded": 7,
-          "progress": 0,
-          "timeSpentSeconds": 102
-        }
-      },
-      "chapter 12": {
-        "attempt1": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "8e053419-397e-4f34-84b6-3a3f354e751e",
-            "032282c3-a610-4308-babd-6bbcd70a341e",
-            "78679d25-7208-467b-b517-fb90787b3495",
-            "9075f121-5d01-4ff0-a324-a1c331a6a9de",
-            "8f9f5382-f685-479b-8f80-be02bb171b66",
-            "ec9d9987-d12e-482a-b205-15a0ece8e0d0",
-            "26a0fc59-5f04-43a2-8508-87fda417e6d1",
-            "e9133964-5885-4288-bb73-8e520b3d4694",
-            "bc4b6499-6df6-425d-a097-8f51410d7b6e"
-          ],
-          "date": "2025-10-12 01:53:52",
-          "keysFound": 9,
-          "keysNeeded": 9,
-          "progress": 100,
-          "timeSpentSeconds": 1034
-        },
-        "attempt2": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "date": "2025-10-15 03:17:40",
-          "keysFound": 0,
-          "keysNeeded": 9,
-          "progress": 0,
-          "timeSpentSeconds": 7367
-        }
-      },
-      "chapter 2": {
-        "attempt1": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "fbb2c323-e2f1-4ae0-9739-895579aae51a",
-            "a4e54b10-16b1-4302-8ed5-cbfbcb375d3b",
-            "0ac253f2-2a68-4b06-a688-93c104b9425d"
-          ],
-          "date": "2025-09-22 15:27:28",
-          "keysFound": 3,
-          "keysNeeded": 3,
-          "progress": 100,
-          "timeSpentSeconds": 29
-        },
-        "attempt2": {
-          "IsCompleted": true,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "b39b7c5d-5d15-4985-bd0a-7133c973a837",
-            "34cc0204-dbce-4d3e-b5f8-0b538c4655d5",
-            "2dae26d9-c904-4f72-9b95-a4bb9c6903ef"
-          ],
-          "date": "2025-09-24 14:23:12",
-          "keysFound": 3,
-          "keysNeeded": 3,
-          "progress": 100,
-          "timeSpentSeconds": 219
-        },
-        "attempt3": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "date": "2025-10-16 08:10:41",
-          "keysFound": 0,
-          "keysNeeded": 3,
-          "progress": 0,
-          "timeSpentSeconds": 1032
-        }
-      },
-      "chapter 3": {
-        "attempt1": {
-          "IsCompleted": true,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "97a64167-74e1-4272-9c87-7ec4aed465af",
-            "6191f7e5-962b-49d8-b9e1-9ebf5254862a",
-            "4eb4bd42-9cef-4ea8-a1d3-edfa2345de13",
-            "e29660b6-f45b-4180-ba7f-fa1c606012c4"
-          ],
-          "date": "2025-09-22 15:31:50",
-          "keysFound": 4,
-          "keysNeeded": 4,
-          "progress": 100,
-          "timeSpentSeconds": 43
-        },
-        "attempt2": {
-          "IsCompleted": true,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "0f2ff8c3-db0e-4f4c-a3f2-85298a9e42ef",
-            "450ea1d5-3351-415e-b2cf-de16ca1784a6",
-            "f5598237-99c4-4812-aad0-4a6ee451ecd5"
-          ],
-          "date": "2025-09-28 17:43:20",
-          "keysFound": 3,
-          "keysNeeded": 3,
-          "progress": 100,
-          "timeSpentSeconds": 461
-        },
-        "attempt3": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "450ea1d5-3351-415e-b2cf-de16ca1784a6"
-          ],
-          "date": "2025-10-13 03:21:26",
-          "keysFound": 1,
-          "keysNeeded": 3,
-          "progress": 33,
-          "timeSpentSeconds": 328
-        }
-      },
-      "chapter 4": {
-        "attempt1": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "323d922e-1961-4583-80bd-fc46a31c1ecf",
-            "65c8b49c-ff85-4a92-a279-3998c444f8ed",
-            "b6733c4d-1db6-47ba-9d15-6ced82c42359",
-            "6c39aa17-c667-40fb-a93b-691781cf710e",
-            "312230d4-7a14-4291-9f6c-3748b674b495"
-          ],
-          "date": "2025-09-22 15:42:20",
-          "keysFound": 5,
-          "keysNeeded": 5,
-          "progress": 100,
-          "timeSpentSeconds": 88
-        },
-        "attempt2": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "date": "2025-10-13 06:03:15",
-          "keysFound": 0,
-          "keysNeeded": 4,
-          "progress": 0,
-          "timeSpentSeconds": 554
-        }
-      },
-      "chapter 5": {
-        "attempt1": {
-          "IsCompleted": true,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "961bf453-3dd3-4ccc-92ef-7ad568286f51",
-            "8202a4a1-dbca-4032-b597-d50697c6c2db",
-            "e8854831-e99f-4322-9583-68d8384a18a5",
-            "248503df-1385-4199-9441-4e43f072107e",
-            "6d43caf8-49a5-448c-9bea-e98016547b5f"
-          ],
-          "date": "2025-09-22 15:52:45",
-          "keysFound": 5,
-          "keysNeeded": 5,
-          "progress": 100,
-          "timeSpentSeconds": 30
-        },
-        "attempt2": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "c41d1562-c745-47ea-9902-0a6e160cdc47",
-            "3fac511f-3f18-4786-80a8-40d6ad2de113",
-            "483b4d08-8cd7-436b-a9a3-17e136b88af8",
-            "4d05f494-b087-42f6-8dd2-71eb56d23898"
-          ],
-          "date": "2025-10-16 08:14:23",
-          "keysFound": 4,
-          "keysNeeded": 5,
-          "progress": 78,
-          "timeSpentSeconds": 1162
-        }
-      },
-      "chapter 6": {
-        "attempt1": {
-          "IsCompleted": true,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "db59a13e-3fa0-4e3a-961b-3050f2506916",
-            "08d08082-71d1-4f24-8ab8-7d37a931e2cf",
-            "234333ab-437c-4b1d-a96f-5d4f3f5be3c7",
-            "eb2ae8f2-da1f-4c38-a509-b2914025efa3",
-            "6ff00743-ca0c-4a70-9a79-94af870302d8",
-            "52412c50-650d-4838-bf9f-b890ee44c674"
-          ],
-          "date": "2025-09-22 16:36:34",
-          "keysFound": 6,
-          "keysNeeded": 6,
-          "progress": 100,
-          "timeSpentSeconds": 40
-        },
-        "attempt2": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "fca80558-f28d-4028-887a-35fa0468b8f8"
-          ],
-          "date": "2025-10-12 23:50:26",
-          "keysFound": 1,
-          "keysNeeded": 6,
-          "progress": 16,
-          "timeSpentSeconds": 515
-        }
-      },
-      "chapter 7": {
-        "attempt1": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "547e8aee-a311-4724-9d47-051307cf0347",
-            "1a6b444b-6dc8-4470-9b8c-5d99242b608c",
-            "f95ee521-2bbf-4813-b435-594529ac8745",
-            "d254de11-b247-4937-806f-ed1efc91d9ab",
-            "eb008d36-b85a-43d6-804c-cdd1f0396c61",
-            "531ab77b-52dc-4295-a50a-5d3831757a78"
-          ],
-          "date": "2025-10-11 12:31:19",
-          "keysFound": 6,
-          "keysNeeded": 6,
-          "progress": 100,
-          "timeSpentSeconds": 1363
-        },
-        "attempt2": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "f95ee521-2bbf-4813-b435-594529ac8745",
-            "547e8aee-a311-4724-9d47-051307cf0347",
-            "1a6b444b-6dc8-4470-9b8c-5d99242b608c",
-            "d254de11-b247-4937-806f-ed1efc91d9ab",
-            "531ab77b-52dc-4295-a50a-5d3831757a78",
-            "eb008d36-b85a-43d6-804c-cdd1f0396c61"
-          ],
-          "date": "2025-10-13 00:49:58",
-          "keysFound": 6,
-          "keysNeeded": 6,
-          "progress": 100,
-          "timeSpentSeconds": 294
-        },
-        "attempt3": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "date": "2025-10-13 01:24:33",
-          "keysFound": 0,
-          "keysNeeded": 6,
-          "progress": 0,
-          "timeSpentSeconds": 97
-        }
-      },
-      "chapter 8": {
-        "attempt1": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "e18490d7-0417-4c31-b4c5-2cb42bdf6264",
-            "335b2059-7315-4a41-a6cf-15d8601e7a82",
-            "18026bcc-d9d1-4d2f-8e10-f31f1bf7d3e4",
-            "1c89f0c5-cdd4-42bb-a530-d2e725c06939",
-            "2e4aaa74-1f4e-4228-a63f-be395ce960c9",
-            "4ea3ff52-522e-467d-8745-40cd161b8e4f"
-          ],
-          "date": "2025-10-11 13:30:08",
-          "keysFound": 6,
-          "keysNeeded": 6,
-          "progress": 100,
-          "timeSpentSeconds": 1173
-        },
-        "attempt2": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "date": "2025-10-13 03:25:13",
-          "keysFound": 0,
-          "keysNeeded": 6,
-          "progress": 0,
-          "timeSpentSeconds": 351
-        }
-      },
-      "chapter 9": {
-        "attempt1": {
-          "IsCompleted": true,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "2ac274b4-6daa-410c-a667-1ba5f2e4274d",
-            "7da3ef4c-a3bd-43ae-82fa-aa531096fe7c",
-            "0c001200-b75e-4258-b5d3-de625ff7a1f8",
-            "1c1262d5-a80a-48d4-8e2b-7d0565c44c25",
-            "918f7aec-fa57-41a5-ad4f-a470a25fcf77",
-            "6acf3dad-e166-4b2d-a791-0f37dac2d27b",
-            "4f5c210c-d06c-45a3-8904-22b69d843330"
-          ],
-          "date": "2025-10-11 14:22:03",
-          "keysFound": 7,
-          "keysNeeded": 7,
-          "progress": 100,
-          "timeSpentSeconds": 1475
-        },
-        "attempt2": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "7da3ef4c-a3bd-43ae-82fa-aa531096fe7c"
-          ],
-          "date": "2025-10-12 23:48:25",
-          "keysFound": 1,
-          "keysNeeded": 7,
-          "progress": 14,
-          "timeSpentSeconds": 221
-        }
-      }
-    },
-    "1414": {
-      "chapter 1": {
-        "attempt1": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "73721c34-170d-4012-b6c0-5ea5fa65a080",
-            "5d59fe2a-5a82-488a-8445-29a8e71d9854"
-          ],
-          "date": "2025-09-27 13:18:00",
-          "keysFound": 2,
-          "keysNeeded": 2,
-          "progress": 100,
-          "timeSpentSeconds": 92
-        },
-        "attempt2": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "73721c34-170d-4012-b6c0-5ea5fa65a080",
-            "5d59fe2a-5a82-488a-8445-29a8e71d9854"
-          ],
-          "date": "2025-10-18 02:47:57",
-          "keysFound": 2,
-          "keysNeeded": 2,
-          "progress": 100,
-          "timeSpentSeconds": 368
-        }
-      }
-    },
-    "1489": {
-      "chapter 1": {
-        "attempt1": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "73721c34-170d-4012-b6c0-5ea5fa65a080",
-            "5d59fe2a-5a82-488a-8445-29a8e71d9854"
-          ],
-          "date": "2025-10-18 13:13:39",
-          "keysFound": 2,
-          "keysNeeded": 2,
-          "progress": 100,
-          "timeSpentSeconds": 311
-        }
-      }
-    },
-    "5050": {
-      "chapter 1": {
-        "attempt1": {
-          "IsCompleted": true,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "b24a4032-a7ab-4957-8750-8163c043a623",
-            "3bb24c0b-8a1a-44fa-a0ea-2db5a0b10cf3",
-            "a9b5aa41-b1bf-4a37-a5dc-76eefa66e2b7",
-            "868af515-24cc-4017-a9e7-0c3d188e7e59",
-            "79bc5d42-d2dd-4e7e-b45b-02768726163f"
-          ],
-          "date": "2025-09-11 18:05:57",
-          "keysFound": 5,
-          "keysNeeded": 5,
-          "progress": 100,
-          "timeSpentSeconds": 65
-        },
-        "attempt2": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "73721c34-170d-4012-b6c0-5ea5fa65a080",
-            "5d59fe2a-5a82-488a-8445-29a8e71d9854"
-          ],
-          "date": "2025-10-18 02:58:58",
-          "keysFound": 2,
-          "keysNeeded": 5,
-          "progress": 39,
-          "timeSpentSeconds": 1057
-        }
-      },
-      "chapter 11": {
-        "attempt1": {
-          "IsCompleted": true,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "a120d104-68bc-4e02-8012-d68521d81fa7",
-            "dad34607-1cea-47ef-b7c0-e3d140d5a174",
-            "160899e5-f79c-4836-8912-6040d0598d59",
-            "403095a6-213b-49ef-bb39-61f66279053f",
-            "91b9f3c6-2092-4d80-bc17-babaffea83a3",
-            "3190c3f4-2dd9-4d81-b192-7d161ca304b1",
-            "786c1e8b-c58c-4022-b2ec-fc9dbf7759a3",
-            "f517f4ce-1469-488b-8709-298dbffad9b5",
-            "de97524c-2616-4dc4-b17a-1f02024524eb",
-            "059ee4a3-67cb-4199-91a0-1f8600f0162f",
-            "f6059f19-88d6-4fa2-95bf-b6e16a1caed7",
-            "ea2501af-5aee-43d5-a87b-e3ab70300471",
-            "5d94c7db-09e7-4980-9a4a-e9818610f8d8",
-            "97f9a4c0-f8a6-4d4b-913e-be4e2f1ed51e",
-            "884144b1-789b-4ab1-993f-f298cdb76e8c",
-            "b79245e9-39ff-4e2a-bfd8-f0c2cfe60809",
-            "84eb039e-2332-44f3-b7b7-f6560bc2ad00"
-          ],
-          "date": "2025-09-11 17:25:44",
-          "keysFound": 17,
-          "keysNeeded": 17,
-          "progress": 100,
-          "timeSpentSeconds": 84
-        }
-      },
-      "chapter 12": {
-        "attempt1": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "date": "2025-10-14 20:12:22",
-          "keysFound": 0,
-          "keysNeeded": 9,
-          "progress": 0,
-          "timeSpentSeconds": 779
-        }
-      },
-      "chapter 2": {
-        "attempt1": {
-          "IsCompleted": true,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "95d839ee-ecf7-4312-9e22-4f94d7b7dd91",
-            "c7e81952-f0d2-4569-97f7-216a4c992c55",
-            "b541e40b-6eba-4ecb-a3f5-e2ee0f6cf9c6",
-            "b043f5cc-6a47-4681-8047-60e9fc0bc04a",
-            "cad73588-7252-456c-b50c-35d9962e9396",
-            "ffd16abb-02eb-4512-9ad7-d477881aa08c",
-            "c0a3e1a0-3027-4c47-9b42-e600ae0d6eec"
-          ],
-          "date": "2025-09-10 01:11:21",
-          "keysFound": 7,
-          "keysNeeded": 7,
-          "progress": 100,
-          "timeSpentSeconds": 159
-        },
-        "attempt2": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "date": "2025-09-20 16:49:04",
-          "keysFound": 0,
-          "keysNeeded": 4,
-          "progress": 0,
-          "timeSpentSeconds": 98
-        }
-      },
-      "chapter 3": {
-        "attempt1": {
-          "IsCompleted": true,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "97a64167-74e1-4272-9c87-7ec4aed465af",
-            "6191f7e5-962b-49d8-b9e1-9ebf5254862a",
-            "4eb4bd42-9cef-4ea8-a1d3-edfa2345de13",
-            "e29660b6-f45b-4180-ba7f-fa1c606012c4",
-            "74977c47-93f3-4eb2-a2c2-3417b200f58c",
-            "84065b2d-8095-442d-aea7-c92ac1b0aab4",
-            "6f31e696-bdb0-4d11-8d42-c1f84fb6b81a",
-            "08b7f6e4-6c90-418f-94f7-d639edb3164f"
-          ],
-          "date": "2025-09-10 02:44:36",
-          "keysFound": 8,
-          "keysNeeded": 8,
-          "progress": 100,
-          "timeSpentSeconds": 102
-        },
-        "attempt2": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "date": "2025-10-14 20:25:03",
-          "keysFound": 0,
-          "keysNeeded": 3,
-          "progress": 0,
-          "timeSpentSeconds": 257
-        }
-      },
-      "chapter 4": {
-        "attempt1": {
-          "IsCompleted": true,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "323d922e-1961-4583-80bd-fc46a31c1ecf",
-            "e29660b6-f45b-4180-ba7f-fa1c606012c4",
-            "4098f6f2-0e32-41e2-9fbe-8aa494f4c2c3",
-            "65c8b49c-ff85-4a92-a279-3998c444f8ed",
-            "b6733c4d-1db6-47ba-9d15-6ced82c42359",
-            "6c39aa17-c667-40fb-a93b-691781cf710e",
-            "312230d4-7a14-4291-9f6c-3748b674b495",
-            "5b40612b-7184-453b-8670-e8bbeb540e66",
-            "c36e4616-1293-449e-b8d5-0b50d19714ad"
-          ],
-          "date": "2025-09-11 16:49:02",
-          "keysFound": 9,
-          "keysNeeded": 9,
-          "progress": 100,
-          "timeSpentSeconds": 163
-        },
-        "attempt2": {
-          "IsCompleted": true,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "323d922e-1961-4583-80bd-fc46a31c1ecf",
-            "e29660b6-f45b-4180-ba7f-fa1c606012c4",
-            "4098f6f2-0e32-41e2-9fbe-8aa494f4c2c3",
-            "6c39aa17-c667-40fb-a93b-691781cf710e",
-            "b6733c4d-1db6-47ba-9d15-6ced82c42359",
-            "312230d4-7a14-4291-9f6c-3748b674b495",
-            "5b40612b-7184-453b-8670-e8bbeb540e66",
-            "c36e4616-1293-449e-b8d5-0b50d19714ad",
-            "4bba1eb2-2f6f-4fe7-bb06-344bdb8ba1b9"
-          ],
-          "date": "2025-09-11 17:00:10",
-          "keysFound": 9,
-          "keysNeeded": 9,
-          "progress": 100,
-          "timeSpentSeconds": 94
-        }
-      },
-      "chapter 5": {
-        "attempt1": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "3952e72a-a540-40b3-8586-6db66be740d7",
-            "961bf453-3dd3-4ccc-92ef-7ad568286f51",
-            "8202a4a1-dbca-4032-b597-d50697c6c2db",
-            "248503df-1385-4199-9441-4e43f072107e",
-            "6d43caf8-49a5-448c-9bea-e98016547b5f",
-            "e8854831-e99f-4322-9583-68d8384a18a5"
-          ],
-          "date": "2025-09-22 15:06:41",
-          "keysFound": 6,
-          "keysNeeded": 10,
-          "progress": 59,
-          "timeSpentSeconds": 180
-        }
-      },
-      "chapter 6": {
-        "attempt1": {
-          "IsCompleted": true,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "60e63b7f-a7e9-40d1-b605-a51ce6717471",
-            "52412c50-650d-4838-bf9f-b890ee44c674",
-            "616efa99-5333-46a2-8bb0-c585afe38a5b",
-            "fa131d91-6684-412e-bbc4-9443f16a540b",
-            "15e7e5ed-820e-4efb-a5e3-9e7dc160403b",
-            "a475b97a-3c9c-4801-8340-658d641e9d5b",
-            "aa174169-6829-4362-880e-f9301f9c3b84",
-            "6ff00743-ca0c-4a70-9a79-94af870302d8",
-            "db59a13e-3fa0-4e3a-961b-3050f2506916",
-            "08d08082-71d1-4f24-8ab8-7d37a931e2cf",
-            "234333ab-437c-4b1d-a96f-5d4f3f5be3c7",
-            "eb2ae8f2-da1f-4c38-a509-b2914025efa3"
-          ],
-          "date": "2025-09-11 18:15:43",
-          "keysFound": 12,
-          "keysNeeded": 12,
-          "progress": 100,
-          "timeSpentSeconds": 207
-        }
-      },
-      "chapter 7": {
-        "attempt1": {
-          "IsCompleted": true,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "3f313edf-e303-4266-824c-124105404e76",
-            "aab8c266-e999-474e-96c8-31feb11e9e13",
-            "c3c98159-d3e1-457a-bdfd-3d2b44e596cc",
-            "4df092b3-7787-49f3-911d-7f49c51e8bfd",
-            "b83437ea-a7d5-4e0d-86d0-f4869b2c91f1",
-            "3b8a87e7-7c5d-47d7-af7d-6e21d1a64873",
-            "298c3f18-2737-4037-b20d-bbc52c655099",
-            "d9716c47-e33b-4b94-943a-3b717f082284",
-            "923d2bea-e7a1-409b-b2b1-0c1945a39751",
-            "365f9971-c435-442f-8e56-68ba093da135",
-            "d3661aad-52ff-4cc2-b77b-444dc664d525",
-            "42e43d6b-ae84-4cda-a18d-4f571f83b881",
-            "18d5ee19-fde2-4faf-b1cf-7f3c361bcf24"
-          ],
-          "date": "2025-09-11 17:55:04",
-          "keysFound": 13,
-          "keysNeeded": 13,
-          "progress": 100,
-          "timeSpentSeconds": 341
-        }
-      },
-      "chapter 8": {
-        "attempt1": {
-          "IsCompleted": true,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "5cfdad43-9173-439c-b646-e409bd51ef8c",
-            "9f3c7b0a-6e49-44d5-93fc-bb12814db211",
-            "c2b9d6b6-3bef-4a99-8d04-80e5eee0db77",
-            "4eabaa76-61d6-49ae-9b49-0c23a30bbfc8",
-            "5c055431-8b5b-4351-8838-e7910619915d",
-            "daa8dc3f-ca01-499d-a567-91ac85e9bbc0",
-            "438bb4ab-b26a-491e-8e08-a5c0fbb371ec",
-            "90cd0564-13b3-4d1d-9fd2-bbb20a8d621f",
-            "528c240a-2790-4f0b-aa22-f0cda163cfc8",
-            "ac1daf12-81d5-47d6-b4ec-c191b4cddaea",
-            "2fa892f8-6655-4e16-9b74-b0e44e094e44",
-            "e7fe8d78-9f48-4f1f-9043-3137fbeba7cd",
-            "6efb2d6b-4e7a-4910-92b0-01e706b409ec",
-            "bf8a7867-2af5-4609-acc5-ab26a52a0d3d"
-          ],
-          "date": "2025-09-11 17:21:25",
-          "keysFound": 14,
-          "keysNeeded": 14,
-          "progress": 100,
-          "timeSpentSeconds": 128
-        },
-        "attempt2": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "date": "2025-10-14 19:49:54",
-          "keysFound": 0,
-          "keysNeeded": 6,
-          "progress": 0,
-          "timeSpentSeconds": 311
-        }
-      },
-      "chapter 9": {
-        "attempt1": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "9f3c7b0a-6e49-44d5-93fc-bb12814db211",
-            "5cfdad43-9173-439c-b646-e409bd51ef8c",
-            "daa8dc3f-ca01-499d-a567-91ac85e9bbc0",
-            "438bb4ab-b26a-491e-8e08-a5c0fbb371ec",
-            "90cd0564-13b3-4d1d-9fd2-bbb20a8d621f",
-            "528c240a-2790-4f0b-aa22-f0cda163cfc8",
-            "5c055431-8b5b-4351-8838-e7910619915d",
-            "4eabaa76-61d6-49ae-9b49-0c23a30bbfc8",
-            "c2b9d6b6-3bef-4a99-8d04-80e5eee0db77",
-            "bf8a7867-2af5-4609-acc5-ab26a52a0d3d",
-            "ac1daf12-81d5-47d6-b4ec-c191b4cddaea",
-            "2fa892f8-6655-4e16-9b74-b0e44e094e44",
-            "e7fe8d78-9f48-4f1f-9043-3137fbeba7cd",
-            "6efb2d6b-4e7a-4910-92b0-01e706b409ec"
-          ],
-          "date": "2025-09-22 15:08:38",
-          "keysFound": 14,
-          "keysNeeded": 15,
-          "progress": 91,
-          "timeSpentSeconds": 214
-        }
-      }
-    },
-    "7395": {
-      "chapter 1": {
-        "attempt1": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "date": "2025-10-18 09:07:02",
-          "keysFound": 0,
-          "keysNeeded": 2,
-          "progress": 0,
-          "timeSpentSeconds": 296
-        }
-      }
-    },
-    "8310": {
-      "chapter 1": {
-        "attempt1": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "73721c34-170d-4012-b6c0-5ea5fa65a080",
-            "5d59fe2a-5a82-488a-8445-29a8e71d9854"
-          ],
-          "date": "2025-10-18 22:35:59",
-          "keysFound": 2,
-          "keysNeeded": 2,
-          "progress": 100,
-          "timeSpentSeconds": 504
-        },
-        "attempt2": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "73721c34-170d-4012-b6c0-5ea5fa65a080",
-            "5d59fe2a-5a82-488a-8445-29a8e71d9854"
-          ],
-          "date": "2025-10-20 13:50:25",
-          "keysFound": 2,
-          "keysNeeded": 2,
-          "progress": 100,
-          "timeSpentSeconds": 186
-        },
-        "attempt3": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "date": "2025-10-20 13:58:04",
-          "keysFound": 0,
-          "keysNeeded": 2,
-          "progress": 0,
-          "timeSpentSeconds": 0
-        }
-      },
-      "chapter 2": {
-        "attempt1": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "date": "2025-10-20 14:05:28",
-          "keysFound": 0,
-          "keysNeeded": 3,
-          "progress": 0,
-          "timeSpentSeconds": 0
-        }
-      }
-    },
-    "0404": {
-      "Chapter 1": {
-        "attempt1": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "date": "2025-10-16 07:48:30",
-          "keysFound": 0,
-          "keysNeeded": 2,
-          "progress": 0,
-          "timeSpentSeconds": 106
-        }
-      },
-      "chapter 1": {
-        "attempt1": {
-          "IsCompleted": true,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "testKey",
-            "b24a4032-a7ab-4957-8750-8163c043a623",
-            "3bb24c0b-8a1a-44fa-a0ea-2db5a0b10cf3",
-            "868af515-24cc-4017-a9e7-0c3d188e7e59",
-            "a9b5aa41-b1bf-4a37-a5dc-76eefa66e2b7"
-          ],
-          "date": "2025-09-15 01:13:13",
-          "keysFound": 5,
-          "keysNeeded": 5,
-          "progress": 100,
-          "timeSpentSeconds": 722
-        },
-        "attempt10": {
-          "StudentStart": true,
-          "keysFound": 0,
-          "keysNeeded": 5,
-          "progress": 0,
-          "timeSpentSeconds": 0
-        },
-        "attempt11": {
-          "IsCompleted": true,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "dce9c7f0-8471-45ae-95c8-338d0d6b254c",
-            "bf031707-4f3a-42c2-b7dc-6f60e8f21e47",
-            "fc8bfeb8-4e97-48e0-83ee-520e628f93bd",
-            "4a2b3aff-412f-4e92-9b4a-4b1306f52b4c",
-            "9dc600f9-161c-4034-93b3-5c895c702f91"
-          ],
-          "date": "2025-09-17 02:07:23",
-          "keysFound": 5,
-          "keysNeeded": 5,
-          "progress": 100,
-          "timeSpentSeconds": 104
-        },
-        "attempt12": {
-          "IsCompleted": true,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "dce9c7f0-8471-45ae-95c8-338d0d6b254c",
-            "bf031707-4f3a-42c2-b7dc-6f60e8f21e47",
-            "4a2b3aff-412f-4e92-9b4a-4b1306f52b4c",
-            "9dc600f9-161c-4034-93b3-5c895c702f91",
-            "fc8bfeb8-4e97-48e0-83ee-520e628f93bd"
-          ],
-          "date": "2025-09-17 02:24:47",
-          "keysFound": 5,
-          "keysNeeded": 5,
-          "progress": 100,
-          "timeSpentSeconds": 45
-        },
-        "attempt13": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "date": "2025-09-17 11:20:56",
-          "keysFound": 0,
-          "keysNeeded": 4,
-          "progress": 0,
-          "timeSpentSeconds": 40
-        },
-        "attempt14": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "date": "2025-09-17 11:24:35",
-          "keysFound": 0,
-          "keysNeeded": 4,
-          "progress": 0,
-          "timeSpentSeconds": 63
-        },
-        "attempt15": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "date": "2025-09-17 11:36:38",
-          "keysFound": 0,
-          "keysNeeded": 4,
-          "progress": 0,
-          "timeSpentSeconds": 28
-        },
-        "attempt16": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "date": "2025-09-17 11:38:19",
-          "keysFound": 0,
-          "keysNeeded": 4,
-          "progress": 0,
-          "timeSpentSeconds": 30
-        },
-        "attempt17": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "date": "2025-09-17 11:43:23",
-          "keysFound": 0,
-          "keysNeeded": 4,
-          "progress": 0,
-          "timeSpentSeconds": 21
-        },
-        "attempt18": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "date": "2025-09-17 12:05:28",
-          "keysFound": 0,
-          "keysNeeded": 4,
-          "progress": 0,
-          "timeSpentSeconds": 31
-        },
-        "attempt19": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "date": "2025-09-17 12:13:17",
-          "keysFound": 0,
-          "keysNeeded": 4,
-          "progress": 0,
-          "timeSpentSeconds": 26
-        },
-        "attempt2": {
-          "IsCompleted": true,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "b24a4032-a7ab-4957-8750-8163c043a623",
-            "3bb24c0b-8a1a-44fa-a0ea-2db5a0b10cf3",
-            "a9b5aa41-b1bf-4a37-a5dc-76eefa66e2b7",
-            "868af515-24cc-4017-a9e7-0c3d188e7e59",
-            "79bc5d42-d2dd-4e7e-b45b-02768726163f"
-          ],
-          "date": "2025-09-15 01:18:33",
-          "keysFound": 5,
-          "keysNeeded": 5,
-          "progress": 100,
-          "timeSpentSeconds": 64
-        },
-        "attempt20": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "date": "2025-09-17 12:18:20",
-          "keysFound": 0,
-          "keysNeeded": 4,
-          "progress": 0,
-          "timeSpentSeconds": 24
-        },
-        "attempt21": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "date": "2025-09-17 12:23:39",
-          "keysFound": 0,
-          "keysNeeded": 4,
-          "progress": 0,
-          "timeSpentSeconds": 70
-        },
-        "attempt22": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "date": "2025-09-17 12:29:49",
-          "keysFound": 0,
-          "keysNeeded": 4,
-          "progress": 0,
-          "timeSpentSeconds": 22
-        },
-        "attempt23": {
-          "IsCompleted": true,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "dce9c7f0-8471-45ae-95c8-338d0d6b254c",
-            "bf031707-4f3a-42c2-b7dc-6f60e8f21e47",
-            "fc8bfeb8-4e97-48e0-83ee-520e628f93bd",
-            "4a2b3aff-412f-4e92-9b4a-4b1306f52b4c"
-          ],
-          "date": "2025-09-17 13:12:09",
-          "keysFound": 4,
-          "keysNeeded": 4,
-          "progress": 100,
-          "timeSpentSeconds": 78
-        },
-        "attempt24": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "dce9c7f0-8471-45ae-95c8-338d0d6b254c"
-          ],
-          "date": "2025-09-17 13:28:02",
-          "keysFound": 1,
-          "keysNeeded": 4,
-          "progress": 24,
-          "timeSpentSeconds": 14
-        },
-        "attempt25": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "dce9c7f0-8471-45ae-95c8-338d0d6b254c",
-            "bf031707-4f3a-42c2-b7dc-6f60e8f21e47"
-          ],
-          "date": "2025-09-17 13:28:47",
-          "keysFound": 2,
-          "keysNeeded": 4,
-          "progress": 49,
-          "timeSpentSeconds": 15
-        },
-        "attempt26": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "date": "2025-09-17 13:29:52",
-          "keysFound": 0,
-          "keysNeeded": 4,
-          "progress": 0,
-          "timeSpentSeconds": 16
-        },
-        "attempt27": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "dce9c7f0-8471-45ae-95c8-338d0d6b254c",
-            "bf031707-4f3a-42c2-b7dc-6f60e8f21e47",
-            "4a2b3aff-412f-4e92-9b4a-4b1306f52b4c"
-          ],
-          "date": "2025-09-17 20:43:15",
-          "keysFound": 3,
-          "keysNeeded": 4,
-          "progress": 74,
-          "timeSpentSeconds": 97
-        },
-        "attempt28": {
-          "StudentStart": true,
-          "keysFound": 0,
-          "keysNeeded": 4,
-          "progress": 0,
-          "timeSpentSeconds": 0
-        },
-        "attempt29": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "dce9c7f0-8471-45ae-95c8-338d0d6b254c"
-          ],
-          "date": "2025-09-17 21:18:46",
-          "keysFound": 1,
-          "keysNeeded": 4,
-          "progress": 24,
-          "timeSpentSeconds": 10
-        },
-        "attempt3": {
-          "IsCompleted": true,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "dce9c7f0-8471-45ae-95c8-338d0d6b254c",
-            "bf031707-4f3a-42c2-b7dc-6f60e8f21e47",
-            "fc8bfeb8-4e97-48e0-83ee-520e628f93bd",
-            "9dc600f9-161c-4034-93b3-5c895c702f91",
-            "4a2b3aff-412f-4e92-9b4a-4b1306f52b4c"
-          ],
-          "date": "2025-09-15 14:31:52",
-          "keysFound": 5,
-          "keysNeeded": 5,
-          "progress": 100,
-          "timeSpentSeconds": 462
-        },
-        "attempt30": {
-          "StudentStart": true,
-          "keysFound": 0,
-          "keysNeeded": 4,
-          "progress": 0,
-          "timeSpentSeconds": 0
-        },
-        "attempt31": {
-          "IsCompleted": true,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "dce9c7f0-8471-45ae-95c8-338d0d6b254c",
-            "bf031707-4f3a-42c2-b7dc-6f60e8f21e47",
-            "fc8bfeb8-4e97-48e0-83ee-520e628f93bd",
-            "4a2b3aff-412f-4e92-9b4a-4b1306f52b4c"
-          ],
-          "date": "2025-09-17 21:39:06",
-          "keysFound": 4,
-          "keysNeeded": 4,
-          "progress": 100,
-          "timeSpentSeconds": 137
-        },
-        "attempt32": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "dce9c7f0-8471-45ae-95c8-338d0d6b254c",
-            "bf031707-4f3a-42c2-b7dc-6f60e8f21e47",
-            "9dc600f9-161c-4034-93b3-5c895c702f91",
-            "4a2b3aff-412f-4e92-9b4a-4b1306f52b4c"
-          ],
-          "date": "2025-09-19 18:51:34",
-          "keysFound": 4,
-          "keysNeeded": 4,
-          "progress": 100,
-          "timeSpentSeconds": 672
-        },
-        "attempt33": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "73721c34-170d-4012-b6c0-5ea5fa65a080",
-            "5d59fe2a-5a82-488a-8445-29a8e71d9854"
-          ],
-          "date": "2025-09-20 16:46:07",
-          "keysFound": 2,
-          "keysNeeded": 4,
-          "progress": 49,
-          "timeSpentSeconds": 656
-        },
-        "attempt34": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "73721c34-170d-4012-b6c0-5ea5fa65a080",
-            "5d59fe2a-5a82-488a-8445-29a8e71d9854"
-          ],
-          "date": "2025-09-21 14:46:09",
-          "keysFound": 2,
-          "keysNeeded": 2,
-          "progress": 100,
-          "timeSpentSeconds": 312
-        },
-        "attempt35": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "73721c34-170d-4012-b6c0-5ea5fa65a080"
-          ],
-          "date": "2025-09-22 10:18:02",
-          "keysFound": 1,
-          "keysNeeded": 2,
-          "progress": 49,
-          "timeSpentSeconds": 665
-        },
-        "attempt36": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "5d59fe2a-5a82-488a-8445-29a8e71d9854",
-            "73721c34-170d-4012-b6c0-5ea5fa65a080"
-          ],
-          "date": "2025-10-14 19:26:57",
-          "keysFound": 2,
-          "keysNeeded": 5,
-          "progress": 39,
-          "timeSpentSeconds": 6804
-        },
-        "attempt4": {
-          "IsCompleted": true,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "dce9c7f0-8471-45ae-95c8-338d0d6b254c",
-            "bf031707-4f3a-42c2-b7dc-6f60e8f21e47",
-            "fc8bfeb8-4e97-48e0-83ee-520e628f93bd",
-            "4a2b3aff-412f-4e92-9b4a-4b1306f52b4c",
-            "9dc600f9-161c-4034-93b3-5c895c702f91"
-          ],
-          "date": "2025-09-15 15:20:51",
-          "keysFound": 5,
-          "keysNeeded": 5,
-          "progress": 100,
-          "timeSpentSeconds": 92
-        },
-        "attempt5": {
-          "IsCompleted": true,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "9dc600f9-161c-4034-93b3-5c895c702f91",
-            "4a2b3aff-412f-4e92-9b4a-4b1306f52b4c",
-            "bf031707-4f3a-42c2-b7dc-6f60e8f21e47",
-            "dce9c7f0-8471-45ae-95c8-338d0d6b254c",
-            "fc8bfeb8-4e97-48e0-83ee-520e628f93bd"
-          ],
-          "date": "2025-09-17 01:08:18",
-          "keysFound": 5,
-          "keysNeeded": 5,
-          "progress": 100,
-          "timeSpentSeconds": 71
-        },
-        "attempt6": {
-          "IsCompleted": true,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "dce9c7f0-8471-45ae-95c8-338d0d6b254c",
-            "bf031707-4f3a-42c2-b7dc-6f60e8f21e47",
-            "4a2b3aff-412f-4e92-9b4a-4b1306f52b4c",
-            "9dc600f9-161c-4034-93b3-5c895c702f91",
-            "fc8bfeb8-4e97-48e0-83ee-520e628f93bd"
-          ],
-          "date": "2025-09-17 01:21:19",
-          "keysFound": 5,
-          "keysNeeded": 5,
-          "progress": 100,
-          "timeSpentSeconds": 63
-        },
-        "attempt7": {
-          "IsCompleted": true,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "dce9c7f0-8471-45ae-95c8-338d0d6b254c",
-            "bf031707-4f3a-42c2-b7dc-6f60e8f21e47",
-            "4a2b3aff-412f-4e92-9b4a-4b1306f52b4c",
-            "9dc600f9-161c-4034-93b3-5c895c702f91",
-            "fc8bfeb8-4e97-48e0-83ee-520e628f93bd"
-          ],
-          "date": "2025-09-17 01:28:16",
-          "keysFound": 5,
-          "keysNeeded": 5,
-          "progress": 100,
-          "timeSpentSeconds": 58
-        },
-        "attempt8": {
-          "IsCompleted": true,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "dce9c7f0-8471-45ae-95c8-338d0d6b254c",
-            "bf031707-4f3a-42c2-b7dc-6f60e8f21e47",
-            "fc8bfeb8-4e97-48e0-83ee-520e628f93bd",
-            "4a2b3aff-412f-4e92-9b4a-4b1306f52b4c",
-            "9dc600f9-161c-4034-93b3-5c895c702f91"
-          ],
-          "date": "2025-09-17 01:35:20",
-          "keysFound": 5,
-          "keysNeeded": 5,
-          "progress": 100,
-          "timeSpentSeconds": 115
-        },
-        "attempt9": {
-          "IsCompleted": true,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "dce9c7f0-8471-45ae-95c8-338d0d6b254c",
-            "bf031707-4f3a-42c2-b7dc-6f60e8f21e47",
-            "fc8bfeb8-4e97-48e0-83ee-520e628f93bd",
-            "4a2b3aff-412f-4e92-9b4a-4b1306f52b4c",
-            "9dc600f9-161c-4034-93b3-5c895c702f91"
-          ],
-          "date": "2025-09-17 01:57:58",
-          "keysFound": 5,
-          "keysNeeded": 5,
-          "progress": 100,
-          "timeSpentSeconds": 98
-        }
-      },
-      "chapter 10": {
-        "attempt1": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "160899e5-f79c-4836-8912-6040d0598d59",
-            "403095a6-213b-49ef-bb39-61f66279053f",
-            "84eb039e-2332-44f3-b7b7-f6560bc2ad00",
-            "f6059f19-88d6-4fa2-95bf-b6e16a1caed7",
-            "b79245e9-39ff-4e2a-bfd8-f0c2cfe60809",
-            "884144b1-789b-4ab1-993f-f298cdb76e8c",
-            "5d94c7db-09e7-4980-9a4a-e9818610f8d8"
-          ],
-          "date": "2025-09-22 15:33:34",
-          "keysFound": 7,
-          "keysNeeded": 7,
-          "progress": 100,
-          "timeSpentSeconds": 35
-        }
-      },
-      "chapter 2": {
-        "attempt1": {
-          "IsCompleted": true,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "95d839ee-ecf7-4312-9e22-4f94d7b7dd91",
-            "c7e81952-f0d2-4569-97f7-216a4c992c55",
-            "2319234a-4449-4594-9550-8bd65d1f0b52",
-            "fb469fc1-a2cd-462c-9346-7e2ad1e992e1",
-            "97e0a8f8-425a-4295-9d2a-56db298ee38b",
-            "fbb2c323-e2f1-4ae0-9739-895579aae51a",
-            "a4e54b10-16b1-4302-8ed5-cbfbcb375d3b",
-            "0ac253f2-2a68-4b06-a688-93c104b9425d",
-            "1a8af48b-5957-40cc-a0ed-e75a829f7009"
-          ],
-          "date": "2025-09-15 01:20:12",
-          "keysFound": 9,
-          "keysNeeded": 0,
-          "progress": 100,
-          "timeSpentSeconds": 117
-        },
-        "attempt10": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "2dae26d9-c904-4f72-9b95-a4bb9c6903ef",
-            "34cc0204-dbce-4d3e-b5f8-0b538c4655d5",
-            "b39b7c5d-5d15-4985-bd0a-7133c973a837"
-          ],
-          "date": "2025-09-24 11:15:29",
-          "keysFound": 3,
-          "keysNeeded": 3,
-          "progress": 100,
-          "timeSpentSeconds": 171
-        },
-        "attempt11": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "2dae26d9-c904-4f72-9b95-a4bb9c6903ef",
-            "34cc0204-dbce-4d3e-b5f8-0b538c4655d5",
-            "b39b7c5d-5d15-4985-bd0a-7133c973a837"
-          ],
-          "date": "2025-09-24 12:08:44",
-          "keysFound": 3,
-          "keysNeeded": 3,
-          "progress": 100,
-          "timeSpentSeconds": 137
-        },
-        "attempt12": {
-          "IsCompleted": true,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "2dae26d9-c904-4f72-9b95-a4bb9c6903ef",
-            "b39b7c5d-5d15-4985-bd0a-7133c973a837",
-            "34cc0204-dbce-4d3e-b5f8-0b538c4655d5"
-          ],
-          "date": "2025-09-24 12:35:06",
-          "keysFound": 3,
-          "keysNeeded": 3,
-          "progress": 100,
-          "timeSpentSeconds": 377
-        },
-        "attempt13": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "b39b7c5d-5d15-4985-bd0a-7133c973a837",
-            "34cc0204-dbce-4d3e-b5f8-0b538c4655d5",
-            "2dae26d9-c904-4f72-9b95-a4bb9c6903ef"
-          ],
-          "date": "2025-09-24 13:14:09",
-          "keysFound": 3,
-          "keysNeeded": 3,
-          "progress": 100,
-          "timeSpentSeconds": 486
-        },
-        "attempt14": {
-          "IsCompleted": true,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "b39b7c5d-5d15-4985-bd0a-7133c973a837",
-            "34cc0204-dbce-4d3e-b5f8-0b538c4655d5",
-            "2dae26d9-c904-4f72-9b95-a4bb9c6903ef"
-          ],
-          "date": "2025-09-24 13:38:52",
-          "keysFound": 3,
-          "keysNeeded": 3,
-          "progress": 100,
-          "timeSpentSeconds": 553
-        },
-        "attempt15": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "34cc0204-dbce-4d3e-b5f8-0b538c4655d5",
-            "b39b7c5d-5d15-4985-bd0a-7133c973a837"
-          ],
-          "date": "2025-10-12 11:38:53",
-          "keysFound": 2,
-          "keysNeeded": 3,
-          "progress": 65,
-          "timeSpentSeconds": 3926
-        },
-        "attempt2": {
-          "IsCompleted": true,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "2319234a-4449-4594-9550-8bd65d1f0b52",
-            "fbb2c323-e2f1-4ae0-9739-895579aae51a",
-            "fb469fc1-a2cd-462c-9346-7e2ad1e992e1",
-            "97e0a8f8-425a-4295-9d2a-56db298ee38b",
-            "a4e54b10-16b1-4302-8ed5-cbfbcb375d3b",
-            "0ac253f2-2a68-4b06-a688-93c104b9425d",
-            "1a8af48b-5957-40cc-a0ed-e75a829f7009"
-          ],
-          "date": "2025-09-15 01:44:04",
-          "keysFound": 7,
-          "keysNeeded": 7,
-          "progress": 100,
-          "timeSpentSeconds": 141
-        },
-        "attempt3": {
-          "IsCompleted": true,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "2319234a-4449-4594-9550-8bd65d1f0b52",
-            "fb469fc1-a2cd-462c-9346-7e2ad1e992e1",
-            "fbb2c323-e2f1-4ae0-9739-895579aae51a",
-            "a4e54b10-16b1-4302-8ed5-cbfbcb375d3b",
-            "0ac253f2-2a68-4b06-a688-93c104b9425d",
-            "1a8af48b-5957-40cc-a0ed-e75a829f7009",
-            "97e0a8f8-425a-4295-9d2a-56db298ee38b"
-          ],
-          "date": "2025-09-15 01:52:47",
-          "keysFound": 7,
-          "keysNeeded": 7,
-          "progress": 100,
-          "timeSpentSeconds": 59
-        },
-        "attempt4": {
-          "IsCompleted": true,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "2319234a-4449-4594-9550-8bd65d1f0b52",
-            "fb469fc1-a2cd-462c-9346-7e2ad1e992e1",
-            "fbb2c323-e2f1-4ae0-9739-895579aae51a",
-            "a4e54b10-16b1-4302-8ed5-cbfbcb375d3b",
-            "0ac253f2-2a68-4b06-a688-93c104b9425d",
-            "1a8af48b-5957-40cc-a0ed-e75a829f7009",
-            "97e0a8f8-425a-4295-9d2a-56db298ee38b"
-          ],
-          "date": "2025-09-15 14:45:24",
-          "keysFound": 7,
-          "keysNeeded": 7,
-          "progress": 100,
-          "timeSpentSeconds": 441
-        },
-        "attempt5": {
-          "IsCompleted": true,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "1a8af48b-5957-40cc-a0ed-e75a829f7009",
-            "fbb2c323-e2f1-4ae0-9739-895579aae51a",
-            "fb469fc1-a2cd-462c-9346-7e2ad1e992e1",
-            "97e0a8f8-425a-4295-9d2a-56db298ee38b",
-            "a4e54b10-16b1-4302-8ed5-cbfbcb375d3b",
-            "0ac253f2-2a68-4b06-a688-93c104b9425d",
-            "2319234a-4449-4594-9550-8bd65d1f0b52"
-          ],
-          "date": "2025-09-17 01:19:42",
-          "keysFound": 7,
-          "keysNeeded": 7,
-          "progress": 100,
-          "timeSpentSeconds": 289
-        },
-        "attempt6": {
-          "IsCompleted": true,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "2319234a-4449-4594-9550-8bd65d1f0b52",
-            "fb469fc1-a2cd-462c-9346-7e2ad1e992e1",
-            "97e0a8f8-425a-4295-9d2a-56db298ee38b",
-            "fbb2c323-e2f1-4ae0-9739-895579aae51a",
-            "a4e54b10-16b1-4302-8ed5-cbfbcb375d3b",
-            "0ac253f2-2a68-4b06-a688-93c104b9425d",
-            "1a8af48b-5957-40cc-a0ed-e75a829f7009"
-          ],
-          "date": "2025-09-17 01:24:28",
-          "keysFound": 7,
-          "keysNeeded": 7,
-          "progress": 100,
-          "timeSpentSeconds": 57
-        },
-        "attempt7": {
-          "IsCompleted": true,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "1a8af48b-5957-40cc-a0ed-e75a829f7009",
-            "0ac253f2-2a68-4b06-a688-93c104b9425d",
-            "a4e54b10-16b1-4302-8ed5-cbfbcb375d3b",
-            "97e0a8f8-425a-4295-9d2a-56db298ee38b",
-            "2319234a-4449-4594-9550-8bd65d1f0b52",
-            "fb469fc1-a2cd-462c-9346-7e2ad1e992e1",
-            "fbb2c323-e2f1-4ae0-9739-895579aae51a"
-          ],
-          "date": "2025-09-17 02:26:10",
-          "keysFound": 7,
-          "keysNeeded": 7,
-          "progress": 100,
-          "timeSpentSeconds": 65
-        },
-        "attempt8": {
-          "IsCompleted": true,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "97e0a8f8-425a-4295-9d2a-56db298ee38b",
-            "fb469fc1-a2cd-462c-9346-7e2ad1e992e1",
-            "2319234a-4449-4594-9550-8bd65d1f0b52",
-            "1a8af48b-5957-40cc-a0ed-e75a829f7009",
-            "a4e54b10-16b1-4302-8ed5-cbfbcb375d3b"
-          ],
-          "date": "2025-09-17 13:16:34",
-          "keysFound": 5,
-          "keysNeeded": 5,
-          "progress": 100,
-          "timeSpentSeconds": 276
-        },
-        "attempt9": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "1a8af48b-5957-40cc-a0ed-e75a829f7009",
-            "fb469fc1-a2cd-462c-9346-7e2ad1e992e1",
-            "97e0a8f8-425a-4295-9d2a-56db298ee38b",
-            "fbb2c323-e2f1-4ae0-9739-895579aae51a",
-            "b39b7c5d-5d15-4985-bd0a-7133c973a837"
-          ],
-          "date": "2025-09-24 11:10:36",
-          "keysFound": 5,
-          "keysNeeded": 4,
-          "progress": 100,
-          "timeSpentSeconds": 756
-        }
-      },
-      "chapter 3": {
-        "attempt1": {
-          "IsCompleted": true,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "4eb4bd42-9cef-4ea8-a1d3-edfa2345de13",
-            "97a64167-74e1-4272-9c87-7ec4aed465af",
-            "6191f7e5-962b-49d8-b9e1-9ebf5254862a",
-            "08b7f6e4-6c90-418f-94f7-d639edb3164f",
-            "6f31e696-bdb0-4d11-8d42-c1f84fb6b81a",
-            "84065b2d-8095-442d-aea7-c92ac1b0aab4",
-            "e29660b6-f45b-4180-ba7f-fa1c606012c4",
-            "74977c47-93f3-4eb2-a2c2-3417b200f58c"
-          ],
-          "date": "2025-09-22 13:49:59",
-          "keysFound": 8,
-          "keysNeeded": 8,
-          "progress": 100,
-          "timeSpentSeconds": 331
-        },
-        "attempt2": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "f5598237-99c4-4812-aad0-4a6ee451ecd5",
-            "450ea1d5-3351-415e-b2cf-de16ca1784a6",
-            "0f2ff8c3-db0e-4f4c-a3f2-85298a9e42ef"
-          ],
-          "date": "2025-09-25 19:43:34",
-          "keysFound": 3,
-          "keysNeeded": 3,
-          "progress": 100,
-          "timeSpentSeconds": 881
-        },
-        "attempt3": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "f5598237-99c4-4812-aad0-4a6ee451ecd5",
-            "0f2ff8c3-db0e-4f4c-a3f2-85298a9e42ef",
-            "450ea1d5-3351-415e-b2cf-de16ca1784a6"
-          ],
-          "date": "2025-09-29 01:40:39",
-          "keysFound": 3,
-          "keysNeeded": 3,
-          "progress": 100,
-          "timeSpentSeconds": 1796
-        },
-        "attempt4": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "date": "2025-10-12 11:57:23",
-          "keysFound": 0,
-          "keysNeeded": 3,
-          "progress": 0,
-          "timeSpentSeconds": 225
-        }
-      },
-      "chapter 4": {
-        "attempt1": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "4098f6f2-0e32-41e2-9fbe-8aa494f4c2c3",
-            "e29660b6-f45b-4180-ba7f-fa1c606012c4",
-            "323d922e-1961-4583-80bd-fc46a31c1ecf",
-            "65c8b49c-ff85-4a92-a279-3998c444f8ed",
-            "b6733c4d-1db6-47ba-9d15-6ced82c42359"
-          ],
-          "date": "2025-09-22 13:59:25",
-          "keysFound": 5,
-          "keysNeeded": 5,
-          "progress": 100,
-          "timeSpentSeconds": 76
-        },
-        "attempt2": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "16da47ce-283e-41e0-a836-9da5972fa5d0",
-            "cad8cd32-4556-4e7d-a925-06d7111bf46b",
-            "bcbc5dd1-2fb2-4cc8-926d-63e0ec970db5"
-          ],
-          "date": "2025-09-27 12:27:40",
-          "keysFound": 3,
-          "keysNeeded": 4,
-          "progress": 74,
-          "timeSpentSeconds": 3589
-        }
-      },
-      "chapter 5": {
-        "attempt1": {
-          "IsCompleted": true,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "3952e72a-a540-40b3-8586-6db66be740d7",
-            "8202a4a1-dbca-4032-b597-d50697c6c2db",
-            "248503df-1385-4199-9441-4e43f072107e",
-            "6d43caf8-49a5-448c-9bea-e98016547b5f",
-            "e8854831-e99f-4322-9583-68d8384a18a5"
-          ],
-          "date": "2025-09-22 14:47:10",
-          "keysFound": 5,
-          "keysNeeded": 5,
-          "progress": 100,
-          "timeSpentSeconds": 76
-        },
-        "attempt2": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "date": "2025-10-12 10:30:22",
-          "keysFound": 0,
-          "keysNeeded": 5,
-          "progress": 0,
-          "timeSpentSeconds": 124
-        }
-      },
-      "chapter 6": {
-        "attempt1": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "db59a13e-3fa0-4e3a-961b-3050f2506916",
-            "08d08082-71d1-4f24-8ab8-7d37a931e2cf",
-            "234333ab-437c-4b1d-a96f-5d4f3f5be3c7",
-            "eb2ae8f2-da1f-4c38-a509-b2914025efa3",
-            "6ff00743-ca0c-4a70-9a79-94af870302d8",
-            "60e63b7f-a7e9-40d1-b605-a51ce6717471"
-          ],
-          "date": "2025-09-22 14:42:24",
-          "keysFound": 6,
-          "keysNeeded": 6,
-          "progress": 100,
-          "timeSpentSeconds": 57
-        },
-        "attempt2": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "fca80558-f28d-4028-887a-35fa0468b8f8",
-            "756903f4-e6fe-4b67-ae58-5c3f8ff308f8",
-            "8a88452d-3ae5-4936-b5a0-4004a56c8b3d",
-            "b3657db9-4a29-4701-ad20-80d3204e8cc0",
-            "5ef0f3d0-cf9d-4b82-a2da-d147d99d29d6"
-          ],
-          "date": "2025-10-14 19:35:16",
-          "keysFound": 5,
-          "keysNeeded": 6,
-          "progress": 82,
-          "timeSpentSeconds": 1534
-        }
-      },
-      "chapter 7": {
-        "attempt1": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "3f313edf-e303-4266-824c-124105404e76",
-            "aab8c266-e999-474e-96c8-31feb11e9e13",
-            "c3c98159-d3e1-457a-bdfd-3d2b44e596cc",
-            "4df092b3-7787-49f3-911d-7f49c51e8bfd",
-            "b83437ea-a7d5-4e0d-86d0-f4869b2c91f1",
-            "3b8a87e7-7c5d-47d7-af7d-6e21d1a64873",
-            "298c3f18-2737-4037-b20d-bbc52c655099",
-            "d3661aad-52ff-4cc2-b77b-444dc664d525",
-            "42e43d6b-ae84-4cda-a18d-4f571f83b881",
-            "18d5ee19-fde2-4faf-b1cf-7f3c361bcf24"
-          ],
-          "date": "2025-09-22 15:02:14",
-          "keysFound": 10,
-          "keysNeeded": 10,
-          "progress": 100,
-          "timeSpentSeconds": 57
-        }
-      },
-      "chapter 8": {
-        "attempt1": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "169427e5-738e-41f0-918a-3946cfd7b780",
-            "45707521-1740-49af-b2f2-709a5685bd96",
-            "2da90931-8a32-45d3-9c82-4615d7c3aa57",
-            "26889ca7-6f6d-4997-8cf3-76478f13f7b7",
-            "6e24cd96-a5c1-42c1-9c21-c9838fa8030b",
-            "736aa47a-0b18-4a10-b0e4-d7a3753fa461"
-          ],
-          "date": "2025-09-22 14:56:15",
-          "keysFound": 6,
-          "keysNeeded": 6,
-          "progress": 100,
-          "timeSpentSeconds": 65
-        }
-      },
-      "chapter 9": {
-        "attempt1": {
-          "IsCompleted": false,
-          "StudentStart": true,
-          "collectedKeyIDs": [
-            "5cfdad43-9173-439c-b646-e409bd51ef8c",
-            "c2b9d6b6-3bef-4a99-8d04-80e5eee0db77",
-            "daa8dc3f-ca01-499d-a567-91ac85e9bbc0",
-            "438bb4ab-b26a-491e-8e08-a5c0fbb371ec",
-            "90cd0564-13b3-4d1d-9fd2-bbb20a8d621f",
-            "528c240a-2790-4f0b-aa22-f0cda163cfc8",
-            "5c055431-8b5b-4351-8838-e7910619915d"
-          ],
-          "date": "2025-09-22 15:00:43",
-          "keysFound": 7,
-          "keysNeeded": 7,
-          "progress": 100,
-          "timeSpentSeconds": 60
-        }
-      }
-    },
     "Midnight14": {
       "chapter 1": {
         "attempt1": {
@@ -4297,6 +1829,15 @@
           "keysNeeded": 2,
           "progress": 100,
           "timeSpentSeconds": 1262
+        },
+        "attempt2": {
+          "IsCompleted": false,
+          "StudentStart": true,
+          "date": "2025-10-21 15:02:10",
+          "keysFound": 0,
+          "keysNeeded": 2,
+          "progress": 0,
+          "timeSpentSeconds": 145
         }
       },
       "chapter 10": {
@@ -4317,11 +1858,11 @@
           "collectedKeyIDs": [
             "75b2c41f-de1d-41f0-836b-f6ad7874fcfa"
           ],
-          "date": "2025-10-17 04:55:43",
+          "date": "2025-10-21 15:16:45",
           "keysFound": 1,
           "keysNeeded": 7,
           "progress": 14,
-          "timeSpentSeconds": 591
+          "timeSpentSeconds": 1071
         }
       },
       "chapter 12": {
@@ -4336,11 +1877,11 @@
             "8f9f5382-f685-479b-8f80-be02bb171b66",
             "ec9d9987-d12e-482a-b205-15a0ece8e0d0"
           ],
-          "date": "2025-10-18 17:54:05",
+          "date": "2025-10-21 15:08:03",
           "keysFound": 6,
           "keysNeeded": 9,
           "progress": 65,
-          "timeSpentSeconds": 3005
+          "timeSpentSeconds": 3205
         }
       },
       "chapter 2": {
@@ -4385,6 +1926,15 @@
           "keysNeeded": 3,
           "progress": 100,
           "timeSpentSeconds": 578
+        },
+        "attempt4": {
+          "IsCompleted": false,
+          "StudentStart": true,
+          "date": "2025-10-21 15:03:45",
+          "keysFound": 0,
+          "keysNeeded": 3,
+          "progress": 0,
+          "timeSpentSeconds": 212
         }
       },
       "chapter 3": {
@@ -4520,11 +2070,24 @@
         "attempt4": {
           "IsCompleted": false,
           "StudentStart": true,
-          "date": "2025-10-20 16:23:42",
+          "collectedKeyIDs": [
+            "73721c34-170d-4012-b6c0-5ea5fa65a080",
+            "5d59fe2a-5a82-488a-8445-29a8e71d9854"
+          ],
+          "date": "2025-10-21 02:22:15",
+          "keysFound": 2,
+          "keysNeeded": 2,
+          "progress": 100,
+          "timeSpentSeconds": 718
+        },
+        "attempt5": {
+          "IsCompleted": false,
+          "StudentStart": true,
+          "date": "2025-10-21 04:24:29",
           "keysFound": 0,
           "keysNeeded": 2,
           "progress": 0,
-          "timeSpentSeconds": 406
+          "timeSpentSeconds": 57
         }
       },
       "chapter 10": {
@@ -4616,11 +2179,11 @@
         "attempt2": {
           "IsCompleted": false,
           "StudentStart": true,
-          "date": "2025-10-16 09:49:36",
+          "date": "2025-10-21 20:27:22",
           "keysFound": 0,
           "keysNeeded": 3,
           "progress": 0,
-          "timeSpentSeconds": 178
+          "timeSpentSeconds": 311
         }
       },
       "chapter 4": {
@@ -4630,11 +2193,11 @@
           "collectedKeyIDs": [
             "a02dcbc1-a826-4c20-8656-8aef0c6fe1cc"
           ],
-          "date": "2025-10-16 03:22:57",
+          "date": "2025-10-21 02:19:06",
           "keysFound": 1,
           "keysNeeded": 4,
           "progress": 24,
-          "timeSpentSeconds": 318
+          "timeSpentSeconds": 532
         }
       },
       "chapter 5": {
@@ -4678,11 +2241,11 @@
             "1c89f0c5-cdd4-42bb-a530-d2e725c06939",
             "18026bcc-d9d1-4d2f-8e10-f31f1bf7d3e4"
           ],
-          "date": "2025-10-16 03:28:59",
+          "date": "2025-10-21 04:22:40",
           "keysFound": 2,
           "keysNeeded": 6,
           "progress": 33,
-          "timeSpentSeconds": 392
+          "timeSpentSeconds": 673
         }
       },
       "chapter 9": {
