@@ -85,6 +85,30 @@ body { font-family:'Inter', sans-serif; background:#f8f9fa; margin:0; }
 .view-section-answers-btn:hover { transform:translateY(-2px); box-shadow:0 10px 24px rgba(80,17,33,0.16); }
 .view-section-answers-btn .ico { width:14px; height:14px; display:inline-block; }
 
+/* Section Answers list styles */
+.section-answers-list { display:flex; flex-direction:column; gap:12px; }
+.student-card { background:#fff; border:1px solid #eee; border-radius:10px; padding:10px; box-shadow:0 2px 6px rgba(0,0,0,0.03); }
+.student-header { display:flex; justify-content:space-between; align-items:center; gap:12px; }
+.student-title { font-weight:700; color:#501121; }
+.student-title .sid { font-weight:600; color:#666; margin-left:6px; font-size:13px; }
+.student-meta { display:flex; gap:8px; align-items:center; }
+.badge { padding:6px 8px; border-radius:8px; background:#f3f3f3; color:#333; font-weight:700; font-size:13px; }
+.badge.score { background:linear-gradient(180deg,#f3f8ff,#eaf6ff); color:#0a53a0; }
+.badge.ok { background:#e8f8ef; color:#2b8a3e; }
+.badge.warn { background:#fff4f4; color:#c92a2a; }
+.badge.muted { background:#fafafa; color:#666; font-weight:600 }
+.toggle-details { background:transparent; border:1px solid #ddd; padding:6px 8px; border-radius:8px; cursor:pointer; font-weight:700; }
+.student-details { margin-top:10px; padding-top:10px; border-top:1px dashed #eee; display:none; }
+.qa-list { display:flex; flex-direction:column; gap:8px; }
+.qa-row { display:flex; justify-content:space-between; gap:12px; align-items:center; padding:8px; border-radius:8px; background:#fff; border:1px solid #fbfbfb; }
+.qa-question { flex:1; color:#333; }
+.qa-status { min-width:110px; text-align:right; font-weight:800; }
+.status-ok { color:#2b8a3e; }
+.status-wrong { color:#c92a2a; }
+.status-muted { color:#666; }
+.qa-detail { margin-top:6px; padding:8px; background:#fff; border:1px dashed #eee; border-radius:6px; color:#444; font-size:13px; }
+.debug-note { margin-top:8px; color:#777; font-size:12px; }
+
 
 .modal { display:none; position:fixed; z-index:3000; left:0; top:0; width:100%; height:100%; background: rgba(0,0,0,0.45); align-items:center; justify-content:center; padding:20px; }
 .modal-content { background:white; width:100%; max-width:600px; border-radius:12px; padding:25px; box-shadow:0 8px 20px rgba(0,0,0,0.15); animation:fadeIn 0.2s ease; }
@@ -158,8 +182,9 @@ body { font-family:'Inter', sans-serif; background:#f8f9fa; margin:0; }
       <div class="data-container">
   <p style="display:flex;align-items:center;gap:10px;">Total Students: <span id="totalStudents">Loading...</span>
     <span class="top-actions">
-      <button id="exportStudentsBtn" class="answers-btn"><span class="ico"><i class="fas fa-file-csv"></i></span> Export Students</button>
+          <button id="exportStudentsBtn" class="answers-btn"><span class="ico"><i class="fas fa-file-csv"></i></span> Export Students</button>
       <button id="viewSectionsBtn" class="answers-btn"><span class="ico"><i class="fas fa-layer-group"></i></span> View Sections</button>
+          <button id="scanDbBtn" class="answers-btn" title="Scan RTDB root for quiz/chapter nodes"><span class="ico"><i class="fas fa-magnifying-glass"></i></span> Scan DB</button>
     </span>
   </p>
         <div style="margin-top:8px;margin-bottom:10px;"></div>
@@ -418,6 +443,70 @@ document.addEventListener('click', (e)=>{
   if(!b) return;
   openSectionsModal();
 });
+// DB scan button handler (opt-in root scan)
+document.addEventListener('click', (e)=>{
+  const btn = e.target.closest && e.target.closest('#scanDbBtn');
+  if(!btn) return;
+  // confirm with user
+  if(!confirm('This will read the entire Realtime Database root to look for quiz/chapter nodes. Continue?')) return;
+  scanDatabaseRootForQuizzes().catch(err=>{ console.error('DB scan failed', err); alert('DB scan failed: '+ (err && err.message? err.message:String(err))); });
+});
+
+// Create modal for scan results
+if(!document.getElementById('dbScanModal')){
+  const m = document.createElement('div'); m.id='dbScanModal'; m.className='modal'; m.style.display='none';
+  m.innerHTML = `<div class="modal-content" style="max-width:900px;"><div class="modal-header"><h2>DB Scan Results</h2><span class="close" id="closeDbScan">&times;</span></div><div id="dbScanContent" style="max-height:60vh;overflow:auto;padding:8px">No results yet</div></div>`;
+  document.body.appendChild(m);
+  document.getElementById('closeDbScan').addEventListener('click', ()=>{ m.style.display='none'; });
+}
+
+// Scan the RTDB root for candidate quiz/chapter nodes and show results
+async function scanDatabaseRootForQuizzes(){
+  const modal = document.getElementById('dbScanModal'); const content = document.getElementById('dbScanContent');
+  if(!modal || !content) return;
+  content.innerHTML = '<p>Scanning root... this may take a moment.</p>';
+  modal.style.display='flex'; modal.style.setProperty('position','fixed','important'); modal.style.setProperty('z-index','2147483647','important');
+  try{
+    const rootSnap = await rtdb.ref().get();
+    if(!rootSnap.exists()){ content.innerHTML = '<p>Database root is empty.</p>'; return; }
+    const root = rootSnap.val();
+    const candidates = [];
+    // top-level keys that look like quizzes/chapters
+    for(const k of Object.keys(root)){
+      const kl = String(k).toLowerCase();
+      if(kl.includes('quiz') || kl.includes('quizzes') || kl.includes('chapter') || kl.includes('chapters') || kl==='quizzes' || kl==='quiz'){
+        candidates.push({ path: k, reason: 'top-level name'});
+      }
+      // also scan one level deeper for 'questions' nodes and numeric chapter keys
+      try{
+        const node = root[k];
+        if(node && typeof node === 'object'){
+          for(const kk of Object.keys(node)){
+            const kkl = String(kk).toLowerCase();
+            const path = `${k}/${kk}`;
+            if(kkl.includes('quiz') || kkl.includes('quizzes') || kkl.includes('chapter') || kkl.includes('questions') || /^chapter\s*\d+$/.test(kkl) || /^chapter\d+$/.test(kkl) || /^\d+$/.test(kkl)){
+              candidates.push({ path, reason: 'second-level match' });
+            }
+            // look deeper one more level for '/questions' under candidate
+            try{
+              const sub = node[kk];
+              if(sub && typeof sub === 'object'){
+                if(Object.prototype.hasOwnProperty.call(sub,'questions')) candidates.push({ path:`${k}/${kk}/questions`, reason:'contains questions' });
+                if(Object.prototype.hasOwnProperty.call(sub,'choices') || Object.prototype.hasOwnProperty.call(sub,'questionIndex')) candidates.push({ path:`${k}/${kk}`, reason:'looks like question objects' });
+              }
+            }catch(e){}
+          }
+        }
+      }catch(e){}
+    }
+    // always check canonical 'quizzes' path
+    try{ if(root.quizzes) candidates.push({ path:'quizzes', reason:'canonical path present' }); }catch(e){}
+    // dedupe
+    const byPath = {}; candidates.forEach(c=>{ byPath[c.path] = c; });
+    const rows = Object.keys(byPath).map(p=> `<li><b>${escapeHtml(p)}</b> — ${escapeHtml(byPath[p].reason)}</li>` ).join('');
+    content.innerHTML = `<p>Found ${Object.keys(byPath).length} candidate paths:</p><ul>${rows}</ul><p>Note: this is a heuristic scan. If you see a likely path, copy it and tell me and I'll make the UI try it directly.</p>`;
+  }catch(err){ console.error('scanDatabaseRootForQuizzes failed', err); content.innerHTML = `<pre>${escapeHtml(String(err && err.message?err.message:String(err)))}</pre>`; }
+}
 document.getElementById('closeSectionsModal')?.addEventListener('click', closeSectionsModal);
 document.getElementById('closeSectionsModalBtn')?.addEventListener('click', closeSectionsModal);
 
@@ -583,7 +672,9 @@ async function loadChapterQuestions(ch){
   const list = document.getElementById(`questions-list-${ch}`);
   // try to load questions from any variant of the chapter key
   const qFound = await findQuizQuestions(ch);
-  if(!qFound || !qFound.snap || !qFound.snap.exists()){ list.innerHTML="<p>No questions yet</p>"; return; }
+  if(!qFound || !qFound.snap || !qFound.snap.exists()){ 
+    const tried = (qFound && qFound.triedPaths) ? qFound.triedPaths.join(', ') : 'unknown paths';
+    list.innerHTML = `<p>No questions yet. Tried: ${escapeHtml(tried)}</p>`; return; }
   list.innerHTML = "";
     qFound.snap.forEach(child=>{
     const q = child.val(), id = child.key;
@@ -633,19 +724,16 @@ function renderPreviewBox(ch){
 function evaluateAnswer(q, response){
   if(!q) return false;
   if(q.type === 'multiple_choice'){
-    // For MCQs, normalize both the stored student response and the question's answer(s)
-    // to handle legacy formats: letter prefixes ("A.", "B)"), numeric indices (0/1-based),
-    // and braced lists.
     const caseSensitive = !!q.caseSensitive;
     const normalize = v => caseSensitive ? String(v).trim() : String(v).toLowerCase().trim();
 
-    // Use normalizeStudentResponse to map numeric indices and strip prefixes when possible
+    // Normalize student response into canonical display texts
     const respNorm = normalizeStudentResponse(q, response);
-    const ansNorm = normalizeStudentResponse(q, q.answer);
+    const rArr = Array.isArray(respNorm) ? respNorm.map(x=>normalize(x)) : (respNorm===undefined||respNorm===null?[]:[normalize(respNorm)]);
 
-    const toArray = x => Array.isArray(x) ? x : (x === undefined || x === null ? [] : [x]);
-    const rArr = toArray(respNorm).map(x => normalize(x));
-    const aArr = toArray(ansNorm).map(x => normalize(x));
+    // Derive canonical correct answer(s) from the question definitions (from quizzes node)
+    const ansArrRaw = getCanonicalAnswers(q);
+    const aArr = (ansArrRaw||[]).map(x=> normalize(x));
 
     if(q.orderMatters){
       if(rArr.length !== aArr.length) return false;
@@ -658,8 +746,7 @@ function evaluateAnswer(q, response){
     }
   } else if(q.type === 'identification'){
     const caseSensitive = !!q.caseSensitive;
-    const normalize = v => caseSensitive ? v.trim() : String(v).toLowerCase().trim();
-    // orderMatters for identification could imply exact match on tokens order; default exact
+    const normalize = v => caseSensitive ? String(v).trim() : String(v).toLowerCase().trim();
     return normalize(response) === normalize(q.answer);
   } else if(q.type === 'true_false'){
     return String(response).toLowerCase() === String(q.answer).toLowerCase();
@@ -680,83 +767,111 @@ function shuffle(array){
 function normalizeStudentResponse(q, studentResp){
   if(!q) return studentResp;
   // If no choices available, return original
+  // Support both array-form choices or object-form choices (e.g. {A: 'x', B: 'y'})
   const choices = Array.isArray(q.choices) ? q.choices : (q.choices ? Object.values(q.choices) : []);
+  const rawChoicesObj = (q.choices && !Array.isArray(q.choices) && typeof q.choices === 'object') ? q.choices : null;
+  // If choices are provided as an object keyed by letters (A/B/C...), build a letter->text map
+  const letterMap = {};
+  if(rawChoicesObj){
+    try{
+      Object.keys(rawChoicesObj).forEach(k => {
+        if(!k) return;
+        const m = String(k).trim().match(/^([A-Za-z])/);
+        if(m){ letterMap[m[1].toUpperCase()] = rawChoicesObj[k]; }
+      });
+    }catch(e){ /* ignore */ }
+  }
   // If no choices are defined (identification or TF), just return trimmed/raw student value
   if(!choices || choices.length===0){
     if(Array.isArray(studentResp)) return studentResp.map(x=> (x===null||x===undefined)?x:String(x).trim());
     return (studentResp===null||studentResp===undefined)?studentResp:String(studentResp).trim();
   }
-  // helper to map one value
+  // helper to find the canonical choice text from choices array that matches a candidate
+  const findChoiceMatch = (candidate) => {
+    if(candidate === null || candidate === undefined) return null;
+    const cand = String(candidate).trim();
+    if(cand === '') return null;
+    const candNorm = cand.toLowerCase();
+    // If we have a letter-keyed choices map, prefer direct letter lookups
+    const letterMatch = cand.match(/^([A-Za-z])\b|^([A-Za-z])(?=[\.\)\-\s])/);
+    if(letterMatch){
+      const L = (letterMatch[1] || letterMatch[2] || '').toUpperCase();
+      if(L && letterMap && letterMap[L] !== undefined) return letterMap[L];
+    }
+    // direct exact or stripped matches
+    for(const opt of choices){
+      const optNorm = String(opt).toLowerCase().trim();
+      if(optNorm === candNorm) return opt;
+      const optStripped = String(opt).replace(/^[A-Za-z]\s*[\.\)]\s*/,'').replace(/^\d+\.\s*/,'').trim();
+      if(optStripped.toLowerCase() === candNorm) return opt;
+    }
+    // letter to index match: single letter like 'A' -> index 0
+    if(/^[A-Za-z]$/.test(cand)){
+      const idx = cand.toUpperCase().charCodeAt(0) - 65;
+      if(choices[idx] !== undefined) return choices[idx];
+    }
+    // numeric string index '1' -> index 0
+    if(!isNaN(Number(cand))){
+      const n = Number(cand);
+      if(choices[n] !== undefined) return choices[n];
+      if(choices[n-1] !== undefined) return choices[n-1];
+    }
+    return null;
+  };
+
+  // map a single token (try choices, letter, numeric)
+  const mapToken = (tok) => {
+    if(tok === null || tok === undefined) return undefined;
+    const s = String(tok).trim();
+    if(s === '') return undefined;
+    const low = s.toLowerCase();
+    if(['-','null','n/a','no response','none','na','invalid choice','.','invalid','(no response)'].indexOf(low) !== -1) return undefined;
+    // try direct match / letter / number
+    const m = findChoiceMatch(s);
+    if(m) return m;
+    // strip common prefixes and try again
+    const stripped = s.replace(/^[A-Za-z]\s*[\.\)]\s*/,'').replace(/^\d+\.\s*/,'').trim();
+    if(stripped && stripped !== s){ const m2 = findChoiceMatch(stripped); if(m2) return m2; }
+    return stripped || s;
+  };
+
+  // helper that maps one value (number/string) to canonical choice text or undefined
   const mapOne = (v) => {
     if(v === null || v === undefined) return undefined;
     if(typeof v === 'number'){
-      // try 0-based first, then 1-based
+      // number may be 0-based or 1-based index
       const try0 = choices[v] !== undefined ? choices[v] : undefined;
       if(try0 !== undefined) return try0;
       const try1 = choices[v-1] !== undefined ? choices[v-1] : undefined;
       return try1;
     }
-    let s = String(v).trim();
-    if(s === '') return undefined;
-    const lower = s.toLowerCase();
-    // treat common placeholders as no-response
-    if(['-','null','n/a','no response','none','na','invalid choice','.','invalid','(no response)'].indexOf(lower) !== -1) return undefined;
-
-    // strip common choice prefixes like 'A. ', 'A) ', '1. ' (be generous: allow letters A-Z and lower/upper)
-    let stripped = s.replace(/^[A-Za-z]\s*[\.\)]\s*/,'').replace(/^\d+\.\s*/,'').trim();
-    if(stripped === '') return undefined;
-
-    // Helper to find the canonical choice text from choices array that matches a candidate
-    const findChoiceMatch = (candidate) => {
-      const candNorm = String(candidate).toLowerCase().trim();
-      for(const opt of choices){
-        const optNorm = String(opt).toLowerCase().trim();
-        if(optNorm === candNorm) return opt; // exact match
-        // strip prefix from option and compare
-        const optStripped = String(opt).replace(/^[A-Za-z]\s*[\.\)]\s*/,'').replace(/^\d+\.\s*/,'').trim();
-        if(String(optStripped).toLowerCase().trim() === candNorm) return opt;
-      }
-      return null;
-    };
-
-    // If the stripped value exactly matches a defined choice (or matches after stripping prefixes), return the canonical choice
-    const matchedChoice = findChoiceMatch(stripped);
-    if(matchedChoice) return matchedChoice;
-    const matchedChoiceRaw = findChoiceMatch(s);
-    if(matchedChoiceRaw) return matchedChoiceRaw;
-
-    // Handle set-like values: {a, b, c} or 'a, b, c'
-    const isBraced = /^\{.*\}$/.test(stripped);
-    if(isBraced || stripped.indexOf(',') !== -1){
-      const inner = (isBraced ? stripped.slice(1, -1) : stripped).split(',').map(x=>String(x).trim()).filter(x=>x);
-      if(inner.length === 0) return undefined;
-      // If individual items match choices, return an array of matched choices
-      const mappedItems = inner.map(item => {
-        if(choices.indexOf(item) !== -1) return item;
-        // try stripping prefixes from item
-        const it = item.replace(/^[A-Da-d]\s*[\.|\)]\s*/,'').replace(/^\d+\.\s*/,'').trim();
-        if(choices.indexOf(it) !== -1) return it;
-        return item;
-      });
-      return mappedItems;
+    // if it's an array encoded as JSON in a string, try parse
+    if(typeof v === 'string' && (v.trim().startsWith('[') || v.trim().startsWith('{'))){
+      try{ const parsed = JSON.parse(v); if(Array.isArray(parsed)) return parsed.map(p=>mapToken(p)).filter(x=>x!==undefined); }catch(e){}
     }
-
-    // numeric string -> index mapping (after stripping): try 0-based then 1-based
-    if(!isNaN(Number(stripped))){
-      const n = Number(stripped);
-      if(choices[n] !== undefined) return choices[n];
-      if(choices[n-1] !== undefined) return choices[n-1];
+    if(Array.isArray(v)){
+      const mapped = v.map(x=>mapToken(x)).filter(x=> x !== undefined && x !== null && String(x).trim() !== '');
+      return mapped.length ? mapped : [];
     }
-
-    // fallback: return the stripped text
-    return stripped;
+    return mapToken(v);
   };
 
   if(Array.isArray(studentResp)){
-    const mapped = studentResp.map(mapOne).filter(x=> x !== undefined && x !== null && String(x).trim() !== '');
+    const mapped = studentResp.map(mapOne).filter(x=> x !== undefined && x !== null && (Array.isArray(x) ? x.length>0 : String(x).trim() !== ''));
     return mapped.length ? mapped : [];
   }
   return mapOne(studentResp);
+}
+
+// Derive the canonical correct answer(s) for a question as display text(s)
+function getCanonicalAnswers(q){
+  if(!q) return [];
+  try{
+    const ansNorm = normalizeStudentResponse(q, q.answer);
+    if(ansNorm === undefined || ansNorm === null) return [];
+    if(Array.isArray(ansNorm)) return ansNorm.filter(x=> x!==undefined && x!==null);
+    return [ansNorm];
+  }catch(e){ console.debug('getCanonicalAnswers failed', e); return []; }
 }
 
 // Robust extractor: get student response for a question key/index from various attempt shapes
@@ -905,14 +1020,20 @@ document.addEventListener('click', async (e)=>{
     let questions = {};
     try{
       const qFound = await findQuizQuestions(ch);
-      if(qFound && qFound.snap && qFound.snap.exists()){ questions = qFound.snap.val(); console.debug('Loaded questions from', qFound.path); }
-      else { const fallbackSnap = await rtdb.ref(`quizzes/${ch}/questions`).get(); if(fallbackSnap && fallbackSnap.exists()) questions = fallbackSnap.val(); }
+      if(qFound && qFound.snap && qFound.snap.exists()){ questions = normalizeQuestionsMap(qFound.snap.val()); console.debug('Loaded questions from', qFound.path); }
+      else {
+        const tried = (qFound && qFound.triedPaths) ? qFound.triedPaths.join(', ') : 'unknown paths';
+        const fallbackSnap = await rtdb.ref(`quizzes/${ch}/questions`).get(); if(fallbackSnap && fallbackSnap.exists()) questions = normalizeQuestionsMap(fallbackSnap.val());
+        else { console.debug('No questions found; attempted paths:', tried); }
+      }
     }catch(e){ console.debug('Failed to load questions for', ch, e); }
 
     // Build modal content: iterate questions in numeric order by questionIndex
     const qKeys = Object.keys(questions || {}).sort((a,b)=> Number(a) - Number(b));
     let html = `<div style="max-height:60vh;overflow:auto">`;
-    html += `<h3>Attempt ${escapeHtml(attemptIndex)} — Student ${escapeHtml(sid)} — Source: ${escapeHtml(source)}</h3>`;
+  html += `<h3>Attempt ${escapeHtml(attemptIndex)} — Student ${escapeHtml(sid)} — Source: ${escapeHtml(source)}</h3>`;
+  // show which questions path was used to load the quiz definitions (helps verify we're reading /quizzes/...)
+  try{ if(typeof qFound !== 'undefined' && qFound && qFound.path){ html += `<div style="font-size:12px;color:#666;margin-bottom:8px">Loaded questions path: <code>${escapeHtml(qFound.path)}</code></div>`; } }catch(e){}
 
     if(qKeys.length===0){ html += `<p>No question definitions found for this chapter.</p>`; }
     else {
@@ -943,14 +1064,8 @@ document.addEventListener('click', async (e)=>{
         if(q.type === 'multiple_choice'){
           // render choices and highlight correct and student selection
           const choices = Array.isArray(q.choices) ? q.choices : (q.choices ? Object.values(q.choices) : []);
-          const correctOptions = Array.isArray(q.answer) ? q.answer : (q.answer !== undefined ? [q.answer] : []);
-          // map correct options to display text (handle numeric indices and prefixes)
-          const correctOptionsText = correctOptions.map(co=>{
-            if(co === undefined || co === null) return String(co);
-            if(!isNaN(Number(co))){ const n=Number(co); const idx=(n===0?0:n-1); return choices[idx] !== undefined ? choices[idx] : String(co); }
-            const sCo = String(co).trim().replace(/^[A-Da-d]\s*[\.|\)]\s*/,'').replace(/^\d+\.\s*/,'').trim();
-            return sCo;
-          });
+          // derive canonical correct options text(s) from the question definition
+          const correctOptionsText = getCanonicalAnswers(q);
 
           // student selections normalized to array for easy checks
           let studentSelections = [];
@@ -994,7 +1109,7 @@ document.addEventListener('click', async (e)=>{
             html += `<div style="margin-top:4px;color:#444">Normalized: <span style="font-weight:600">${escapeHtml(normDisplay)}</span></div>`;
           }catch(e){ /* ignore display errors */ }
           // if student is incorrect, show which option(s) are correct
-          if(!correct && correctOptions.length){
+          if(!correct && correctOptionsText.length){
             const mappedCorrect = correctOptionsText.join(', ');
             html += `<div style="margin-top:8px;">Correct answer: <span style="font-weight:700">${escapeHtml(mappedCorrect)}</span></div>`;
           }
@@ -1069,21 +1184,6 @@ function chapterVariants(ch){
   // explicit chapter forms for numeric chapters
   const digits = raw.match(/(\d+)/);
   if(digits){ const d = digits[0]; out.add(`chapter${d}`); out.add(`chapter ${d}`); out.add(`Chapter ${d}`); out.add(`Chapter${d}`); out.add(d); }
-  // add hyphen/underscore and zero-padded variants and short forms (ch)
-  if(digits){
-    const d = digits[0];
-    const pad2 = d.length === 1 ? `0${d}` : d;
-    out.add(`chapter-${d}`);
-    out.add(`chapter_${d}`);
-    out.add(`chapter${pad2}`);
-    out.add(`chapter-${pad2}`);
-    out.add(`chapter_${pad2}`);
-    out.add(`CHAPTER${d}`);
-    out.add(`CHAPTER ${d}`);
-    out.add(`ch${d}`);
-    out.add(`ch ${d}`);
-    out.add(`Ch${d}`);
-  }
   return Array.from(out);
 }
 
@@ -1103,14 +1203,67 @@ async function findFirstChapterSnapshot(root, sid, ch){
 // Helper: find quiz questions node for any chapter variant
 async function findQuizQuestions(ch){
   const variants = chapterVariants(ch);
+  const triedPaths = [];
   for(const v of variants){
-    const path = `quizzes/${v}/questions`;
+    // try the common shape: quizzes/{chapter}/questions
+    const path1 = `quizzes/${v}/questions`;
+    triedPaths.push(path1);
     try{
-      const snap = await rtdb.ref(path).get();
-      if(snap && snap.exists()) return { snap, path, variant: v };
-    }catch(e){ console.debug('findQuizQuestions read failed for', path, e); }
+      const snap = await rtdb.ref(path1).get();
+      if(snap && snap.exists()) return { snap, path: path1, variant: v, triedPaths };
+    }catch(e){ console.debug('findQuizQuestions read failed for', path1, e); }
+    // some exports store questions directly under quizzes/{chapter} as an object with a 'questions' array or map
+    const path2 = `quizzes/${v}`;
+    triedPaths.push(path2);
+    try{
+      const snap2 = await rtdb.ref(path2).get();
+      if(snap2 && snap2.exists()){
+        const val = snap2.val() || {};
+        // if it already contains a 'questions' child, return that
+        if(val.questions){
+          // return a synthetic snapshot-like object for compatibility
+          const fakeSnap = { exists: () => true, val: () => val.questions };
+          return { snap: fakeSnap, path: path2 + '/questions', variant: v, triedPaths };
+        }
+        // if the node itself looks like questions (contains numeric keys or '1','2' etc), return it
+        const keys = Object.keys(val || {});
+        const looksLikeQuestions = keys.length && keys.some(k => /^\d+$/.test(k) || /^q?\d+$/i.test(k) || (val[k] && (val[k].question || val[k].choices || val[k].answer)));
+        if(looksLikeQuestions){ const fakeSnap2 = { exists: () => true, val: () => val }; return { snap: fakeSnap2, path: path2, variant: v, triedPaths }; }
+      }
+    }catch(e){ console.debug('findQuizQuestions read failed for', path2, e); }
   }
-  return null;
+  return { triedPaths };
+}
+
+// Normalize a questions value (array or map) into a map with numeric-string keys
+function normalizeQuestionsMap(raw){
+  if(!raw) return {};
+  // if it's an array (some exports use arrays with null at index 0), convert to map '1'..'n'
+  if(Array.isArray(raw)){
+    const out = {};
+    for(let i=0;i<raw.length;i++){
+      const item = raw[i];
+      if(item === null || item === undefined) continue;
+      // use 1-based numbering for human-friendly question indexes
+      const idx = i; // export already uses questionIndex in each item; but array pos may be index
+      const key = String(i);
+      out[key] = item;
+    }
+    return out;
+  }
+  // if it's an object, try to map numeric-like keys to numeric-string keys
+  if(typeof raw === 'object'){
+    const out = {};
+    Object.keys(raw).forEach(k => {
+      const v = raw[k];
+      // preserve numeric keys as-is, but strip leading non-digits like 'Q1' -> '1'
+      const m = k.match(/(\d+)$/);
+      const key = m ? m[1] : k;
+      out[String(key)] = v;
+    });
+    return out;
+  }
+  return {};
 }
 
 // Helper: find a key in an in-memory map object that matches any chapter variant
@@ -1126,6 +1279,66 @@ function findVariantKeyInMap(obj, ch){
     if(normVariants.has(nk)) return k;
   }
   return null;
+}
+
+// Export section answers CSV
+async function exportSectionAnswersCSV(sectionId, ch){
+  const modal = document.getElementById('sectionAnswersModal'); if(!modal) return;
+  const content = document.getElementById('sectionAnswersContent'); if(!content) return;
+  // gather questions
+  const qFound = await findQuizQuestions(ch);
+  const questionsRaw = (qFound && qFound.snap && qFound.snap.exists()) ? qFound.snap.val() : {};
+  const questions = normalizeQuestionsMap(questionsRaw);
+  const qKeys = Object.keys(questions||{}).sort((a,b)=>Number(a)-Number(b));
+  // find student cards inside content
+  const cards = Array.from(content.querySelectorAll('.student-card'));
+  if(cards.length===0){ alert('No student data to export. Load the section answers first.'); return; }
+  // CSV header
+  const headers = ['uid','name','attempts','latest','best','avg','date'];
+  qKeys.forEach(qk => headers.push('Q'+qk));
+  const rows = [headers];
+  for(const card of cards){
+    const uid = card.dataset.uid || '';
+    const nameSpan = card.querySelector('.sid');
+    const name = nameSpan ? nameSpan.textContent : '';
+    const cache = card._attemptCache || { attempts: [], fetched: {} };
+    const attempts = cache.attempts || [];
+    const attemptsCount = attempts.length;
+    const scoresArr = attempts.map(a=>{ const s = a && a.score!==undefined && a.score!==null ? Number(a.score) : NaN; return isNaN(s)?null:s; }).filter(x=>x!==null);
+    const best = scoresArr.length ? Math.max(...scoresArr) : '';
+    const avg = scoresArr.length ? Math.round((scoresArr.reduce((s,t)=>s+t,0)/scoresArr.length)*10)/10 : '';
+    // determine selected attempt (look at selector if present)
+    const selector = card.querySelector('.attempt-selector');
+    let chosenKey = null;
+    if(selector){ const val = selector.value; if(val === 'latest') chosenKey = attempts[0] && attempts[0].key; else if(val === 'best'){ let bestKey = attempts[0] && attempts[0].key; let bestScore=-Infinity; for(const a of attempts){ const s = a && a.score!==undefined && a.score!==null ? Number(a.score) : NaN; if(!isNaN(s) && s>bestScore){ bestScore=s; bestKey=a.key; } } chosenKey = bestKey; } else chosenKey = val; }
+    if(!chosenKey && attempts[0]) chosenKey = attempts[0].key;
+    const fetched = cache.fetched && cache.fetched[chosenKey] ? cache.fetched[chosenKey] : null;
+    const attemptObj = fetched && fetched.obj ? fetched.obj : null;
+    const date = attempts[0] ? attempts[0].date || '' : '';
+    const latestScore = attempts[0] ? attempts[0].score || '' : '';
+    const row = [uid, name, attemptsCount, latestScore, best, avg, date];
+    // per-question values
+    for(const qk of qKeys){ const q = questions[qk]; let studentResp = undefined; if(attemptObj) studentResp = extractStudentResponse(attemptObj, qk, Number(qk)); const norm = normalizeStudentResponse(q, studentResp); const out = (norm === undefined || norm === null) ? '' : (Array.isArray(norm) ? norm.join(' | ') : String(norm)); row.push(out); }
+    rows.push(row);
+  }
+  // convert to CSV
+  const csv = rows.map(r => r.map(c => '"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\n');
+  downloadTextFile(csv, `section_${sectionId}_${ch}_answers.csv`);
+}
+
+function downloadTextFile(text, filename){
+  const blob = new Blob([text], { type: 'text/csv;charset=utf-8;' });
+  if(window.navigator && window.navigator.msSaveOrOpenBlob){ window.navigator.msSaveOrOpenBlob(blob, filename); }
+  else {
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
 }
 
 // Return a list of attempts (keys) for a student/chapter with simple labels (date or key)
@@ -1153,10 +1366,11 @@ async function getAttemptList(sid, ch){
 }
 
 // Render the questions block HTML for an attempt object
-function renderAttemptQuestionsHtml(attemptObj, source, questions){
+function renderAttemptQuestionsHtml(attemptObj, source, questions, sourcePath){
   const qKeys = Object.keys(questions || {}).sort((a,b)=> Number(a) - Number(b));
   let html = `<div style="max-height:60vh;overflow:auto">`;
   html += `<h3>Source: ${escapeHtml(source)}</h3>`;
+  if(sourcePath){ html += `<div style="font-size:12px;color:#666;margin-bottom:8px">Loaded questions path: <code>${escapeHtml(sourcePath)}</code></div>`; }
   // If the attempt object looks like a direct answers map (keys like 'Q1', '1', etc), wrap it so extractor finds it
   let effectiveAttempt = attemptObj || {};
   try{
@@ -1184,14 +1398,9 @@ function renderAttemptQuestionsHtml(attemptObj, source, questions){
       else { resultText = 'Incorrect'; cls = 'question-result wrong'; resultColor = '#d33'; }
       html += `<div class="${cls}" style="padding:10px;border-bottom:1px solid #eee;margin-bottom:8px;">`;
       html += `<div style="display:flex;justify-content:space-between;align-items:center"><div style="font-weight:700;color:#501121">Q${escapeHtml(q.questionIndex || qk)}: ${escapeHtml(q.question||'')}</div><div style="font-size:12px;color:#666">${escapeHtml(q.type||'')}</div></div>`;
-      if(q.type === 'multiple_choice'){
+        if(q.type === 'multiple_choice'){
         const choices = Array.isArray(q.choices) ? q.choices : (q.choices ? Object.values(q.choices) : []);
-        const correctOptions = Array.isArray(q.answer) ? q.answer : (q.answer !== undefined ? [q.answer] : []);
-        const correctOptionsText = correctOptions.map(co=>{
-          if(co === undefined || co === null) return String(co);
-          if(!isNaN(Number(co))){ const n=Number(co); const idx=(n===0?0:n-1); return choices[idx] !== undefined ? choices[idx] : String(co); }
-          return String(co).trim().replace(/^[A-Za-z]\s*[\.\)]\s*/,'').replace(/^\d+\.\s*/,'').trim();
-        });
+        const correctOptionsText = getCanonicalAnswers(q);
         let studentSelections = [];
         if(Array.isArray(normResp)) studentSelections = normResp.slice();
         else if(normResp !== undefined && normResp !== null && String(normResp).trim() !== '') studentSelections = [String(normResp)];
@@ -1216,7 +1425,7 @@ function renderAttemptQuestionsHtml(attemptObj, source, questions){
           html += `<div style="margin-top:6px;color:#444">Student response (raw): <span style="font-weight:600">${escapeHtml(rawDisplay)}</span></div>`;
           html += `<div style="margin-top:4px;color:#444">Normalized: <span style="font-weight:600">${escapeHtml(normDisplay)}</span></div>`;
         }catch(e){}
-        if(!correct && correctOptions.length && !isNoResponse){ const mappedCorrect = correctOptionsText.join(', '); html += `<div style="margin-top:8px;">Correct answer: <span style="font-weight:700">${escapeHtml(mappedCorrect)}</span></div>`; }
+  if(!correct && correctOptionsText.length && !isNoResponse){ const mappedCorrect = correctOptionsText.join(', '); html += `<div style="margin-top:8px;">Correct answer: <span style="font-weight:700">${escapeHtml(mappedCorrect)}</span></div>`; }
         html += `<div style="margin-top:8px;">Result: <span style="font-weight:700;color:${resultColor}">${escapeHtml(resultText)}</span></div>`;
       } else {
         html += `<div style="margin-top:6px;">Expected: <span style='font-weight:600'>${escapeHtml(String(q.answer===undefined?JSON.stringify(q.choices||''): q.answer))}</span></div>`;
@@ -1267,11 +1476,11 @@ document.addEventListener('click', async (e)=>{
     try{
       const qFound = await findQuizQuestions(ch);
       if(qFound && qFound.snap && qFound.snap.exists()){
-        questions = qFound.snap.val();
+        questions = normalizeQuestionsMap(qFound.snap.val());
         console.debug('Loaded questions from', qFound.path);
       } else {
         const fallbackSnap = await rtdb.ref(`quizzes/${ch}/questions`).get();
-        if(fallbackSnap && fallbackSnap.exists()){ questions = fallbackSnap.val(); console.debug('Loaded questions from fallback quizzes/${ch}/questions'); }
+        if(fallbackSnap && fallbackSnap.exists()){ questions = normalizeQuestionsMap(fallbackSnap.val()); console.debug('Loaded questions from fallback quizzes/${ch}/questions'); }
       }
     }catch(e){ console.debug('Failed to load quiz questions for chapter', ch, e); }
     const attempts = await getAttemptList(sid, ch);
@@ -1293,7 +1502,7 @@ document.addEventListener('click', async (e)=>{
       try{
         const fetchedAttempt = await fetchAttemptObject(sid, ch, key);
         if(!fetchedAttempt || !fetchedAttempt.obj){ containerEl.innerHTML = `<div style="color:#a23">Attempt data not found for key: ${escapeHtml(key)}</div>`; return; }
-        const html = renderAttemptQuestionsHtml(fetchedAttempt.obj, fetchedAttempt.source, questions);
+          const html = renderAttemptQuestionsHtml(fetchedAttempt.obj, fetchedAttempt.source, questions, (qFound && qFound.path) ? qFound.path : null);
         containerEl.innerHTML = html;
       }catch(e){ containerEl.innerHTML = `<div style="color:#a23">Error loading attempt: ${escapeHtml(e && e.message? e.message : String(e))}</div>`; }
     }
@@ -1497,6 +1706,7 @@ if(!document.getElementById('sectionAnswersModal')){
         <div style="display:flex;gap:8px;align-items:center;">
           <select id="sectionAnswersChapterSelect"></select>
           <button id="loadSectionAnswersBtn" class="btn" style="background:#fff;border:1px solid #ccc;padding:6px 10px;border-radius:6px;">Load</button>
+          <button id="exportSectionAnswersBtn" class="btn" style="background:#fff;border:1px solid #ccc;padding:6px 10px;border-radius:6px;">Export CSV</button>
           <button id="closeSectionAnswersModal" class="btn" style="background:#fff;border:1px solid #ccc;padding:6px 10px;border-radius:6px;">Close</button>
         </div>
       </div>
@@ -1509,6 +1719,11 @@ if(!document.getElementById('sectionAnswersModal')){
     const sel = document.getElementById('sectionAnswersChapterSelect'); const ch = sel.value; const sid = sModal.dataset.sectionId;
     if(!sid){ alert('No section selected'); return; }
     await loadSectionAnswers(sid, ch);
+  });
+  document.getElementById('exportSectionAnswersBtn').addEventListener('click', async ()=>{
+    const sel = document.getElementById('sectionAnswersChapterSelect'); const ch = sel.value; const sid = sModal.dataset.sectionId;
+    if(!sid){ alert('No section selected'); return; }
+    await exportSectionAnswersCSV(sid, ch);
   });
 }
 
@@ -1534,7 +1749,7 @@ async function openSectionAnswersModal(sectionId){
 async function loadSectionAnswers(sectionId, ch){
   const content = document.getElementById('sectionAnswersContent'); if(!content) return; content.innerHTML = '<p>Loading...</p>';
   try{
-    // find section students from cache or fetch
+    // fetch section students
     let sectionObj = sectionsCache && sectionsCache[sectionId];
     if(!sectionObj){ const snap = await rtdb.ref(`SectionList/${sectionId}`).get(); if(snap.exists()) sectionObj = snap.val(); }
     const studentMap = sectionObj && sectionObj.students ? sectionObj.students : {};
@@ -1544,52 +1759,105 @@ async function loadSectionAnswers(sectionId, ch){
     // load chapter questions (variant-aware)
     const qFound = await findQuizQuestions(ch);
     const questions = (qFound && qFound.snap && qFound.snap.exists()) ? qFound.snap.val() : {};
+    if(!(qFound && qFound.snap && qFound.snap.exists())){
+      const tried = (qFound && qFound.triedPaths) ? qFound.triedPaths.join(', ') : 'unknown paths';
+      content.innerHTML = `<p>No questions found for ${escapeHtml(ch)}. Tried: ${escapeHtml(tried)}</p>`; return;
+    }
     const qKeys = Object.keys(questions||{}).sort((a,b)=>Number(a)-Number(b));
 
-    // For each student, fetch their latest attempt for this chapter (use getAttemptList to find attempts) and then fetch that attempt object
-    const rowsHtml = [];
+    const list = document.createElement('div'); list.className = 'section-answers-list';
+
     for(const uid of uids){
-      // get attempt list and pick the latest (getAttemptList already uses variants)
       const attempts = await getAttemptList(uid, ch);
-      if(!attempts || attempts.length===0){ rowsHtml.push(`<div style="border-bottom:1px solid #eee;padding:8px"><div style="font-weight:700">${escapeHtml(uid)} — <span style='color:#666'>No attempts</span></div></div>`); continue; }
-      const latest = attempts[0]; // attempts are sorted by date desc in getAttemptList
-      const fetched = await fetchAttemptObject(uid, ch, latest.key);
-      const attemptObj = fetched && fetched.obj ? fetched.obj : null;
-      const source = fetched && fetched.source ? fetched.source : 'unknown';
-      // render a compact per-student question list and diagnostics
-      let html = `<div style="border-bottom:1px solid #eee;padding:8px"><div style="display:flex;justify-content:space-between;align-items:center"><div style="font-weight:700">${escapeHtml(uid)}</div><div style="color:#666">Score: ${escapeHtml(String(latest.score||''))} &nbsp; ${escapeHtml(latest.date||'')}</div></div>`;
-      if(!attemptObj){ html += `<div style='color:#a23;margin-top:6px'>No attempt object found (source: ${escapeHtml(source)})</div></div>`; rowsHtml.push(html); continue; }
+      const card = document.createElement('div'); card.className = 'student-card';
+      const header = document.createElement('div'); header.className = 'student-header';
+      const title = document.createElement('div'); title.className = 'student-title'; title.innerHTML = `${escapeHtml(uid)} <span class="sid">${escapeHtml(studentMap[uid] && studentMap[uid].name ? studentMap[uid].name : '')}</span>`;
+      const meta = document.createElement('div'); meta.className = 'student-meta';
+      if(!attempts || attempts.length===0){ meta.innerHTML = `<span class="badge muted">No attempts</span>`; header.appendChild(title); header.appendChild(meta); card.appendChild(header); list.appendChild(card); continue; }
+  const latest = attempts[0];
+  // compute overall stats
+  const scoresArr = attempts.map(a => { const s = a && a.score!==undefined && a.score!==null ? Number(a.score) : NaN; return isNaN(s) ? null : s; }).filter(x=>x!==null);
+  const attemptsCount = attempts.length;
+  const best = scoresArr.length ? Math.max(...scoresArr) : null;
+  const avg = scoresArr.length ? (scoresArr.reduce((s,t)=>s+t,0)/scoresArr.length) : null;
+  const scoreBadge = `<span class="badge score">Latest: ${escapeHtml(String(latest.score||''))}</span>`;
+  const attemptsBadge = `<span class="badge muted">Attempts: ${escapeHtml(String(attemptsCount))}</span>`;
+  const bestBadge = best !== null ? `<span class="badge muted">Best: ${escapeHtml(String(best))}</span>` : '';
+  const avgBadge = avg !== null ? `<span class="badge muted">Avg: ${escapeHtml(String(Math.round(avg*10)/10))}</span>` : '';
+  const dateBadge = `<span class="badge muted">${escapeHtml(latest.date||'')}</span>`;
+  // attempt selector: latest / best / specific
+  const selector = document.createElement('select'); selector.className = 'attempt-selector';
+  // option: latest
+  const optLatest = document.createElement('option'); optLatest.value = 'latest'; optLatest.textContent = 'Latest'; selector.appendChild(optLatest);
+  // option: best
+  const optBest = document.createElement('option'); optBest.value = 'best'; optBest.textContent = 'Best'; selector.appendChild(optBest);
+  // specific attempts
+  attempts.forEach(a=>{ const o = document.createElement('option'); o.value = a.key; o.textContent = a.date ? `${a.date} (${a.key.substr(0,6)})` : a.key; selector.appendChild(o); });
+  const toggleBtn = document.createElement('button'); toggleBtn.className = 'toggle-details'; toggleBtn.textContent = 'Show answers';
+  meta.innerHTML = attemptsBadge + scoreBadge + bestBadge + avgBadge + dateBadge; meta.appendChild(selector); meta.appendChild(toggleBtn);
+      header.appendChild(title); header.appendChild(meta);
+      card.appendChild(header);
 
-      // Build diagnostics header (trim raw JSON and per-question extraction diagnostics)
-      const rawJson = JSON.stringify(attemptObj, null, 2) || '';
-      const trimmedRaw = rawJson.length > 2000 ? rawJson.substring(0,2000) + '\n... (trimmed)' : rawJson;
-      const diagLines = [];
-      html += '<div style="margin-top:8px;display:flex;flex-direction:column;gap:6px">';
+      const detailsDiv = document.createElement('div'); detailsDiv.className = 'student-details';
+  // fetch attempt objects for all listed attempts and cache per-student for quick switching
+  const studentCache = { attempts: attempts, fetched: {} };
+  for(const a of attempts){ try{ const f = await fetchAttemptObject(uid, ch, a.key); if(f && f.obj) studentCache.fetched[a.key] = f; }catch(e){ /* ignore fetch errors for non-latest */ } }
+  const latestKey = latest.key;
+  const attemptObj = (studentCache.fetched && studentCache.fetched[latestKey]) ? studentCache.fetched[latestKey].obj : null;
+  const source = (studentCache.fetched && studentCache.fetched[latestKey]) ? studentCache.fetched[latestKey].source : 'unknown';
+  // attach cache map to card for later reference
+  card.dataset.uid = uid; card._attemptCache = studentCache;
+      if(!attemptObj){ detailsDiv.innerHTML = `<div class="debug-note">No attempt object found (source: ${escapeHtml(source)})</div>`; card.appendChild(detailsDiv); list.appendChild(card); continue; }
+
+      // build qa list
+      const qaList = document.createElement('div'); qaList.className = 'qa-list';
       for(const qk of qKeys){ const q = questions[qk]; const qIndex = Number(qk); const studentResp = extractStudentResponse(attemptObj, qk, qIndex); const normResp = normalizeStudentResponse(q, studentResp); const correct = evaluateAnswer(q, normResp); const isNoResponse = (normResp === undefined || normResp === null || (Array.isArray(normResp) && normResp.length===0) || (typeof normResp === 'string' && String(normResp).trim()===''));
-        const status = isNoResponse ? 'No response' : (correct ? 'Correct' : 'Wrong');
-        // add diagnostic line for this question
-        let rawDisplayForDiag = (studentResp === undefined || studentResp === null) ? '(no response)' : (Array.isArray(studentResp) ? studentResp.join(', ') : String(studentResp));
-        let normDisplayForDiag = (normResp === undefined || normResp === null) ? '(no response)' : (Array.isArray(normResp) ? normResp.join(', ') : String(normResp));
-        diagLines.push(`Q${qk}: raw => ${rawDisplayForDiag}  | normalized => ${normDisplayForDiag}  | status => ${status}`);
-
-        html += `<div style='display:flex;justify-content:space-between;align-items:center;padding:6px;border-radius:6px;background:${correct? '#f0fff4':'#fff6f6'};border:1px solid ${correct? '#dff0df':'#f0c0c0'}'>`;
-        html += `<div style="flex:1"><strong>Q${escapeHtml(q.questionIndex || qk)}</strong>: ${escapeHtml((q.question||'').slice(0,120))}</div>`;
-        html += `<div style="min-width:160px;text-align:right;color:${isNoResponse? '#666': (correct? '#2b8a3e':'#d33')};font-weight:700">${escapeHtml(status)}</div>`;
-        html += `</div>`;
-        if(!correct && !isNoResponse){ const rawDisplay = rawDisplayForDiag; const normDisplay = normDisplayForDiag; let correctText = '';
-            if(q.type === 'multiple_choice'){ const choices = Array.isArray(q.choices)?q.choices: (q.choices?Object.values(q.choices):[]); const correctOptions = Array.isArray(q.answer)?q.answer: (q.answer!==undefined?[q.answer]:[]); const correctOptionsText = correctOptions.map(co=>{ if(co===undefined||co===null) return String(co); if(!isNaN(Number(co))){ const n=Number(co); const idx=(n===0?0:n-1); return choices[idx] !== undefined ? choices[idx] : String(co);} return String(co).trim().replace(/^[A-Za-z]\s*[\.\)]\s*/,'').replace(/^\d+\.\s*/,'').trim(); }).join(', '); correctText = correctOptionsText; }
-            html += `<div style='margin-top:6px;padding:8px;background:#fff;border:1px dashed #eee;font-size:13px;color:#444'><div><b>Student response (raw):</b> ${escapeHtml(rawDisplay)}</div><div><b>Normalized:</b> ${escapeHtml(normDisplay)}</div><div style='margin-top:6px;color:#222'><b>Correct answer:</b> ${escapeHtml(correctText || String(q.answer||''))}</div></div>`;
-        }
+        const row = document.createElement('div'); row.className = 'qa-row';
+        const qText = document.createElement('div'); qText.className = 'qa-question'; qText.innerHTML = `<strong>Q${escapeHtml(q.questionIndex || qk)}</strong>: ${escapeHtml((q.question||'').slice(0,140))}`;
+        const status = document.createElement('div'); status.className = 'qa-status'; if(isNoResponse) { status.innerHTML = `<span class="badge muted">No response</span>`; status.classList.add('status-muted'); } else if(correct) { status.innerHTML = `<span class="badge ok">Correct</span>`; status.classList.add('status-ok'); } else { status.innerHTML = `<span class="badge warn">Wrong</span>`; status.classList.add('status-wrong'); }
+        row.appendChild(qText); row.appendChild(status);
+        qaList.appendChild(row);
+        if(!correct && !isNoResponse){ const rawDisplay = (studentResp === undefined || studentResp === null) ? '(no response)' : (Array.isArray(studentResp) ? studentResp.join(', ') : String(studentResp)); const normDisplay = (normResp === undefined || normResp === null) ? '(no response)' : (Array.isArray(normResp) ? normResp.join(', ') : String(normResp)); const detail = document.createElement('div'); detail.className = 'qa-detail'; detail.innerHTML = `<div><b>Student response (raw):</b> ${escapeHtml(rawDisplay)}</div><div style="margin-top:6px"><b>Normalized:</b> ${escapeHtml(normDisplay)}</div>`; qaList.appendChild(detail); }
       }
-      // append diagnostics details
-      const diagText = 'Source: ' + source + '\n\n' + 'Raw attempt (trimmed):\n' + trimmedRaw + '\n\n' + 'Per-question extraction:\n' + diagLines.join('\n');
-      html += `</div>`; // close question column
-      html += `<div style='margin-top:8px'><details><summary style='cursor:pointer'>Debug info (show raw attempt & per-question extraction)</summary><pre style='white-space:pre-wrap;max-height:360px;overflow:auto;padding:8px;border:1px solid #eee;background:#fafafa'>${escapeHtml(diagText)}</pre></details></div>`;
-      html += '</div>';
-      rowsHtml.push(html);
+
+      // debug summary hidden by default
+      const debugSummary = document.createElement('div'); debugSummary.className = 'debug-note'; debugSummary.textContent = `Source: ${source}`;
+      detailsDiv.appendChild(qaList); detailsDiv.appendChild(debugSummary);
+      card.appendChild(detailsDiv);
+
+      // wire toggle
+      toggleBtn.addEventListener('click', ()=>{
+        const open = detailsDiv.style.display && detailsDiv.style.display !== 'none';
+        detailsDiv.style.display = open ? 'none' : 'block';
+        toggleBtn.textContent = open ? 'Show answers' : 'Hide answers';
+      });
+
+      // handle attempt selection changes
+      selector.addEventListener('change', ()=>{
+        const val = selector.value;
+        let keyToUse = latestKey;
+        if(val === 'latest'){ keyToUse = latestKey; }
+        else if(val === 'best'){ // pick best-scoring attempt
+          let bestKey = latestKey; let bestScore = -Infinity;
+          for(const a of attempts){ const s = a && a.score!==undefined && a.score!==null ? Number(a.score) : NaN; if(!isNaN(s) && s>bestScore){ bestScore=s; bestKey=a.key; } }
+          keyToUse = bestKey;
+        } else { keyToUse = val; }
+        // replace detailsDiv content with selected attempt
+        detailsDiv.innerHTML = '<p>Loading...</p>';
+        const f = card._attemptCache && card._attemptCache.fetched && card._attemptCache.fetched[keyToUse];
+        if(!f){ detailsDiv.innerHTML = `<div class="debug-note">No attempt found for selection</div>`; return; }
+        // render QA list for this attempt
+        const attemptObjSel = f.obj; const sourceSel = f.source;
+        const qaListNew = document.createElement('div'); qaListNew.className = 'qa-list';
+        for(const qk of qKeys){ const q = questions[qk]; const qIndex = Number(qk); const studentResp = extractStudentResponse(attemptObjSel, qk, qIndex); const normResp = normalizeStudentResponse(q, studentResp); const correct = evaluateAnswer(q, normResp); const isNoResponse = (normResp === undefined || normResp === null || (Array.isArray(normResp) && normResp.length===0) || (typeof normResp === 'string' && String(normResp).trim()===''));
+          const row = document.createElement('div'); row.className = 'qa-row'; const qText = document.createElement('div'); qText.className = 'qa-question'; qText.innerHTML = `<strong>Q${escapeHtml(q.questionIndex || qk)}</strong>: ${escapeHtml((q.question||'').slice(0,140))}`; const status = document.createElement('div'); status.className = 'qa-status'; if(isNoResponse) { status.innerHTML = `<span class="badge muted">No response</span>`; status.classList.add('status-muted'); } else if(correct) { status.innerHTML = `<span class="badge ok">Correct</span>`; status.classList.add('status-ok'); } else { status.innerHTML = `<span class="badge warn">Wrong</span>`; status.classList.add('status-wrong'); } row.appendChild(qText); row.appendChild(status); qaListNew.appendChild(row); if(!correct && !isNoResponse){ const rawDisplay = (studentResp === undefined || studentResp === null) ? '(no response)' : (Array.isArray(studentResp) ? studentResp.join(', ') : String(studentResp)); const normDisplay = (normResp === undefined || normResp === null) ? '(no response)' : (Array.isArray(normResp) ? normResp.join(', ') : String(normResp)); const detail = document.createElement('div'); detail.className = 'qa-detail'; detail.innerHTML = `<div><b>Student response (raw):</b> ${escapeHtml(rawDisplay)}</div><div style="margin-top:6px"><b>Normalized:</b> ${escapeHtml(normDisplay)}</div>`; qaListNew.appendChild(detail); } }
+        detailsDiv.innerHTML = ''; detailsDiv.appendChild(qaListNew); detailsDiv.appendChild(Object.assign(document.createElement('div'),{className:'debug-note', textContent:`Source: ${sourceSel}`}));
+      });
+
+      list.appendChild(card);
     }
 
-    content.innerHTML = `<div style="display:flex;flex-direction:column;gap:8px;">${rowsHtml.join('')}</div>`;
+    content.innerHTML = ''; content.appendChild(list);
   }catch(err){ console.error('loadSectionAnswers failed', err); content.innerHTML = '<pre>'+escapeHtml(err && err.message?err.message:String(err))+'</pre>'; }
 }
 
