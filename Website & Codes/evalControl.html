@@ -531,9 +531,17 @@ async function openSectionsModal(){
           const name = s.name || s.title || sid;
           const students = s.students || {};
           const uids = Object.keys(students || {});
+          // disable view button when there are no students to prevent opening an empty view
+          const hasStudents = (uids && uids.length>0);
           html += `<div style="border:1px solid #eee;padding:10px;border-radius:8px;margin-bottom:8px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><div><strong>${escapeHtml(name)}</strong></div><div><button class="view-section-answers-btn" data-section-id="${escapeHtml(sid)}">View Section Answers</button></div></div>`;
-          if(uids.length===0) html += `<div style="color:#666">No students</div>`;
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><div><strong>${escapeHtml(name)}</strong></div><div>`;
+          if(hasStudents){
+            html += `<button class="view-section-answers-btn" data-section-id="${escapeHtml(sid)}">View Section Answers</button>`;
+          } else {
+            html += `<button class="view-section-answers-btn" data-section-id="${escapeHtml(sid)}" disabled title="No students in this section">View Section Answers</button>`;
+          }
+          html += `</div></div>`;
+          if(!hasStudents) html += `<div style="color:#666">No students</div>`;
           else{
             html += `<div style="display:flex;flex-direction:column;gap:6px;">`;
             for(const uid of uids){
@@ -1244,9 +1252,9 @@ function normalizeQuestionsMap(raw){
     for(let i=0;i<raw.length;i++){
       const item = raw[i];
       if(item === null || item === undefined) continue;
-      // use 1-based numbering for human-friendly question indexes
-      const idx = i; // export already uses questionIndex in each item; but array pos may be index
-      const key = String(i);
+      // prefer an explicit questionIndex if present, otherwise use 1-based array position
+      const idx = (item && (item.questionIndex !== undefined && item.questionIndex !== null)) ? Number(item.questionIndex) : (i + 1);
+      const key = String(idx);
       out[key] = item;
     }
     return out;
@@ -1753,8 +1761,20 @@ async function loadSectionAnswers(sectionId, ch){
     let sectionObj = sectionsCache && sectionsCache[sectionId];
     if(!sectionObj){ const snap = await rtdb.ref(`SectionList/${sectionId}`).get(); if(snap.exists()) sectionObj = snap.val(); }
     const studentMap = sectionObj && sectionObj.students ? sectionObj.students : {};
-    const uids = Object.keys(studentMap||{});
+    let uids = Object.keys(studentMap||{});
     if(uids.length===0){ content.innerHTML = '<p>No students in this section.</p>'; return; }
+    // filter UIDs to those that actually exist as StudentAccount or Cridentials entries
+    try{
+      const [accSnap, credSnap] = await Promise.all([ rtdb.ref('StudentAccount').get(), rtdb.ref('Cridentials').get() ]);
+      const accounts = accSnap.exists() ? accSnap.val() : {};
+      const creds = credSnap.exists() ? credSnap.val() : {};
+      const valid = {};
+      Object.keys(accounts||{}).forEach(k=> valid[k]=true);
+      Object.keys(creds||{}).forEach(k=> valid[k]=true);
+      const beforeCount = uids.length;
+      uids = uids.filter(uid => !!valid[uid]);
+      if(uids.length === 0){ content.innerHTML = `<p>No matching student accounts found for section (filtered ${beforeCount} -> 0)</p>`; return; }
+    }catch(e){ console.debug('Failed to fetch StudentAccount/Cridentials for filtering', e); }
 
     // load chapter questions (variant-aware)
     const qFound = await findQuizQuestions(ch);
@@ -1864,7 +1884,16 @@ async function loadSectionAnswers(sectionId, ch){
 // delegated handler to open section answers for a section
 document.addEventListener('click', (e)=>{
   const b = e.target.closest && e.target.closest('.view-section-answers-btn');
-  if(!b) return; const sectionId = b.getAttribute('data-section-id'); if(!sectionId) return; openSectionAnswersModal(sectionId);
+  if(!b) return;
+  const sectionId = b.getAttribute('data-section-id');
+  if(!sectionId) return;
+  // runtime validation: ensure section has students before opening modal
+  try{
+    const sec = sectionsCache && sectionsCache[sectionId] ? sectionsCache[sectionId] : null;
+    const students = sec && sec.students ? Object.keys(sec.students||{}) : [];
+    if(!students || students.length === 0){ alert('This section has no students.'); return; }
+  }catch(e){ /* ignore and proceed */ }
+  openSectionAnswersModal(sectionId);
 });
 
 
