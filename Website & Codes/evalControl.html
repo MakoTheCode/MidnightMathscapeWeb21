@@ -431,7 +431,7 @@ async function exportStudentsCsv(){
     ]);
   }
   // convert to CSV string
-  const csvContent = rows.map(r => r.map(cell => '"' + String(cell).replace(/"/g,'""') + '"').join(',')).join('\n');
+  const csvContent = rows.map(r => r.map(cell => '"' + String(cell).replace(/"/g,'""') + '"').join(',')).join('\r\n');
   // add UTF-8 BOM so Excel on Windows recognizes encoding
   const bom = '\uFEFF';
   const blob = new Blob([bom + csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -838,8 +838,9 @@ function normalizeStudentResponse(q, studentResp){
     // numeric string index '1' -> index 0
     if(!isNaN(Number(cand))){
       const n = Number(cand);
-      if(choices[n] !== undefined) return choices[n];
+      // prefer 1-based numeric answers (e.g., '1' -> choices[0]) but accept 0-based if present
       if(choices[n-1] !== undefined) return choices[n-1];
+      if(choices[n] !== undefined) return choices[n];
     }
     return null;
   };
@@ -871,11 +872,10 @@ function normalizeStudentResponse(q, studentResp){
   const mapOne = (v) => {
     if(v === null || v === undefined) return undefined;
     if(typeof v === 'number'){
-      // number may be 0-based or 1-based index
-      const try0 = choices[v] !== undefined ? choices[v] : undefined;
-      if(try0 !== undefined) return try0;
-      const try1 = choices[v-1] !== undefined ? choices[v-1] : undefined;
-      return try1;
+      // prefer interpreting numeric answers as 1-based (1 -> first choice)
+      if(choices[v-1] !== undefined) return choices[v-1];
+      if(choices[v] !== undefined) return choices[v];
+      return undefined;
     }
     // if it's an array encoded as JSON in a string, try parse
     if(typeof v === 'string' && (v.trim().startsWith('[') || v.trim().startsWith('{'))){
@@ -917,12 +917,28 @@ function normalizeForCompare(q, val){
       const caseSensitive = !!q.caseSensitive;
       const norm = v => caseSensitive ? String(v).trim() : String(v).toLowerCase().trim();
       if(mapped === undefined || mapped === null) return null;
-      if(Array.isArray(mapped)) return mapped.map(x=> norm(x)).filter(x=> x !== undefined && x !== null && String(x)!=='');
-      return norm(mapped);
+      // further normalize numeric/currency formats so '₱200' and '200' match, and '3.50' normalizes to '3.5'
+      const clean = (s) => {
+        if(s === undefined || s === null) return null;
+        let t = String(s).trim();
+        // remove common currency symbols and thousands separators
+        t = t.replace(/[₱$£€,\s]/g,'');
+        // if it's a pure number after stripping, return canonical numeric string
+        if(/^[-+]?\d*(?:\.\d+)?$/.test(t)){
+          const n = Number(t);
+          if(!isNaN(n)) return String(n);
+        }
+        return caseSensitive ? String(s).trim() : String(s).toLowerCase().trim();
+      };
+      if(Array.isArray(mapped)) return mapped.map(x=> clean(x)).filter(x=> x !== undefined && x !== null && String(x)!='');
+      return clean(mapped);
     }
     // fallback for non-multiple choice
     const caseSensitive = q && q.caseSensitive;
-    return caseSensitive ? String(val).trim() : String(val).toLowerCase().trim();
+    let t = caseSensitive ? String(val).trim() : String(val).toLowerCase().trim();
+    // strip currency for non-MC as well
+    t = t.replace(/[₱$£€,]/g,'');
+    return t;
   }catch(e){ console.debug('normalizeForCompare failed', e); return null; }
 }
 
@@ -1444,7 +1460,7 @@ async function exportSectionAnswersCSV(sectionId, ch){
     rows.push(row);
   }
   // convert to CSV
-  const csv = rows.map(r => r.map(c => '"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\n');
+  const csv = rows.map(r => r.map(c => '"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\r\n');
   downloadTextFile(csv, `section_${sectionId}_${ch}_answers_${exportedAt.replace(/[:\.]/g,'-')}.csv`);
 }
 
@@ -1606,7 +1622,17 @@ function renderAttemptQuestionsHtml(attemptObj, source, questions, sourcePath){
       // collect mismatch info for console debugging: student provided something but evaluated incorrect or no selection
       try{
         if(!isNoResponse && !correct){
-          _mismatches.push({ qk: qk, question: q.question||'', rawResp: rawResp, normResp: normResp, canonical: canonical, normCanonical: normCanonical, perChoiceNorm: (typeof perChoiceNorm !== 'undefined' ? perChoiceNorm : null) });
+          // generate quick suggestion: check numeric/currency mismatch
+          let suggestion = null;
+          try{
+            const nNormResp = Array.isArray(normResp) ? normResp.join('|') : String(normResp);
+            const nCanon = (normCanonical||[]).join('|');
+            if(nNormResp && nCanon){
+              if(nNormResp.replace(/[₱$£€,\.]/g,'') === nCanon.replace(/[₱$£€,\.]/g,'')) suggestion = 'Numeric/currency formatting mismatch (try stripping currency/separators)';
+              else if(/^[0-9\.\-]+$/.test(nNormResp) && !/^[0-9\.\-]+$/.test(nCanon)) suggestion = 'Student answered numeric while canonical is text (or vice versa)';
+            }
+          }catch(e){}
+          _mismatches.push({ qk: qk, question: q.question||'', rawResp: rawResp, normResp: normResp, canonical: canonical, normCanonical: normCanonical, perChoiceNorm: (typeof perChoiceNorm !== 'undefined' ? perChoiceNorm : null), suggestion });
         }
       }catch(e){}
     });
